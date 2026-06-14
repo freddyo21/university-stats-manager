@@ -12,11 +12,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 
 export function Layout() {
   const { t, lang, setLang } = useI18n();
   const { state, update } = useAcademicStore();
+
+  const location = useLocation();
 
   const tabs = [
     { to: "/", label: t("nav.entry"), icon: BookOpen },
@@ -31,7 +33,7 @@ export function Layout() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <Link to="/" className="flex items-center gap-2.5 min-w-0">
+          <NavLink to="/" className="flex items-center gap-2.5 min-w-0">
             <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground">
               <GraduationCap className="h-5 w-5" />
             </div>
@@ -39,7 +41,7 @@ export function Layout() {
               <div className="truncate text-sm font-semibold leading-tight">{t("app.title")}</div>
               <div className="truncate text-xs text-muted-foreground leading-tight">{t("app.tagline")}</div>
             </div>
-          </Link>
+          </NavLink>
           <div className="flex shrink-0 items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -47,7 +49,7 @@ export function Layout() {
                   {t("common.preset")}: {t(`common.preset${state.presetId.charAt(0).toUpperCase() + state.presetId.slice(1)}`)}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-72">
+              <DropdownMenuContent align="end" className="w-85">
                 <DropdownMenuLabel>{t("common.preset")}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {listPresets().map((p) => (
@@ -78,15 +80,16 @@ export function Layout() {
             {tabs.map((tb) => {
               const Icon = tb.icon;
               return (
-                <Link
+                <NavLink
                   key={tb.to}
                   to={tb.to}
-                  className="group relative flex items-center gap-2 whitespace-nowrap px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:text-foreground data-[status=active]:text-foreground"
+                  className={`group relative flex items-center gap-2 whitespace-nowrap px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:text-foreground data-[status=active]:text-foreground
+                    ${location.pathname === tb.to ? "border-b-3 border-accent" : ""}`}
                 >
                   <Icon className="h-4 w-4" />
                   {tb.label}
                   <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-accent opacity-0 transition-opacity group-data-[status=active]:opacity-100" />
-                </Link>
+                </NavLink>
               );
             })}
           </div>
