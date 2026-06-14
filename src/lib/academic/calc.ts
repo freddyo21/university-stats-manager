@@ -307,7 +307,7 @@ export function cumulativeGPA10(
   }
 
   const res = {
-    gpa10: passedCredits > 0 ? roundGpa(weighted / passedCredits, precisionMode) : null,
+    gpa10: any && passedCredits > 0 ? roundGpa(weighted / passedCredits, precisionMode) : null,
     credits: passedCredits + exemptCredits,
     passedCredits,
     exemptCredits,
