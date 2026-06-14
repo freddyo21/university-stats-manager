@@ -12,7 +12,9 @@ export default defineConfig({
     babel({
       presets: [
         reactCompilerPreset()
-      ]
+      ],
+      exclude: ["**/node_modules/**"],
+      include: ["src/**/*.{ts,tsx,js,jsx}"],
     }),
   ],
   resolve: {
