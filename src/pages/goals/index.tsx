@@ -280,6 +280,9 @@ export function GoalsPage() {
                             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 <Target className="h-4 w-4 text-accent" /> {t("goals.targetGpa")}
                             </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                                {t("goals.help.inputTarget")}
+                            </div>
                             <div className="mt-2">
                                 <Input type="number" inputMode="decimal"
                                     min={0} max={10} step={0.1}

@@ -79,6 +79,10 @@ const D: Dict = {
   "goals.yes": { en: "YES", vi: "CÓ" },
   "goals.no": { en: "NO", vi: "KHÔNG" },
   "goals.nope": { en: "NOPE", vi: "KHÔNG" },
+  "goals.help.inputTarget": {
+    en: "Enter target GPA in scale 10 in the input below. The application will automatically calculate GPA in scale 4 for you.",
+    vi: "Nhập điểm mục tiêu hệ 10 vào dưới đây. Ứng dụng sẽ tự động tính điểm hệ 4 cho bạn."
+  },
   "roadmap.title": { en: "4-Year Roadmap", vi: "Lộ trình 4 năm" },
   "roadmap.desc": { en: "Long-term GPA strategy, simulator, and analytics.", vi: "Chiến lược dài hạn, mô phỏng và phân tích." },
   "roadmap.targetGrad": { en: "Target Graduation GPA", vi: "GPA tốt nghiệp mục tiêu" },

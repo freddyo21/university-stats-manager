@@ -60,7 +60,7 @@ export function RoadmapPage() {
       for (const sub of s.subjects) {
         const sc = effectiveScore10(
           sub,
-          state.subjectPassThreshold,
+          // state.subjectPassThreshold,
           state.componentPassEnabled,
           state.componentPassThreshold,
           state.precisionMode,
@@ -82,7 +82,7 @@ export function RoadmapPage() {
         const raw = subjectScore10(sub, state.precisionMode);
         const eff = effectiveScore10(
           sub,
-          state.subjectPassThreshold,
+          // state.subjectPassThreshold,
           state.componentPassEnabled,
           state.componentPassThreshold,
           state.precisionMode,
