@@ -1,0 +1,139 @@
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from "react";
+
+export type Lang = "en" | "vi";
+
+type Dict = Record<string, { en: string; vi: string }>;
+
+const D: Dict = {
+  "app.title": { en: "Academic Performance Hub", vi: "Trung tâm Học vụ" },
+  "app.tagline": { en: "Multi-scale GPA · Local-first", vi: "GPA đa thang · Lưu cục bộ" },
+  "nav.entry": { en: "Grade Entry", vi: "Nhập điểm" },
+  "nav.scale": { en: "Grading Scale", vi: "Thang điểm" },
+  "nav.goals": { en: "Semester Goals", vi: "Mục tiêu kỳ" },
+  "nav.roadmap": { en: "4-Year Roadmap", vi: "Lộ trình 4 năm" },
+  "nav.data": { en: "Data & Privacy", vi: "Dữ liệu & Riêng tư" },
+  "nav.help": { en: "User Manual", vi: "Hướng dẫn" },
+  "common.add": { en: "Add", vi: "Thêm" },
+  "common.delete": { en: "Delete", vi: "Xóa" },
+  "common.settings": { en: "Settings", vi: "Cài đặt" },
+  "common.done": { en: "Done", vi: "Xong" },
+  "common.preset": { en: "Preset", vi: "Trường" },
+  "common.language": { en: "Language", vi: "Ngôn ngữ" },
+  "common.status": { en: "Status", vi: "Trạng thái" },
+  "common.passed": { en: "Passed", vi: "Đậu" },
+  "common.failed": { en: "Failed", vi: "Trượt" },
+  "common.inProgress": { en: "In progress", vi: "Đang học" },
+  "common.subjects": { en: "Subjects", vi: "Môn học" },
+  "common.credits": { en: "Credits", vi: "Tín chỉ" },
+  "common.gpa": { en: "GPA", vi: "GPA" },
+  "common.target": { en: "Target", vi: "Mục tiêu" },
+  "common.slogan": { en: "Built for students. Data stored locally in your browser", vi: "Dành riêng cho sinh viên. Dữ liệu lưu cục bộ trong trình duyệt của bạn, không cần phải lo lắng về việc chúng tôi thu thập dữ liệu" },
+  "common.presetHUST": { en: "HUST", vi: "Đại học Bách Khoa Hà Nội" },
+  "common.presetUIT": { en: "UIT", vi: "Trường Đại học Công nghệ Thông tin" },
+  "common.presetCustom": { en: "Custom", vi: "Tùy chỉnh" },
+  "entry.title": { en: "Grade Entry", vi: "Nhập điểm & Trọng số" },
+  "entry.desc": { en: "Capture each subject's components and weights for live GPA preview.", vi: "Nhập thành phần và trọng số mỗi môn để xem GPA tức thời." },
+  "entry.addSemester": { en: "Add Semester", vi: "Thêm học kỳ" },
+  "entry.addSubject": { en: "Add subject", vi: "Thêm môn" },
+  "entry.empty": { en: "No semesters yet — add one to begin.", vi: "Chưa có học kỳ – thêm để bắt đầu." },
+  "entry.subjectCode": { en: "Code", vi: "Mã HP" },
+  "entry.subjectName": { en: "Subject name", vi: "Tên học phần" },
+  "entry.weight": { en: "Weight (%)", vi: "Trọng số (%)" },
+  "entry.score": { en: "Score (0–10)", vi: "Điểm (0–10)" },
+  "entry.process": { en: "Process", vi: "Quá trình" },
+  "entry.midterm": { en: "Midterm", vi: "Giữa kỳ" },
+  "entry.practice": { en: "Practice", vi: "Thực hành" },
+  "entry.final": { en: "Final", vi: "Cuối kỳ" },
+  "entry.weightDisabled": { en: "Disabled (weight 0%)", vi: "Đã khóa (trọng số 0%)" },
+  "entry.componentFail": { en: "Component fail (Liệt)", vi: "Liệt thành phần" },
+  "entry.subjectFail": { en: "Subject Failed", vi: "Trượt môn" },
+  "entry.weightsMustTotal": { en: "Weights must total 100%", vi: "Tổng trọng số phải = 100%" },
+  "settings.subjectPass": { en: "Subject passing threshold", vi: "Mốc đậu môn" },
+  "settings.componentToggle": { en: "Enable component-level pass (Liệt thành phần)", vi: "Bật chấm liệt thành phần" },
+  "settings.componentThreshold": { en: "Component pass threshold", vi: "Mốc đậu thành phần" },
+  "scale.title": { en: "Grading Scale & Reference", vi: "Thang điểm & Tham chiếu" },
+  "scale.desc": { en: "Standard reference and your institution's active mapping.", vi: "Tham chiếu chuẩn và thang trường đang dùng." },
+  "scale.standard": { en: "Standard Reference Table", vi: "Bảng Thang điểm Chuẩn" },
+  "scale.active": { en: "Active Institution Scale", vi: "Mốc điểm thực tế trường" },
+  "scale.range": { en: "Range (Scale 10)", vi: "Khoảng điểm (Hệ 10)" },
+  "scale.letter": { en: "Letter", vi: "Chữ" },
+  "scale.gpa4": { en: "Scale 4", vi: "Hệ 4" },
+  "scale.lower": { en: "Lower (≥)", vi: "Cận dưới (≥)" },
+  "scale.upper": { en: "Upper (<)", vi: "Cận trên (<)" },
+  "goals.title": { en: "Semester Goals", vi: "Mục tiêu học kỳ" },
+  "goals.desc": { en: "Tactical per-semester targets and scholarship gating.", vi: "Mục tiêu chiến thuật và điều kiện học bổng theo kỳ." },
+  "goals.pick": { en: "Select semester", vi: "Chọn học kỳ" },
+  "goals.targetGpa": { en: "GPA Target (this semester)", vi: "GPA mục tiêu (kỳ này)" },
+  "goals.actual": { en: "Actual GPA", vi: "GPA thực tế" },
+  "goals.cumulativeUpTo": { en: "Cumulative GPA up to here", vi: "GPA tích lũy đến kỳ này" },
+  "goals.activeSubjects": { en: "Active subjects", vi: "Số môn" },
+  "goals.achieved": { en: "Goal Achieved", vi: "Đạt mục tiêu" },
+  "goals.scholarship": { en: "Scholarship", vi: "Học bổng" },
+  "goals.yes": { en: "YES", vi: "CÓ" },
+  "goals.no": { en: "NO", vi: "KHÔNG" },
+  "goals.nope": { en: "NOPE", vi: "KHÔNG" },
+  "roadmap.title": { en: "4-Year Roadmap", vi: "Lộ trình 4 năm" },
+  "roadmap.desc": { en: "Long-term GPA strategy, simulator, and analytics.", vi: "Chiến lược dài hạn, mô phỏng và phân tích." },
+  "roadmap.targetGrad": { en: "Target Graduation GPA", vi: "GPA tốt nghiệp mục tiêu" },
+  "roadmap.totalCourse": { en: "Total Required Course Credits", vi: "Tổng tín chỉ toàn khóa" },
+  "roadmap.currentGpa": { en: "Current Cumulative GPA", vi: "GPA tích lũy hiện tại" },
+  "roadmap.passedCredits": { en: "Accumulated (Passed) Credits", vi: "Tín chỉ đã tích lũy" },
+  "roadmap.remaining": { en: "Remaining Credits", vi: "Tín chỉ còn lại" },
+  "roadmap.required": { en: "Required average for remaining credits", vi: "GPA trung bình cần đạt cho phần còn lại" },
+  "roadmap.unreachable": { en: "Target unreachable — lower target or check credits.", vi: "Không thể đạt mục tiêu — hãy giảm hoặc kiểm tra tín chỉ." },
+  "roadmap.secured": { en: "Target already secured. Coast to graduation.", vi: "Đã đảm bảo mục tiêu. Thoải mái đến ngày tốt nghiệp." },
+  "roadmap.distribution": { en: "Grade Distribution", vi: "Phân bố điểm chữ" },
+  "roadmap.stats": { en: "Performance Statistics", vi: "Thống kê hiệu suất" },
+  "roadmap.totalSubjects": { en: "Total subjects entered", vi: "Tổng số môn đã nhập" },
+  "roadmap.perfect": { en: "Perfect score (10/10)", vi: "Điểm tuyệt đối (10/10)" },
+  "roadmap.over9": { en: "Subjects ≥ 9.0", vi: "Môn ≥ 9.0" },
+  "roadmap.over8": { en: "Subjects ≥ 8.0", vi: "Môn ≥ 8.0" },
+  "roadmap.failed": { en: "Failed subjects (< 5.0 or Liệt)", vi: "Môn trượt (< 5.0 hoặc Liệt)" },
+  "data.title": { en: "Local Data & Privacy", vi: "Dữ liệu cục bộ" },
+  "data.desc": { en: "Everything lives in your browser. Export, import, or wipe.", vi: "Mọi dữ liệu lưu trong trình duyệt. Xuất, nhập hoặc xóa." },
+  "data.export": { en: "Export JSON", vi: "Xuất JSON" },
+  "data.import": { en: "Import JSON", vi: "Nhập JSON" },
+  "data.clear": { en: "Clear all data", vi: "Xóa toàn bộ dữ liệu" },
+  "data.confirmTitle": { en: "Clear all data?", vi: "Xóa toàn bộ dữ liệu?" },
+  "data.confirmBody": { en: "This wipes every semester, subject, and setting from this browser. This cannot be undone.", vi: "Hành động này xóa mọi học kỳ, môn và cấu hình khỏi trình duyệt. Không thể hoàn tác." },
+  "data.cancel": { en: "Cancel", vi: "Hủy" },
+  "data.confirm": { en: "Yes, clear everything", vi: "Đồng ý, xóa hết" },
+};
+
+type Ctx = {
+  lang: Lang;
+  setLang: (l: Lang) => void;
+  t: (key: keyof typeof D) => string;
+};
+
+const I18nContext = createContext<Ctx | null>(null);
+
+const LANG_KEY = "academic-hub-lang";
+
+export function I18nProvider({ children }: { children: ReactNode }) {
+  const [lang, setLangState] = useState<Lang>("en");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(LANG_KEY) as Lang | null;
+      if (saved === "en" || saved === "vi") setLangState(saved);
+    } catch { }
+  }, []);
+
+  const setLang = useCallback((l: Lang) => {
+    setLangState(l);
+    try {
+      localStorage.setItem(LANG_KEY, l);
+    } catch { }
+  }, []);
+
+  const t = useCallback((key: keyof typeof D) => D[key]?.[lang] ?? String(key), [lang]);
+
+  return <I18nContext.Provider value={{ lang, setLang, t }}>{children}</I18nContext.Provider>;
+}
+
+export function useI18n() {
+  const ctx = useContext(I18nContext);
+  if (!ctx) throw new Error("useI18n must be used within I18nProvider");
+  return ctx;
+}
