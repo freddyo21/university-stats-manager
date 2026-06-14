@@ -20,24 +20,27 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/academic/i18n";
 import { PageHeader } from "@/components/Header";
-
-function uid() {
-    return Math.random().toString(36).slice(2, 10);
-}
+import { uuidv7 } from "@/utils/uuid";
 
 function newSubject(): Subject {
     return {
-        id: uid(),
+        id: uuidv7(),
         code: "",
         name: "",
         credits: 3,
         weights: { process: 10, midterm: 20, practice: 20, final: 50 },
         scores: { process: null, midterm: null, practice: null, final: null },
+        isExempt: false,
     };
 }
 
 function newSemester(index: number, targetGPA: number): Semester {
-    return { id: uid(), name: `Semester ${index + 1}`, targetGPA, subjects: [newSubject()] };
+    return {
+        id: uuidv7(),
+        name: `Semester ${index + 1}`,
+        targetGPA,
+        subjects: [newSubject()]
+    };
 }
 
 export function GradeEntryPage() {
@@ -163,7 +166,7 @@ function SemesterCard({ semester }: { semester: Semester; index: number }) {
     const { state, update } = useAcademicStore();
     const { t } = useI18n();
     const [open, setOpen] = useState(true);
-    const { gpa, credits } = useMemo(
+    const { gpa10, credits, passedCredits, exemptCredits } = useMemo(
         () => semesterGPA10(semester, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold),
         [semester, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold],
     );
@@ -201,11 +204,11 @@ function SemesterCard({ semester }: { semester: Semester; index: number }) {
                     <Input
                         value={semester.name}
                         onChange={(e) => setSemester({ name: e.target.value })}
-                        className="h-8 max-w-xs border-none bg-transparent px-0 text-base font-semibold focus-visible:ring-0"
+                        className="h-8 max-w-xs border-none bg-transparent px-3 text-base font-semibold focus-visible:ring-0"
                     />
                     <div className="mt-0.5 text-xs text-muted-foreground">
-                        {semester.subjects.length} {t("common.subjects")} · {credits} {t("common.credits")} · {t("common.gpa")}{" "}
-                        <span className="font-semibold text-foreground">{gpa?.toFixed(2) ?? "—"}</span>
+                        {semester.subjects.length} {t("common.subjects")} · {credits} {t("common.credits")} · {passedCredits} {t("common.credits.passed")} · {credits - passedCredits - exemptCredits} {t("common.credits.failed")} · {exemptCredits} {t("common.credits.exempt")} · {t("common.gpa")}{" "}
+                        <span className="font-semibold text-foreground">{gpa10?.toFixed(2) ?? "—"}</span>
                     </div>
                 </div>
                 <Button size="icon" variant="ghost" onClick={remove} aria-label="Delete semester">
@@ -257,12 +260,22 @@ function SubjectRow({
     const score = subjectScore10(subject);
     const wTotal = weightTotal(subject.weights);
     const wValid = wTotal === 100;
+
     const compFail = hasComponentFail(subject, componentPassEnabled, componentPass);
     const passed = subjectPassed(subject, subjectPass, componentPassEnabled, componentPass);
     const letterDisplay = score === null ? "—" : compFail ? "F" : toLetter(score, letterGrades);
+
     const scale10Display = score === null ? "—" : compFail ? "0.00 (F)" : score.toFixed(2);
     const scale4Display =
-        score === null ? "—" : compFail ? "0.0" : (letterGrades.find((r) => score >= r.min && score < r.max)?.gpa4 ?? to4(score)).toFixed(1);
+        score === null
+            ? "—"
+            : compFail
+                ? "0.0"
+                : (
+                    letterGrades.find((r) => score >= r.min && (score < r.max || (r.max === 10 && score === 10)))?.gpa4 ??
+                    to4(score)
+                ).toFixed(1);
+                
     const scale100Display = score === null ? "—" : compFail ? "0" : String(to100(score));
 
     const setScore = (k: keyof Subject["scores"], v: string) => {
@@ -275,6 +288,10 @@ function SubjectRow({
     const setWeight = (k: keyof Subject["weights"], v: string) => {
         const n = Number(v);
         onChange({ weights: { ...subject.weights, [k]: isNaN(n) ? 0 : Math.min(100, Math.max(0, n)) } });
+    };
+
+    const setExempt = (v: boolean) => {
+        onChange({ isExempt: v });
     };
 
     const components: { key: keyof Subject["scores"]; label: string }[] = [
@@ -328,6 +345,18 @@ function SubjectRow({
                         <Trash2 className="h-4 w-4" />
                     </Button>
                 </div>
+            </div>
+
+            <div className="mt-4 mb-2 flex gap-2 items-center">
+                <Checkbox
+                    id={`exempt-${subject.id}`}
+                    checked={subject.isExempt}
+                    onCheckedChange={setExempt}
+                />
+                <label htmlFor={`exempt-${subject.id}`}
+                    className="text-sm font-medium leading-none">
+                    {t("common.exempt")}
+                </label>
             </div>
 
             <div className="mt-4 overflow-x-auto">

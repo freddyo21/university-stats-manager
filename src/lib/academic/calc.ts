@@ -51,6 +51,8 @@ export function subjectPassed(
   compEnabled: boolean,
   compThreshold: number,
 ): boolean | null {
+  if (subject.isExempt) return true;
+
   const sc = subjectScore10(subject);
 
   if (sc === null) return null;
@@ -104,19 +106,48 @@ export function semesterGPA10(
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
-): { gpa: number | null; credits: number } {
+): {
+  gpa10: number | null;
+  credits: number;
+  passedCredits: number;
+  exemptCredits: number;
+} {
   let totalCredits = 0;
+  let passedCredits = 0;
+  let exemptCredits = 0;
   let weighted = 0;
   let any = false;
 
   for (const sub of s.subjects) {
     const sc = effectiveScore10(sub, subjectPass, compEnabled, compThreshold);
-    if (sc === null || sub.credits <= 0) continue;
-    any = true;
-    weighted += sc * sub.credits;
-    totalCredits += sub.credits;
+    const passed = subjectPassed(sub, subjectPass, compEnabled, compThreshold);
+
+    if ((sc === null && !sub.isExempt) || sub.credits <= 0) continue;
+
+    if (sc === null && sub.isExempt) {
+      exemptCredits += sub.credits;
+      continue;
+    }
+
+    if (sc !== null) {
+      any = true;
+      weighted += sc * sub.credits;
+      totalCredits += sub.credits;
+    }
+
+    if (passed) {
+      passedCredits += sub.credits;
+    }
   }
-  return { gpa: any && totalCredits > 0 ? Number((weighted / totalCredits).toFixed(2)) : null, credits: totalCredits };
+
+  const res = {
+    gpa10: any && passedCredits > 0 ? Number((weighted / passedCredits).toFixed(2)) : null,
+    credits: totalCredits + exemptCredits,
+    passedCredits,
+    exemptCredits
+  };
+
+  return res;
 }
 
 export function cumulativeGPA10(
@@ -124,22 +155,36 @@ export function cumulativeGPA10(
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
-): { gpa: number | null; credits: number } {
+): {
+  gpa10: number | null;
+  credits: number
+} {
   let totalCredits = 0;
+  let passedCredits = 0;
   let weighted = 0;
 
   for (const s of semesters) {
     for (const sub of s.subjects) {
       const sc = effectiveScore10(sub, subjectPass, compEnabled, compThreshold);
+      const passed = subjectPassed(sub, subjectPass, compEnabled, compThreshold);
+
       if (sc === null || sub.credits <= 0) continue;
 
       weighted += sc * sub.credits;
       totalCredits += sub.credits;
 
       if (passed) {
+        passedCredits += sub.credits;
+      }
     }
   }
-  return { gpa: totalCredits > 0 ? Number((weighted / totalCredits).toFixed(2)) : null, credits: totalCredits };
+
+  const res = {
+    gpa10: passedCredits > 0 ? Number((weighted / passedCredits).toFixed(2)) : null,
+    credits: totalCredits
+  };
+
+  return res;
 }
 
 export function passedCredits(
