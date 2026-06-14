@@ -54,8 +54,10 @@ export function useAcademicStore() {
       setState(memory);
       setTick((t) => t + 1);
     };
+
     listeners.add(listener);
     listener();
+
     return () => {
       listeners.delete(listener);
     };
@@ -63,26 +65,33 @@ export function useAcademicStore() {
 
   const update = useCallback((updater: (s: AppState) => AppState) => {
     memory = updater(memory);
+
     try {
       localStorage.setItem(KEY, JSON.stringify(memory));
     } catch { }
+
     emit();
   }, []);
 
   const replace = useCallback((next: AppState) => {
     memory = next;
+
     try {
       localStorage.setItem(KEY, JSON.stringify(memory));
     } catch { }
+
     emit();
   }, []);
 
   const reset = useCallback(() => {
     memory = DEFAULT_STATE;
+
     try {
       localStorage.removeItem(KEY);
       localStorage.removeItem(LEGACY_KEY);
+
     } catch { }
+
     emit();
   }, []);
 

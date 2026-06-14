@@ -10,21 +10,26 @@ export function weightTotal(w: Weights) {
 
 export function subjectScore10(subject: Subject): number | null {
   const { weights, scores } = subject;
+
   const total = weightTotal(weights);
   if (total === 0) return null;
+
   const parts: { score: number | null; weight: number }[] = [
     { score: scores.process, weight: weights.process },
     { score: scores.midterm, weight: weights.midterm },
     { score: scores.practice, weight: weights.practice },
     { score: scores.final, weight: weights.final },
   ];
+
   for (const p of parts) {
     if (p.weight > 0 && (p.score === null || isNaN(p.score))) return null;
   }
+
   let sum = 0;
   for (const p of parts) {
     if (p.weight > 0) sum += (p.score ?? 0) * p.weight;
   }
+
   return Number((sum / total).toFixed(2));
 }
 
@@ -47,8 +52,11 @@ export function subjectPassed(
   compThreshold: number,
 ): boolean | null {
   const sc = subjectScore10(subject);
+
   if (sc === null) return null;
+
   if (hasComponentFail(subject, compEnabled, compThreshold)) return false;
+
   return sc >= subjectPass;
 }
 
@@ -59,7 +67,7 @@ export function effectiveScore10(
   compThreshold: number,
 ): number | null {
   const sc = subjectScore10(subject);
-  
+
   if (sc === null) return null;
 
   if (hasComponentFail(subject, compEnabled, compThreshold)) return 0;
@@ -100,6 +108,7 @@ export function semesterGPA10(
   let totalCredits = 0;
   let weighted = 0;
   let any = false;
+
   for (const sub of s.subjects) {
     const sc = effectiveScore10(sub, subjectPass, compEnabled, compThreshold);
     if (sc === null || sub.credits <= 0) continue;
@@ -118,12 +127,16 @@ export function cumulativeGPA10(
 ): { gpa: number | null; credits: number } {
   let totalCredits = 0;
   let weighted = 0;
+
   for (const s of semesters) {
     for (const sub of s.subjects) {
       const sc = effectiveScore10(sub, subjectPass, compEnabled, compThreshold);
       if (sc === null || sub.credits <= 0) continue;
+
       weighted += sc * sub.credits;
       totalCredits += sub.credits;
+
+      if (passed) {
     }
   }
   return { gpa: totalCredits > 0 ? Number((weighted / totalCredits).toFixed(2)) : null, credits: totalCredits };

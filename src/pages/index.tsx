@@ -271,6 +271,7 @@ function SubjectRow({
             scores: { ...subject.scores, [k]: n === null || isNaN(n) ? null : Math.min(10, Math.max(0, n)) },
         });
     };
+
     const setWeight = (k: keyof Subject["weights"], v: string) => {
         const n = Number(v);
         onChange({ weights: { ...subject.weights, [k]: isNaN(n) ? 0 : Math.min(100, Math.max(0, n)) } });

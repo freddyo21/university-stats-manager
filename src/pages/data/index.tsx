@@ -41,7 +41,9 @@ export function DataPage() {
       try {
         const parsed = JSON.parse(String(reader.result)) as Partial<AppState>;
         if (!parsed || !Array.isArray(parsed.semesters)) throw new Error("Invalid file");
+
         replace({ ...DEFAULT_STATE, ...parsed } as AppState);
+        
         toast.success("Imported");
       } catch {
         toast.error("Invalid JSON file");
