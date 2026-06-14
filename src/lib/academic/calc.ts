@@ -1,4 +1,16 @@
-import type { LetterGradeRange, Semester, Subject, Weights } from "./types";
+import type { LetterGradeRange, PrecisionMode, Semester, Subject, Weights } from "./types";
+
+/** Component scores are entered at 1 decimal place by instructors. */
+const SUBJECT_COMPONENT_PRECISION = 1;
+
+export function roundToPrecision(value: number, precision: number): number {
+  const factor = Math.pow(10, precision);
+  return Math.round(value * factor) / factor;
+}
+
+export function roundGpa(value: number, precisionMode: PrecisionMode): number {
+  return roundToPrecision(value, precisionMode);
+}
 
 export function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
@@ -8,7 +20,7 @@ export function weightTotal(w: Weights) {
   return w.process + w.midterm + w.practice + w.final;
 }
 
-export function subjectScore10(subject: Subject): number | null {
+export function subjectScore10(subject: Subject, precision: PrecisionMode = 2): number | null {
   const { weights, scores } = subject;
 
   const total = weightTotal(weights);
@@ -27,10 +39,15 @@ export function subjectScore10(subject: Subject): number | null {
 
   let sum = 0;
   for (const p of parts) {
-    if (p.weight > 0) sum += (p.score ?? 0) * p.weight;
+    if (p.weight > 0) {
+      const roundedComponent = roundToPrecision(p.score ?? 0, SUBJECT_COMPONENT_PRECISION);
+      sum += roundedComponent * p.weight;
+    }
   }
 
-  return Number((sum / total).toFixed(2));
+  const rawScore = sum / total;
+  const factor = Math.pow(10, precision);
+  return Math.round(rawScore * factor) / factor;
 }
 
 export function hasComponentFail(subject: Subject, enabled: boolean, threshold: number): boolean {
@@ -50,10 +67,11 @@ export function subjectPassed(
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
+  precision: PrecisionMode = 2,
 ): boolean | null {
   if (subject.isExempt) return true;
 
-  const sc = subjectScore10(subject);
+  const sc = subjectScore10(subject, precision);
 
   if (sc === null) return null;
 
@@ -67,8 +85,9 @@ export function effectiveScore10(
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
+  precision: PrecisionMode = 2,
 ): number | null {
-  const sc = subjectScore10(subject);
+  const sc = subjectScore10(subject, precision);
 
   if (sc === null) return null;
 
@@ -79,15 +98,9 @@ export function effectiveScore10(
   return sc;
 }
 
-export function to4(score10: number): number {
-  if (score10 >= 8.5) return 4.0;
-  if (score10 >= 8.0) return 3.5;
-  if (score10 >= 7.0) return 3.0;
-  if (score10 >= 6.5) return 2.5;
-  if (score10 >= 5.5) return 2.0;
-  if (score10 >= 5.0) return 1.5;
-  if (score10 >= 4.0) return 1.0;
-  return 0;
+export function gpa4FromScore10(score10: number, letterGrades: LetterGradeRange[]): number {
+  const matchedRange = letterGrades.find((r) => score10 >= r.min && score10 < r.max);
+  return matchedRange ? matchedRange.gpa4 : 0.0;
 }
 
 export function to100(score10: number) {
@@ -106,6 +119,7 @@ export function semesterGPA10(
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
+  precisionMode: PrecisionMode = 2,
 ): {
   gpa10: number | null;
   credits: number;
@@ -119,8 +133,8 @@ export function semesterGPA10(
   let any = false;
 
   for (const sub of s.subjects) {
-    const sc = effectiveScore10(sub, subjectPass, compEnabled, compThreshold);
-    const passed = subjectPassed(sub, subjectPass, compEnabled, compThreshold);
+    const sc = effectiveScore10(sub, subjectPass, compEnabled, compThreshold, precisionMode);
+    const passed = subjectPassed(sub, subjectPass, compEnabled, compThreshold, precisionMode);
 
     if ((sc === null && !sub.isExempt) || sub.credits <= 0) continue;
 
@@ -140,24 +154,73 @@ export function semesterGPA10(
     }
   }
 
-  const res = {
-    gpa10: any && passedCredits > 0 ? Number((weighted / passedCredits).toFixed(2)) : null,
+  return {
+    gpa10: any && passedCredits > 0 ? roundGpa(weighted / passedCredits, precisionMode) : null,
     credits: totalCredits + exemptCredits,
     passedCredits,
-    exemptCredits
+    exemptCredits,
   };
-
-  return res;
 }
 
-export function cumulativeGPA10(
-  semesters: Semester[],
+export function semesterGPA4(
+  s: Semester,
+  letterGrades: LetterGradeRange[],
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
+  precisionMode: PrecisionMode = 2,
 ): {
-  gpa10: number | null;
-  credits: number
+  gpa4: number | null;
+  credits: number;
+  passedCredits: number;
+  exemptCredits: number;
+} {
+  let totalCredits = 0;
+  let passedCredits = 0;
+  let exemptCredits = 0;
+  let weighted = 0;
+  let any = false;
+
+  for (const sub of s.subjects) {
+    const sc = effectiveScore10(sub, subjectPass, compEnabled, compThreshold, precisionMode);
+    const passed = subjectPassed(sub, subjectPass, compEnabled, compThreshold, precisionMode);
+
+    if ((sc === null && !sub.isExempt) || sub.credits <= 0) continue;
+
+    if (sc === null && sub.isExempt) {
+      exemptCredits += sub.credits;
+      continue;
+    }
+
+    if (sc !== null) {
+      any = true;
+      weighted += gpa4FromScore10(sc, letterGrades) * sub.credits;
+      totalCredits += sub.credits;
+    }
+
+    if (passed) {
+      passedCredits += sub.credits;
+    }
+  }
+
+  return {
+    gpa4: any && passedCredits > 0 ? roundGpa(weighted / passedCredits, precisionMode) : null,
+    credits: totalCredits + exemptCredits,
+    passedCredits,
+    exemptCredits,
+  };
+}
+
+export function cumulativeGPA4(
+  semesters: Semester[],
+  letterGrades: LetterGradeRange[],
+  subjectPass: number,
+  compEnabled: boolean,
+  compThreshold: number,
+  precisionMode: PrecisionMode = 2,
+): {
+  gpa4: number | null;
+  credits: number;
 } {
   let totalCredits = 0;
   let passedCredits = 0;
@@ -165,8 +228,44 @@ export function cumulativeGPA10(
 
   for (const s of semesters) {
     for (const sub of s.subjects) {
-      const sc = effectiveScore10(sub, subjectPass, compEnabled, compThreshold);
-      const passed = subjectPassed(sub, subjectPass, compEnabled, compThreshold);
+      const sc = effectiveScore10(sub, subjectPass, compEnabled, compThreshold, precisionMode);
+      const passed = subjectPassed(sub, subjectPass, compEnabled, compThreshold, precisionMode);
+
+      if (sc === null || sub.credits <= 0) continue;
+
+      weighted += gpa4FromScore10(sc, letterGrades) * sub.credits;
+      totalCredits += sub.credits;
+
+      if (passed) {
+        passedCredits += sub.credits;
+      }
+    }
+  }
+
+  return {
+    gpa4: passedCredits > 0 ? roundGpa(weighted / passedCredits, precisionMode) : null,
+    credits: totalCredits,
+  };
+}
+
+export function cumulativeGPA10(
+  semesters: Semester[],
+  subjectPass: number,
+  compEnabled: boolean,
+  compThreshold: number,
+  precisionMode: PrecisionMode = 2,
+): {
+  gpa10: number | null;
+  credits: number;
+} {
+  let totalCredits = 0;
+  let passedCredits = 0;
+  let weighted = 0;
+
+  for (const s of semesters) {
+    for (const sub of s.subjects) {
+      const sc = effectiveScore10(sub, subjectPass, compEnabled, compThreshold, precisionMode);
+      const passed = subjectPassed(sub, subjectPass, compEnabled, compThreshold, precisionMode);
 
       if (sc === null || sub.credits <= 0) continue;
 
@@ -179,12 +278,10 @@ export function cumulativeGPA10(
     }
   }
 
-  const res = {
-    gpa10: passedCredits > 0 ? Number((weighted / passedCredits).toFixed(2)) : null,
-    credits: totalCredits
+  return {
+    gpa10: passedCredits > 0 ? roundGpa(weighted / passedCredits, precisionMode) : null,
+    credits: totalCredits,
   };
-
-  return res;
 }
 
 export function passedCredits(
@@ -192,11 +289,14 @@ export function passedCredits(
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
+  precision: PrecisionMode = 2,
 ): number {
   let credits = 0;
   for (const s of semesters) {
     for (const sub of s.subjects) {
-      if (subjectPassed(sub, subjectPass, compEnabled, compThreshold) === true) credits += sub.credits;
+      if (subjectPassed(sub, subjectPass, compEnabled, compThreshold, precision) === true) {
+        credits += sub.credits;
+      }
     }
   }
   return credits;

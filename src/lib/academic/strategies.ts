@@ -14,7 +14,7 @@ function pickRange(score10: number, ranges: LetterGradeRange[]) {
 export const SCALE_10: ScaleStrategy = {
   id: "scale10",
   label: "Scale 10",
-  format: (s) => s.toFixed(2),
+  format: (s) => s.toFixed(1),
 };
 
 export const SCALE_4: ScaleStrategy = {

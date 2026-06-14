@@ -5,6 +5,7 @@ import {
   cumulativeGPA10,
   effectiveScore10,
   passedCredits,
+  roundGpa,
   subjectScore10,
   toLetter,
 } from "@/lib/academic/calc";
@@ -22,18 +23,32 @@ export function RoadmapPage() {
   const { t, lang } = useI18n();
 
   const cumulative = useMemo(
-    () => cumulativeGPA10(state.semesters, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold),
-    [state.semesters, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold],
+    () =>
+      cumulativeGPA10(
+        state.semesters,
+        state.subjectPassThreshold,
+        state.componentPassEnabled,
+        state.componentPassThreshold,
+        state.precisionMode,
+      ),
+    [state.semesters, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold, state.precisionMode],
   );
   const passed = useMemo(
-    () => passedCredits(state.semesters, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold),
-    [state.semesters, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold],
+    () =>
+      passedCredits(
+        state.semesters,
+        state.subjectPassThreshold,
+        state.componentPassEnabled,
+        state.componentPassThreshold,
+        state.precisionMode,
+      ),
+    [state.semesters, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold, state.precisionMode],
   );
   const remaining = Math.max(0, state.totalCourseCredits - passed);
 
   const requiredAvg = useMemo(() => {
     const totalNeeded = state.targetGPA * state.totalCourseCredits;
-    const have = (cumulative.gpa ?? 0) * cumulative.credits;
+    const have = (cumulative.gpa10 ?? 0) * cumulative.credits;
     if (remaining <= 0) return null;
     return (totalNeeded - have) / remaining;
   }, [cumulative, state.targetGPA, state.totalCourseCredits, remaining]);
@@ -43,7 +58,13 @@ export function RoadmapPage() {
     for (const r of state.letterGrades) buckets[r.letter] = { letter: r.letter, subjects: 0, credits: 0 };
     for (const s of state.semesters) {
       for (const sub of s.subjects) {
-        const sc = effectiveScore10(sub, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold);
+        const sc = effectiveScore10(
+          sub,
+          state.subjectPassThreshold,
+          state.componentPassEnabled,
+          state.componentPassThreshold,
+          state.precisionMode,
+        );
         if (sc === null) continue;
         const l = toLetter(sc, state.letterGrades);
         if (!buckets[l]) buckets[l] = { letter: l, subjects: 0, credits: 0 };
@@ -52,14 +73,20 @@ export function RoadmapPage() {
       }
     }
     return Object.values(buckets);
-  }, [state.semesters, state.letterGrades, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold]);
+  }, [state.semesters, state.letterGrades, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold, state.precisionMode]);
 
   const perfStats = useMemo(() => {
     let perfect = 0, above9 = 0, above8 = 0, failed = 0, totalSubjects = 0;
     for (const s of state.semesters)
       for (const sub of s.subjects) {
-        const raw = subjectScore10(sub);
-        const eff = effectiveScore10(sub, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold);
+        const raw = subjectScore10(sub, state.precisionMode);
+        const eff = effectiveScore10(
+          sub,
+          state.subjectPassThreshold,
+          state.componentPassEnabled,
+          state.componentPassThreshold,
+          state.precisionMode,
+        );
         if (raw === null) continue;
         totalSubjects++;
         if (raw >= 10) perfect++;
@@ -68,9 +95,12 @@ export function RoadmapPage() {
         if (eff === null || eff < state.subjectPassThreshold) failed++;
       }
     return { perfect, above9, above8, failed, totalSubjects };
-  }, [state.semesters, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold]);
+  }, [state.semesters, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold, state.precisionMode]);
 
-  const advisory = classify(cumulative.gpa);
+  const precisionMode = state.precisionMode;
+  const formatGpa = (value: number | null) => (value === null ? "—" : value.toFixed(precisionMode));
+
+  const advisory = classify(cumulative.gpa10);
 
   return (
     <>
@@ -99,10 +129,10 @@ export function RoadmapPage() {
           </div>
 
           <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Metric icon={GraduationCap} label={t("roadmap.currentGpa")} value={cumulative.gpa?.toFixed(2) ?? "—"} />
+            <Metric icon={GraduationCap} label={t("roadmap.currentGpa")} value={formatGpa(cumulative.gpa10)} />
             <Metric icon={BookCheck} label={t("roadmap.passedCredits")} value={String(passed)} />
             <Metric icon={BookMinus} label={t("roadmap.remaining")} value={String(remaining)} />
-            <Metric icon={Target} label={t("common.target")} value={state.targetGPA.toFixed(2)} />
+            <Metric icon={Target} label={t("common.target")} value={roundGpa(state.targetGPA, precisionMode).toFixed(precisionMode)} />
           </div>
 
           <div className="mt-5 rounded-lg border border-accent/30 bg-accent/5 p-4">
@@ -113,14 +143,19 @@ export function RoadmapPage() {
               <div className="min-w-0">
                 <div className="text-sm font-semibold">{t("roadmap.required")}</div>
                 {requiredAvg === null ? (
-                  <p className="text-sm text-muted-foreground">{cumulative.gpa !== null && cumulative.gpa >= state.targetGPA ? t("roadmap.secured") : t("roadmap.unreachable")}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {cumulative.gpa10 !== null &&
+                    roundGpa(cumulative.gpa10, precisionMode) >= roundGpa(state.targetGPA, precisionMode)
+                      ? t("roadmap.secured")
+                      : t("roadmap.unreachable")}
+                  </p>
                 ) : requiredAvg > 10 ? (
-                  <p className="text-sm text-destructive">{t("roadmap.unreachable")} (need {requiredAvg.toFixed(2)}/10)</p>
+                  <p className="text-sm text-destructive">{t("roadmap.unreachable")} (need {roundGpa(requiredAvg, precisionMode).toFixed(precisionMode)}/10)</p>
                 ) : requiredAvg < 0 ? (
                   <p className="text-sm text-success">{t("roadmap.secured")}</p>
                 ) : (
                   <p className="text-sm">
-                    <span className="font-bold text-accent">{requiredAvg.toFixed(2)}/10</span> · {remaining} {t("common.credits")} → {state.targetGPA.toFixed(2)}
+                    <span className="font-bold text-accent">{roundGpa(requiredAvg, precisionMode).toFixed(precisionMode)}/10</span> · {remaining} {t("common.credits")} → {roundGpa(state.targetGPA, precisionMode).toFixed(precisionMode)}
                   </p>
                 )}
               </div>
@@ -131,7 +166,7 @@ export function RoadmapPage() {
         <Card className={cn("p-5", toneBg(advisory.tone))}>
           <h3 className="text-sm font-semibold uppercase tracking-wide opacity-80">Advisory</h3>
           <div className="mt-3 text-2xl font-bold">{advisory.label[lang]}</div>
-          <div className="mt-1 text-sm opacity-80">{t("common.gpa")} {cumulative.gpa?.toFixed(2) ?? "—"} / 10</div>
+          <div className="mt-1 text-sm opacity-80">{t("common.gpa")} {formatGpa(cumulative.gpa10)} / 10</div>
           <p className="mt-4 text-sm">{advisory.advice[lang]}</p>
         </Card>
       </div>

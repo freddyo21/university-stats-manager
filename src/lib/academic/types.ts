@@ -40,6 +40,10 @@ export type LetterGradeRange = {
 
 export type PresetId = "UIT" | "HUST" | "Custom";
 
+export type GradingScale = "10" | "4" | "100";
+
+export type PrecisionMode = 1 | 2;
+
 export type AppState = {
   presetId: PresetId;
   semesters: Semester[];
@@ -50,6 +54,8 @@ export type AppState = {
   targetGPA: number;
   totalCourseCredits: number;
   scholarshipGPA: number;
+  activeScale: GradingScale | null;
+  precisionMode: PrecisionMode;
   language: "en" | "vi";
 };
 
@@ -73,7 +79,9 @@ export const DEFAULT_STATE: AppState = {
   componentPassEnabled: false,
   componentPassThreshold: 3.0,
   targetGPA: 8.0,
-  totalCourseCredits: 140,
+  totalCourseCredits: 120,
   scholarshipGPA: 8.0,
+  activeScale: null,
+  precisionMode: 2,
   language: "en",
 };

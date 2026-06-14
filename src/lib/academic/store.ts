@@ -12,6 +12,19 @@ function load(): AppState {
     const parsed = JSON.parse(raw);
     // shallow merge; nested defaults handled by callers
     const next: AppState = { ...DEFAULT_STATE, ...parsed };
+
+    if (next.precisionMode !== 1 && next.precisionMode !== 2) {
+      next.precisionMode = DEFAULT_STATE.precisionMode;
+    }
+    
+    const legacyScale = (parsed as { gradingScale?: string }).gradingScale;
+    
+    if (next.activeScale === undefined || next.activeScale === null) {
+      next.activeScale =
+        legacyScale === "10" || legacyScale === "4" || legacyScale === "100"
+          ? legacyScale
+          : null;
+    }
     // migrate: ensure subject.code & semester.targetGPA exist
     next.semesters = (next.semesters ?? []).map((sem: Semester) => ({
       id: sem.id,

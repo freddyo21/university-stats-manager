@@ -1,14 +1,14 @@
 import { useMemo, useState } from "react";
 import { Plus, Trash2, ChevronDown, ChevronRight, Settings2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { useAcademicStore } from "@/lib/academic/store";
-import type { AppState, LetterGradeRange, Semester, Subject } from "@/lib/academic/types";
+import type { AppState, LetterGradeRange, PrecisionMode, Semester, Subject } from "@/lib/academic/types";
 import {
     hasComponentFail,
+    gpa4FromScore10,
     semesterGPA10,
     subjectPassed,
     subjectScore10,
     to100,
-    to4,
     toLetter,
     weightTotal,
 } from "@/lib/academic/calc";
@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/academic/i18n";
 import { PageHeader } from "@/components/Header";
@@ -157,6 +158,27 @@ function ConfigPanel({
                         </div>
                     </label>
                 </div>
+                <div className="rounded-md border border-border p-3 sm:col-span-2">
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+                        Độ chính xác GPA
+                    </Label>
+                    <RadioGroup
+                        value={String(state.precisionMode)}
+                        onValueChange={(v) =>
+                            update((s) => ({ ...s, precisionMode: Number(v) as PrecisionMode }))
+                        }
+                        className="mt-2 flex flex-col gap-2 sm:flex-row sm:gap-6"
+                    >
+                        <label className="flex cursor-pointer items-center gap-2 text-sm">
+                            <RadioGroupItem value="1" />
+                            1 chữ số thập phân
+                        </label>
+                        <label className="flex cursor-pointer items-center gap-2 text-sm">
+                            <RadioGroupItem value="2" />
+                            2 chữ số thập phân
+                        </label>
+                    </RadioGroup>
+                </div>
             </div>
         </Card>
     );
@@ -167,8 +189,15 @@ function SemesterCard({ semester }: { semester: Semester; index: number }) {
     const { t } = useI18n();
     const [open, setOpen] = useState(true);
     const { gpa10, credits, passedCredits, exemptCredits } = useMemo(
-        () => semesterGPA10(semester, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold),
-        [semester, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold],
+        () =>
+            semesterGPA10(
+                semester,
+                state.subjectPassThreshold,
+                state.componentPassEnabled,
+                state.componentPassThreshold,
+                state.precisionMode,
+            ),
+        [semester, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold, state.precisionMode],
     );
 
     const setSemester = (patch: Partial<Semester>) =>
@@ -208,7 +237,7 @@ function SemesterCard({ semester }: { semester: Semester; index: number }) {
                     />
                     <div className="mt-0.5 text-xs text-muted-foreground">
                         {semester.subjects.length} {t("common.subjects")} · {credits} {t("common.credits")} · {passedCredits} {t("common.credits.passed")} · {credits - passedCredits - exemptCredits} {t("common.credits.failed")} · {exemptCredits} {t("common.credits.exempt")} · {t("common.gpa")}{" "}
-                        <span className="font-semibold text-foreground">{gpa10?.toFixed(2) ?? "—"}</span>
+                        <span className="font-semibold text-foreground">{gpa10?.toFixed(state.precisionMode) ?? "—"}</span>
                     </div>
                 </div>
                 <Button size="icon" variant="ghost" onClick={remove} aria-label="Delete semester">
@@ -223,6 +252,7 @@ function SemesterCard({ semester }: { semester: Semester; index: number }) {
                             key={sub.id}
                             subject={sub}
                             letterGrades={state.letterGrades}
+                            precisionMode={state.precisionMode}
                             subjectPass={state.subjectPassThreshold}
                             componentPassEnabled={state.componentPassEnabled}
                             componentPass={state.componentPassThreshold}
@@ -242,6 +272,7 @@ function SemesterCard({ semester }: { semester: Semester; index: number }) {
 function SubjectRow({
     subject,
     letterGrades,
+    precisionMode,
     subjectPass,
     componentPassEnabled,
     componentPass,
@@ -250,6 +281,7 @@ function SubjectRow({
 }: {
     subject: Subject;
     letterGrades: LetterGradeRange[];
+    precisionMode: PrecisionMode;
     subjectPass: number;
     componentPassEnabled: boolean;
     componentPass: number;
@@ -257,24 +289,21 @@ function SubjectRow({
     onDelete: () => void;
 }) {
     const { t } = useI18n();
-    const score = subjectScore10(subject);
+    const score = subjectScore10(subject, precisionMode);
     const wTotal = weightTotal(subject.weights);
     const wValid = wTotal === 100;
 
     const compFail = hasComponentFail(subject, componentPassEnabled, componentPass);
-    const passed = subjectPassed(subject, subjectPass, componentPassEnabled, componentPass);
+    const passed = subjectPassed(subject, subjectPass, componentPassEnabled, componentPass, precisionMode);
     const letterDisplay = score === null ? "—" : compFail ? "F" : toLetter(score, letterGrades);
 
-    const scale10Display = score === null ? "—" : compFail ? "0.00 (F)" : score.toFixed(2);
+    const scale10Display = score === null ? "—" : compFail ? "0.0 (F)" : score.toFixed(precisionMode);
     const scale4Display =
         score === null
             ? "—"
             : compFail
                 ? "0.0"
-                : (
-                    letterGrades.find((r) => score >= r.min && (score < r.max || (r.max === 10 && score === 10)))?.gpa4 ??
-                    to4(score)
-                ).toFixed(1);
+                : gpa4FromScore10(score, letterGrades).toFixed(1);
                 
     const scale100Display = score === null ? "—" : compFail ? "0" : String(to100(score));
 
