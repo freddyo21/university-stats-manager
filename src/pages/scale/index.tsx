@@ -88,16 +88,42 @@ export function ScalePage() {
                                 {state.letterGrades.map((r, i) => (
                                     <tr key={i} className="border-t border-border">
                                         <td className="px-3 py-2">
-                                            <Input value={r.letter} onChange={(e) => setRange(i, { letter: e.target.value.slice(0, 3) })} className="h-8 w-16" />
+                                            <Input value={r.letter}
+                                                onChange={(e) => setRange(i, { letter: e.target.value.slice(0, 3) })}
+                                                className="h-8 w-16" />
                                         </td>
                                         <td className="px-3 py-2">
-                                            <Input type="number" min={0} max={10} step={0.1} value={r.min} onChange={(e) => setRange(i, { min: clampNum(e.target.value, 0, 10) })} className="h-8 w-20" />
+                                            <Input type="text" inputMode="decimal"
+                                                min={0}
+                                                max={10}
+                                                step={0.1}
+                                                value={r.min}
+                                                onChange={(e) => setRange(i, { min: clampNum(e.target.value, 0, 10) })}
+                                                className="h-8 w-20"
+                                                disabled={state.presetId === "UIT" || state.presetId === "HUST"}
+                                            />
                                         </td>
                                         <td className="px-3 py-2">
-                                            <Input type="number" min={0} max={10.01} step={0.1} value={r.max} onChange={(e) => setRange(i, { max: clampNum(e.target.value, 0, 10.01) })} className="h-8 w-20" />
+                                            <Input type="text" inputMode="decimal"
+                                                min={0}
+                                                max={10.01}
+                                                step={0.1}
+                                                value={r.max}
+                                                onChange={(e) => setRange(i, { max: clampNum(e.target.value, 0, 10.01) })}
+                                                className="h-8 w-20"
+                                                disabled={state.presetId === "UIT" || state.presetId === "HUST"}
+                                            />
                                         </td>
                                         <td className="px-3 py-2">
-                                            <Input type="number" min={0} max={4} step={0.1} value={r.gpa4} onChange={(e) => setRange(i, { gpa4: clampNum(e.target.value, 0, 4) })} className="h-8 w-20" />
+                                            <Input type="text" inputMode="decimal"
+                                                min={0}
+                                                max={4}
+                                                step={0.1}
+                                                value={r.gpa4}
+                                                onChange={(e) => setRange(i, { gpa4: clampNum(e.target.value, 0, 4) })}
+                                                className="h-8 w-20"
+                                                disabled={state.presetId === "UIT" || state.presetId === "HUST"}
+                                            />
                                         </td>
                                         <td className="px-3 py-2 text-right">
                                             <Button size="icon" variant="ghost" onClick={() => removeRange(i)} aria-label="Remove">
