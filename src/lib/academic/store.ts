@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { type AppState, DEFAULT_STATE } from "./types";
+import { type AppState, DEFAULT_STATE, type Semester, type Subject } from "./types";
 
 const KEY = "academic-hub-v2";
 const LEGACY_KEY = "academic-hub-v1";
@@ -13,17 +13,18 @@ function load(): AppState {
     // shallow merge; nested defaults handled by callers
     const next: AppState = { ...DEFAULT_STATE, ...parsed };
     // migrate: ensure subject.code & semester.targetGPA exist
-    next.semesters = (next.semesters ?? []).map((sem: any) => ({
+    next.semesters = (next.semesters ?? []).map((sem: Semester) => ({
       id: sem.id,
       name: sem.name,
       targetGPA: typeof sem.targetGPA === "number" ? sem.targetGPA : DEFAULT_STATE.targetGPA,
-      subjects: (sem.subjects ?? []).map((sub: any) => ({
+      subjects: (sem.subjects ?? []).map((sub: Subject) => ({
         id: sub.id,
         code: sub.code ?? "",
         name: sub.name ?? "",
         credits: sub.credits ?? 0,
         weights: sub.weights ?? { process: 10, midterm: 20, practice: 20, final: 50 },
         scores: sub.scores ?? { process: null, midterm: null, practice: null, final: null },
+        isExempt: sub.isExempt ?? false,
       })),
     }));
     return next;
@@ -40,7 +41,6 @@ function emit() {
 }
 
 export function useAcademicStore() {
-  // Initial render uses DEFAULT_STATE on both server and client to avoid hydration mismatch.
   const [, setTick] = useState(0);
   const [state, setState] = useState<AppState>(memory);
 

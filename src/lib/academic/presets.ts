@@ -9,7 +9,7 @@ type Preset = {
 };
 
 const UIT_LETTERS: LetterGradeRange[] = [
-  { letter: "A+", min: 9.0, max: 10.01, gpa4: 4.0 },
+  { letter: "A+", min: 9.0, max: 10.0, gpa4: 4.0 },
   { letter: "A", min: 8.0, max: 9.0, gpa4: 3.5 },
   { letter: "B+", min: 7.0, max: 8.0, gpa4: 3.0 },
   { letter: "B", min: 6.0, max: 7.0, gpa4: 2.5 },
@@ -20,7 +20,7 @@ const UIT_LETTERS: LetterGradeRange[] = [
 ];
 
 const HUST_LETTERS: LetterGradeRange[] = [
-  { letter: "A+", min: 9.5, max: 10.01, gpa4: 4.0 },
+  { letter: "A+", min: 9.5, max: 10.0, gpa4: 4.0 },
   { letter: "A", min: 8.5, max: 9.5, gpa4: 4.0 },
   { letter: "B+", min: 8.0, max: 8.5, gpa4: 3.5 },
   { letter: "B", min: 7.0, max: 8.0, gpa4: 3.0 },

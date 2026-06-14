@@ -19,6 +19,7 @@ export type Subject = {
   code: string;
   name: string;
   credits: number;
+  isExempt: boolean;
   weights: Weights;
   scores: Component;
 };
@@ -53,7 +54,7 @@ export type AppState = {
 };
 
 export const DEFAULT_LETTER_GRADES: LetterGradeRange[] = [
-  { letter: "A+", min: 9.0, max: 10.01, gpa4: 4.0 },
+  { letter: "A+", min: 9.0, max: 10.0, gpa4: 4.0 },
   { letter: "A", min: 8.5, max: 9.0, gpa4: 4.0 },
   { letter: "B+", min: 8.0, max: 8.5, gpa4: 3.5 },
   { letter: "B", min: 7.0, max: 8.0, gpa4: 3.0 },

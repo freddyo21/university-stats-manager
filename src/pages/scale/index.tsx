@@ -106,10 +106,10 @@ export function ScalePage() {
                                         <td className="px-3 py-2">
                                             <Input type="text" inputMode="decimal"
                                                 min={0}
-                                                max={10.01}
+                                                max={10.0}
                                                 step={0.1}
                                                 value={r.max}
-                                                onChange={(e) => setRange(i, { max: clampNum(e.target.value, 0, 10.01) })}
+                                                onChange={(e) => setRange(i, { max: clampNum(e.target.value, 0, 10.0) })}
                                                 className="h-8 w-20"
                                                 disabled={state.presetId === "UIT" || state.presetId === "HUST"}
                                             />

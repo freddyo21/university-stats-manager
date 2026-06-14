@@ -24,11 +24,12 @@ export function GoalsPage() {
         () =>
             selected
                 ? semesterGPA10(selected, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold)
-                : { gpa: null, credits: 0 },
+                : { gpa10: null, credits: 0 },
         [selected, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold],
     );
     const cumulativeUpTo = useMemo(() => {
-        if (selectedIndex < 0) return { gpa: null, credits: 0 };
+        if (selectedIndex < 0) return { gpa10: null, credits: 0 };
+        
         return cumulativeGPA10(
             state.semesters.slice(0, selectedIndex + 1),
             state.subjectPassThreshold,
@@ -39,8 +40,8 @@ export function GoalsPage() {
 
     const active = selected ? selected.subjects.filter((s) => subjectPassed(s, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold) !== null).length : 0;
 
-    const goalAchieved = selected && semData.gpa !== null && semData.gpa >= selected.targetGPA;
-    const scholarship = semData.gpa !== null && semData.gpa >= state.scholarshipGPA;
+    const goalAchieved = selected && semData.gpa10 !== null && semData.gpa10 >= selected.targetGPA;
+    const scholarship = semData.gpa10 !== null && semData.gpa10 >= state.scholarshipGPA;
 
     if (state.semesters.length === 0) {
         return (
@@ -66,7 +67,7 @@ export function GoalsPage() {
             <PageHeader title={t("goals.title")} description={t("goals.desc")} />
 
             <Card className="mb-6 p-4">
-                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("goals.pick")}</Label>
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mr-4">{t("goals.pick")}</Label>
                 <select
                     value={selectedId}
                     onChange={(e) => setSelectedId(e.target.value)}
@@ -94,8 +95,8 @@ export function GoalsPage() {
                                 className="mt-2 h-9 text-lg font-semibold"
                             />
                         </Card>
-                        <SummaryCard icon={GraduationCap} label={t("goals.actual")} value={semData.gpa?.toFixed(2) ?? "—"} />
-                        <SummaryCard icon={TrendingUp} label={t("goals.cumulativeUpTo")} value={cumulativeUpTo.gpa?.toFixed(2) ?? "—"} hint={`${cumulativeUpTo.credits} cr.`} />
+                        <SummaryCard icon={GraduationCap} label={t("goals.actual")} value={semData.gpa10?.toFixed(2) ?? "—"} />
+                        <SummaryCard icon={TrendingUp} label={t("goals.cumulativeUpTo")} value={cumulativeUpTo.gpa10?.toFixed(2) ?? "—"} hint={`${cumulativeUpTo.credits} cr.`} />
                     </div>
 
                     <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -103,7 +104,7 @@ export function GoalsPage() {
                             <div className="flex items-center gap-2 text-xs uppercase tracking-wide opacity-80"><Target className="h-4 w-4" /> {t("goals.achieved")}</div>
                             <div className="mt-2 text-3xl font-bold">{goalAchieved ? t("goals.yes") : t("goals.no")}</div>
                             <p className="mt-1 text-sm opacity-90">
-                                {semData.gpa?.toFixed(2) ?? "—"} / {selected.targetGPA.toFixed(2)}
+                                {semData.gpa10?.toFixed(2) ?? "—"} / {selected.targetGPA.toFixed(2)}
                             </p>
                         </Card>
                         <Card className={`p-5 ${scholarship ? "bg-success text-success-foreground" : "bg-muted"}`}>
