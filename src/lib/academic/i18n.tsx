@@ -100,7 +100,7 @@ export const D: Dict = {
   "roadmap.perfect": { en: "Perfect score (10/10)", vi: "Điểm tuyệt đối (10/10)" },
   "roadmap.over9": { en: "Subjects ≥ 9.0", vi: "Môn ≥ 9.0" },
   "roadmap.over8": { en: "Subjects ≥ 8.0", vi: "Môn ≥ 8.0" },
-  "roadmap.failed": { en: "Failed subjects (< 5.0 or Liệt)", vi: "Môn trượt (< 5.0 hoặc Liệt)" },
+  "roadmap.failed": { en: "Failed subjects (< 5.0 or Under failing threshold)", vi: "Môn trượt (< 5.0 hoặc bị điểm liệt)" },
   "data.title": { en: "Local Data & Privacy", vi: "Dữ liệu cục bộ" },
   "data.desc": { en: "Everything lives in your browser. Export, import, or wipe.", vi: "Mọi dữ liệu lưu trong trình duyệt. Xuất, nhập hoặc xóa." },
   "data.export": { en: "Export JSON", vi: "Xuất JSON" },

@@ -35,7 +35,7 @@ export const PRESETS: Record<PresetId, Preset> = {
   UIT: {
     id: "UIT",
     label: "UIT (HCMC)",
-    description: "Scale 10, passing 5.0. Component threshold off by default.",
+    description: "Scale 10, passing 5.0. Failing threshold off by default.",
     apply: (s) => ({
       ...s,
       presetId: "UIT",
@@ -49,7 +49,7 @@ export const PRESETS: Record<PresetId, Preset> = {
   HUST: {
     id: "HUST",
     label: "HUST (Hanoi)",
-    description: "Scale 10, passing 4.0. Component-failed gate (Liệt) at 3.0.",
+    description: "Scale 10, passing 4.0. Failing threshold at 3.0.",
     apply: (s) => ({
       ...s,
       presetId: "HUST",

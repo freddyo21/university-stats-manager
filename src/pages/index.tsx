@@ -52,6 +52,121 @@ export function GradeEntryPage() {
     const addSemester = () =>
         update((s) => ({ ...s, semesters: [...s.semesters, newSemester(s.semesters.length, s.targetGPA)] }));
 
+
+    useEffect(() => {
+        // (async () => {
+        //     try {
+        //         // 1. Gọi lệnh Fetch lấy vỏ bọc kết nối HTTP
+        //         const response = await axios.get("/api/captcha", {
+        //             headers: {
+        //                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        //                 "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        //                 "Accept-Language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7"
+        //             },
+
+        //             validateStatus: (status) => {
+        //                 return status === 200 || status === 403;
+        //             },
+        //         });
+
+        //         console.log("Response:", response.data);
+
+        //         const {
+        //             formBuildId,
+        //             formId,
+        //             captchaSid,
+        //             captchaToken,
+        //             captchaQuestion,
+        //             captchaImageSrc,
+        //             sessionCookie
+        //         } = response.data;
+
+        //         console.log("Captcha Question:", captchaQuestion);
+
+        //         window.open(captchaImageSrc, '_blank');
+
+        //         const captchaAnswer = prompt("Please enter the Captcha answer from the opened image:");
+
+        //         const login = await axios.post("/api/sync", {
+        //             username: "24520084",
+        //             password: "duyanh5069",
+        //             formBuildId,
+        //             formId,
+        //             captchaSid,
+        //             captchaToken,
+        //             captchaAnswer,
+        //             sessionCookie
+        //         });
+
+        //         console.log("Login response:", login.data);
+
+        //         if (!login.config) {
+        //             throw new Error("Không thể kết nối đến cổng API lấy Captcha");
+        //         }
+
+        //         // const response = await axios.get("https://daa.uit.edu.vn/sinhvien/kqhoctap", {
+        //         //     headers: {
+        //         //         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        //         //         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        //         //         "Accept-Language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7"
+        //         //     },
+
+        //         //     validateStatus: (status) => {
+        //         //         return status === 200 || status === 403;
+        //         //     },
+        //         // });
+
+        //         // console.log("Response:", response.data);
+        //     } catch (error: any) {
+        //         console.error("Lỗi xử lý luồng lấy phiên đăng nhập:", error);
+        //     }
+        // })()
+
+        // const EXTENSION_ID = "kbfgedmhlemfpkinnfjnchkpnjmmaejf";
+
+        // async function fetchDaaViaExtension() {
+        //     return new Promise((resolve, reject) => {
+        //         // Ép kiểu window thành any để truy cập các thuộc tính tùy biến
+        //         const globalWindow = window as any;
+
+        //         if (!globalWindow.chrome || !globalWindow.chrome.runtime || !globalWindow.chrome.runtime.sendMessage) {
+        //             reject("Vui lòng cài đặt Chrome Extension hỗ trợ để tiếp tục!");
+        //             return;
+        //         }
+
+        //         // Gọi lệnh thông qua biến đã ép kiểu
+        //         globalWindow.chrome.runtime.sendMessage(
+        //             EXTENSION_ID,
+        //             { action: "fetch_daa" },
+        //             (response: any) => {
+        //                 if (globalWindow.chrome.runtime.lastError) {
+        //                     reject(globalWindow.chrome.runtime.lastError.message);
+        //                 } else if (response && response.success) {
+        //                     resolve(response.data);
+        //                 } else {
+        //                     reject(response?.error || "Lỗi không xác định từ Extension");
+        //                 }
+        //             }
+        //         );
+        //     });
+        // }
+
+        // // Cách sử dụng trong luồng của bạn:
+        // (async () => {
+        //     try {
+        //         console.log("Đang gọi qua Extension để bypass CORS...");
+        //         const htmlData = await fetchDaaViaExtension();
+
+        //         console.log("Đã lấy được HTML thô từ trường:", htmlData);
+        //         // Giờ bạn có thể dùng Regex/Cheerio để bóc tách CaptchaSid, FormBuildId từ biến htmlData này
+        //         // Rồi hiển thị ảnh Captcha lên cho người dùng nhập bình thường!
+
+        //     } catch (err) {
+        //         console.error("Lỗi:", err);
+        //     }
+        // })();
+    }, []);
+
     return (
         <>
             <PageHeader
@@ -237,7 +352,7 @@ function SemesterCard({ semester }: { semester: Semester; index: number }) {
                     />
                     <div className="mt-0.5 text-xs text-muted-foreground">
                         {semester.subjects.length} {t("common.subjects")} · {credits} {t("common.credits")} · {passedCredits} {t("common.credits.passed")} · {credits - passedCredits - exemptCredits} {t("common.credits.failed")} · {exemptCredits} {t("common.credits.exempt")} · {t("common.gpa")}{" "}
-                        <span className="font-semibold text-foreground">{gpa10?.toFixed(state.precisionMode) ?? "—"}</span>
+                        <span className="font-semibold text-foreground">{gpa10?.toFixed(2) ?? "—"}</span>
                     </div>
                 </div>
                 <Button size="icon" variant="ghost" onClick={remove} aria-label="Delete semester">
@@ -304,7 +419,7 @@ function SubjectRow({
             : compFail
                 ? "0.0"
                 : gpa4FromScore10(score, letterGrades).toFixed(1);
-                
+
     const scale100Display = score === null ? "—" : compFail ? "0" : String(to100(score));
 
     const setScore = (k: keyof Subject["scores"], v: string) => {
