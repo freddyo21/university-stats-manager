@@ -303,6 +303,8 @@ function SemesterCard({ semester }: { semester: Semester; index: number }) {
     const { state, update } = useAcademicStore();
     const { t } = useI18n();
     const [open, setOpen] = useState(true);
+    const [openSignal, setOpenSignal] = useState<{ open: boolean; tick: number } | null>(null);
+    const [semExpanded, setSemExpanded] = useState(true);
     const { gpa10, credits, passedCredits, exemptCredits } = useMemo(
         () =>
             semesterGPA10(
@@ -334,9 +336,14 @@ function SemesterCard({ semester }: { semester: Semester; index: number }) {
     const removeSubject = (id: string) =>
         setSemester({ subjects: semester.subjects.filter((s) => s.id !== id) });
 
+    const broadcastOpen = (val: boolean) => {
+        setSemExpanded(val);
+        setOpenSignal((s) => ({ open: val, tick: (s?.tick ?? 0) + 1 }));
+    };
+
     return (
         <Card className="overflow-hidden p-0">
-            <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border bg-muted/30 p-4">
+            <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3 border-b border-border bg-muted/30 p-4">
                 <button
                     onClick={() => setOpen(!open)}
                     className="grid h-8 w-8 place-items-center rounded-md hover:bg-muted"
@@ -355,6 +362,9 @@ function SemesterCard({ semester }: { semester: Semester; index: number }) {
                         <span className="font-semibold text-foreground">{gpa10?.toFixed(2) ?? "—"}</span>
                     </div>
                 </div>
+                <Button size="sm" variant="ghost" onClick={() => broadcastOpen(!semExpanded)} className="text-xs px-2">
+                    {semExpanded ? "Collapse All" : "Expand All"}
+                </Button>
                 <Button size="icon" variant="ghost" onClick={remove} aria-label="Delete semester">
                     <Trash2 className="h-4 w-4" />
                 </Button>
@@ -371,6 +381,7 @@ function SemesterCard({ semester }: { semester: Semester; index: number }) {
                             subjectPass={state.subjectPassThreshold}
                             componentPassEnabled={state.componentPassEnabled}
                             componentPass={state.componentPassThreshold}
+                            openSignal={openSignal}
                             onChange={(patch) => updateSubject(sub.id, patch)}
                             onDelete={() => removeSubject(sub.id)}
                         />
@@ -391,6 +402,7 @@ function SubjectRow({
     subjectPass,
     componentPassEnabled,
     componentPass,
+    openSignal,
     onChange,
     onDelete,
 }: {
@@ -400,10 +412,17 @@ function SubjectRow({
     subjectPass: number;
     componentPassEnabled: boolean;
     componentPass: number;
+    openSignal: { open: boolean; tick: number } | null;
     onChange: (patch: Partial<Subject>) => void;
     onDelete: () => void;
 }) {
     const { t } = useI18n();
+    const [open, setOpen] = useState(true);
+
+    useEffect(() => {
+        if (openSignal !== null) setOpen(openSignal.open);
+    }, [openSignal]);
+
     const score = subjectScore10(subject, precisionMode);
     const wTotal = weightTotal(subject.weights);
     const wValid = wTotal === 100;
@@ -445,33 +464,47 @@ function SubjectRow({
         { key: "final", label: t("entry.final") },
     ];
 
-    const rowFail = passed === false;
+    // Layout control flags
+    const bodyDisabled = subject.isExempt;
+    const showBody = open;
+    const showFooter = open && !subject.isExempt;
+    const rowFail = passed === false && !subject.isExempt;
 
     return (
         <div
             className={cn(
-                "rounded-lg border bg-card p-4 transition-colors",
+                "rounded-lg border bg-card transition-colors",
                 rowFail ? "border-destructive/50 bg-destructive/5" : "border-border",
             )}
         >
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-[8rem_minmax(0,2fr)_6rem_auto]">
-                <div className="min-w-0">
+            {/* ── HEADER ROW ── */}
+            <div className="flex flex-wrap items-center gap-2 p-3">
+                <button
+                    onClick={() => setOpen(!open)}
+                    className="grid h-7 w-7 shrink-0 place-items-center rounded-md hover:bg-muted"
+                    aria-label="Toggle subject"
+                >
+                    {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </button>
+                <div className="w-28 shrink-0">
                     <Label className="text-xs uppercase tracking-wide text-muted-foreground">{t("entry.subjectCode")}</Label>
                     <Input
                         value={subject.code}
                         placeholder="CS101"
                         onChange={(e) => onChange({ code: e.target.value.slice(0, 16) })}
+                        className="h-8"
                     />
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-40 flex-1">
                     <Label className="text-xs uppercase tracking-wide text-muted-foreground">{t("entry.subjectName")}</Label>
                     <Input
                         value={subject.name}
                         placeholder="Introduction to Programming"
                         onChange={(e) => onChange({ name: e.target.value.slice(0, 120) })}
+                        className="h-8"
                     />
                 </div>
-                <div>
+                <div className="w-20 shrink-0">
                     <Label className="text-xs uppercase tracking-wide text-muted-foreground">{t("common.credits")}</Label>
                     <Input
                         type="number"
@@ -481,112 +514,119 @@ function SubjectRow({
                         onChange={(e) =>
                             onChange({ credits: Math.min(20, Math.max(0, Number(e.target.value) || 0)) })
                         }
-                        className="w-24"
+                        className="h-8 w-20"
                     />
                 </div>
-                <div className="flex items-end">
-                    <Button size="icon" variant="ghost" onClick={onDelete} aria-label="Delete subject">
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
+                <div className="flex shrink-0 items-center gap-1.5">
+                    <Checkbox
+                        id={`exempt-${subject.id}`}
+                        checked={subject.isExempt}
+                        onCheckedChange={setExempt}
+                    />
+                    <label
+                        htmlFor={`exempt-${subject.id}`}
+                        className="cursor-pointer text-xs font-medium leading-none"
+                    >
+                        {t("common.exempt")}
+                    </label>
                 </div>
+                <Button size="icon" variant="ghost" onClick={onDelete} aria-label="Delete subject" className="h-8 w-8 shrink-0">
+                    <Trash2 className="h-4 w-4" />
+                </Button>
             </div>
 
-            <div className="mt-4 mb-2 flex gap-2 items-center">
-                <Checkbox
-                    id={`exempt-${subject.id}`}
-                    checked={subject.isExempt}
-                    onCheckedChange={setExempt}
-                />
-                <label htmlFor={`exempt-${subject.id}`}
-                    className="text-sm font-medium leading-none">
-                    {t("common.exempt")}
-                </label>
-            </div>
-
-            <div className="mt-4 overflow-x-auto">
-                <table className="w-full min-w-140 text-sm">
-                    <thead>
-                        <tr className="text-xs uppercase tracking-wide text-muted-foreground">
-                            <th className="pb-1 text-left font-medium">{t("entry.process")} / {t("entry.midterm")}…</th>
-                            <th className="pb-1 text-left font-medium">{t("entry.weight")}</th>
-                            <th className="pb-1 text-left font-medium">{t("entry.score")}</th>
-                            <th className="pb-1 text-left font-medium">{t("common.status")}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {components.map((c) => {
-                            const s = subject.scores[c.key];
-                            const w = subject.weights[c.key];
-                            const disabled = w <= 0;
-                            const failed = !disabled && componentPassEnabled && s !== null && s < componentPass;
-                            return (
-                                <tr key={c.key} className="border-t border-border/60">
-                                    <td className="py-2 pr-2 font-medium">{c.label}</td>
-                                    <td className="py-2 pr-2">
-                                        <Input
-                                            type="number"
-                                            min={0}
-                                            max={100}
-                                            value={w}
-                                            onChange={(e) => setWeight(c.key, e.target.value)}
-                                            className="h-8 w-20"
-                                        />
-                                    </td>
-                                    <td className="py-2 pr-2">
-                                        <Input
-                                            type="number"
-                                            min={0}
-                                            max={10}
-                                            step={0.1}
-                                            value={s ?? ""}
-                                            disabled={disabled}
-                                            placeholder={disabled ? "—" : ""}
-                                            onChange={(e) => setScore(c.key, e.target.value)}
-                                            className={cn(
-                                                "h-8 w-24",
-                                                failed && "border-destructive text-destructive",
-                                                disabled && "bg-muted/60",
+            {/* ── BODY AREA ── */}
+            {showBody && (
+                <div className="border-t border-border/60 overflow-x-auto px-4 pb-3 pt-3">
+                    <table className="w-full min-w-140 text-sm">
+                        <thead>
+                            <tr className="text-xs uppercase tracking-wide text-muted-foreground">
+                                <th className="pb-1 text-left font-medium">{t("entry.process")} / {t("entry.midterm")}…</th>
+                                <th className="pb-1 text-left font-medium">{t("entry.weight")}</th>
+                                <th className="pb-1 text-left font-medium">{t("entry.score")}</th>
+                                <th className="pb-1 text-left font-medium">{t("common.status")}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {components.map((c) => {
+                                const s = subject.scores[c.key];
+                                const w = subject.weights[c.key];
+                                const disabled = bodyDisabled || w <= 0;
+                                const failed = !bodyDisabled && !disabled && componentPassEnabled && s !== null && s < componentPass;
+                                return (
+                                    <tr key={c.key} className="border-t border-border/60">
+                                        <td className="py-2 pr-2 font-medium">{c.label}</td>
+                                        <td className="py-2 pr-2">
+                                            <Input
+                                                type="number"
+                                                min={0}
+                                                max={100}
+                                                value={w}
+                                                disabled={bodyDisabled}
+                                                onChange={(e) => setWeight(c.key, e.target.value)}
+                                                className="h-8 w-20"
+                                            />
+                                        </td>
+                                        <td className="py-2 pr-2">
+                                            <Input
+                                                type="number"
+                                                min={0}
+                                                max={10}
+                                                step={0.1}
+                                                value={s ?? ""}
+                                                disabled={disabled}
+                                                placeholder={disabled ? "—" : ""}
+                                                onChange={(e) => setScore(c.key, e.target.value)}
+                                                className={cn(
+                                                    "h-8 w-24",
+                                                    failed && "border-destructive text-destructive",
+                                                    disabled && "bg-muted/60",
+                                                )}
+                                            />
+                                        </td>
+                                        <td className="py-2">
+                                            {disabled ? (
+                                                <span className="text-xs text-muted-foreground">—</span>
+                                            ) : failed ? (
+                                                <span className="inline-flex items-center gap-1 text-xs text-destructive">
+                                                    <AlertTriangle className="h-3 w-3" /> {t("entry.componentFail")}
+                                                </span>
+                                            ) : s !== null ? (
+                                                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                                                    <CheckCircle2 className="h-3 w-3 text-success" /> OK
+                                                </span>
+                                            ) : (
+                                                <span className="text-xs text-muted-foreground">—</span>
                                             )}
-                                        />
-                                    </td>
-                                    <td className="py-2">
-                                        {disabled ? (
-                                            <span className="text-xs text-muted-foreground">{t("entry.weightDisabled")}</span>
-                                        ) : failed ? (
-                                            <span className="inline-flex items-center gap-1 text-xs text-destructive">
-                                                <AlertTriangle className="h-3 w-3" /> {t("entry.componentFail")}
-                                            </span>
-                                        ) : s !== null ? (
-                                            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                                                <CheckCircle2 className="h-3 w-3 text-success" /> OK
-                                            </span>
-                                        ) : (
-                                            <span className="text-xs text-muted-foreground">—</span>
-                                        )}
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
-                <Stat
-                    label={t("entry.weight")}
-                    value={`${wTotal}%`}
-                    tone={wValid ? "success" : "destructive"}
-                    hint={wValid ? "= 100" : t("entry.weightsMustTotal")}
-                />
-                <Stat label="Scale 10" value={scale10Display} tone={score === null ? "muted" : passed ? "primary" : "destructive"} />
-                <Stat label="Scale 4" value={scale4Display} tone="muted" />
-                <Stat label="Scale 100" value={scale100Display} tone="muted" />
-                <Stat label="Letter" value={letterDisplay} tone={score === null ? "muted" : passed ? "primary" : "destructive"} />
-            </div>
-
-            {rowFail && (
-                <div className="mt-3 flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
-                    <AlertTriangle className="h-3.5 w-3.5" /> {t("entry.subjectFail")}
+            {/* ── FOOTER ROW ── */}
+            {showFooter && (
+                <div className="border-t border-border/60 px-4 pb-4 pt-3">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+                        <Stat
+                            label={t("entry.weight")}
+                            value={`${wTotal}%`}
+                            tone={wValid ? "success" : "destructive"}
+                            hint={wValid ? "= 100" : t("entry.weightsMustTotal")}
+                        />
+                        <Stat label="Scale 10" value={scale10Display} tone={score === null ? "muted" : passed ? "primary" : "destructive"} />
+                        <Stat label="Scale 4" value={scale4Display} tone="muted" />
+                        <Stat label="Scale 100" value={scale100Display} tone="muted" />
+                        <Stat label="Letter" value={letterDisplay} tone={score === null ? "muted" : passed ? "primary" : "destructive"} />
+                    </div>
+                    {rowFail && (
+                        <div className="mt-3 flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
+                            <AlertTriangle className="h-3.5 w-3.5" /> {t("entry.subjectFail")}
+                        </div>
+                    )}
                 </div>
             )}
         </div>
