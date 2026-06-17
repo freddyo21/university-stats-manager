@@ -83,16 +83,15 @@ export function subjectPassed(
 export function effectiveScore10(
   subject: Subject,
   // subjectPass: number,
-  compEnabled: boolean,
-  compThreshold: number,
+  // compEnabled: boolean,
+  // compThreshold: number,
   precision: PrecisionMode = 2,
 ): number | null {
   const sc = subjectScore10(subject, precision);
 
   if (sc === null) return null;
 
-  if (hasComponentFail(subject, compEnabled, compThreshold)) return 0;
-
+  // if (hasComponentFail(subject, compEnabled, compThreshold)) return 0;
   // if (sc < subjectPass) return 0;
 
   return sc;
@@ -133,7 +132,12 @@ export function semesterGPA10(
   let any = false;
 
   for (const sub of s.subjects) {
-    const sc = effectiveScore10(sub, compEnabled, compThreshold, precisionMode);
+    const sc = effectiveScore10(
+      sub,
+      // compEnabled, 
+      // compThreshold, 
+      precisionMode
+    );
     const passed = subjectPassed(sub, subjectPass, compEnabled, compThreshold, precisionMode);
 
     if ((sc === null && !sub.isExempt) || sub.credits <= 0) continue;
@@ -155,7 +159,7 @@ export function semesterGPA10(
   }
 
   return {
-    gpa10: any && totalCredits > 0 ? roundGpa(weighted / totalCredits, precisionMode) : null,
+    gpa10: any && totalCredits > 0 ? roundGpa(weighted / totalCredits, 2) : null,
     credits: totalCredits + exemptCredits,
     passedCredits,
     exemptCredits,
@@ -182,7 +186,12 @@ export function semesterGPA4(
   let any = false;
 
   for (const sub of s.subjects) {
-    const sc = effectiveScore10(sub, compEnabled, compThreshold, precisionMode);
+    const sc = effectiveScore10(
+      sub,
+      // compEnabled, 
+      // compThreshold, 
+      precisionMode
+    );
     const passed = subjectPassed(sub, subjectPass, compEnabled, compThreshold, precisionMode);
 
     if ((sc === null && !sub.isExempt) || sub.credits <= 0) continue;
@@ -204,11 +213,124 @@ export function semesterGPA4(
   }
 
   return {
-    gpa4: any && totalCredits > 0 ? roundGpa(weighted / totalCredits, precisionMode) : null,
+    gpa4: any && totalCredits > 0 ? roundGpa(weighted / totalCredits, 2) : null,
     credits: totalCredits + exemptCredits,
     passedCredits,
     exemptCredits,
   };
+}
+
+export function grossGPA4(
+  semesters: Semester[],
+  letterGrades: LetterGradeRange[],
+  precisionMode: PrecisionMode = 2,
+): {
+  gpa4: number | null;
+  credits: number;        // Tổng tín chỉ đã đăng ký học (gồm cả đạt + trượt + miễn)
+  passedCredits: number;  // Tín chỉ của các môn thực sự ĐẠT (không tính môn trượt)
+  exemptCredits: number;  // Tín chỉ môn miễn điểm
+} {
+  let registeredCredits = 0; // Mẫu số tính GPA: Tổng tín chỉ của tất cả các môn CÓ ĐIỂM (Đạt + Trượt)
+  let passedCredits = 0;     // Số tín chỉ thực sự vượt qua (dùng để thống kê)
+  let exemptCredits = 0;     // Số tín chỉ được miễn
+  let weighted = 0;
+  let any = false;
+
+  for (const s of semesters) {
+    for (const sub of s.subjects) {
+      if (sub.credits <= 0) continue;
+
+      // Trường hợp 1: Môn miễn điểm (Không tính vào trung bình hệ 4 nhưng tính vào tổng tín tích lũy)
+      if (sub.isExempt) {
+        exemptCredits += sub.credits;
+        passedCredits += sub.credits; // Môn miễn vẫn được tính là đã đạt tín chỉ
+        continue;
+      }
+
+      const sc = effectiveScore10(sub, precisionMode);
+
+      // Nếu môn chưa có điểm (null) hoặc hoãn thi thì mới bỏ qua hoàn toàn
+      if (sc === null) continue;
+
+      any = true;
+      const gpa4Point = gpa4FromScore10(sc, letterGrades); // Môn trượt (F) sẽ quy đổi ra 0
+
+      weighted += gpa4Point * sub.credits;
+      registeredCredits += sub.credits; // 💡 Môn TRƯỢT vẫn phải cộng tín chỉ vào mẫu số
+
+      // Kiểm tra xem môn này có đạt hay không (Giả định gpa4 > 0 tức là từ điểm D trở lên là Đạt)
+      if (gpa4Point > 0) {
+        passedCredits += sub.credits;
+      }
+    }
+  }
+
+  const res = {
+    // Điểm TBC hệ 4 chia cho tổng số tín chỉ đã ĐĂNG KÝ (có điểm)
+    gpa4: any && registeredCredits > 0 ? roundGpa(weighted / registeredCredits, 2) : null,
+    // Tổng số tín chỉ tích lũy thực tế mà sinh viên nhận được (Môn đạt + Môn miễn)
+    credits: passedCredits + exemptCredits,
+    passedCredits,
+    exemptCredits,
+  };
+
+  return res;
+}
+
+export function grossGPA10(
+  semesters: Semester[],
+  subjectPass: number,
+  compEnabled: boolean,
+  compThreshold: number,
+  precisionMode: PrecisionMode = 2,
+): {
+  gpa10: number | null;
+  credits: number;
+  passedCredits: number;
+  exemptCredits: number;
+} {
+  let registeredCredits = 0; // Mẫu số tính GPA10: Tổng tín chỉ của các môn CÓ ĐIỂM (Đạt + Trượt)
+  let passedCredits = 0;     // Số tín chỉ thực sự vượt qua
+  let exemptCredits = 0;     // Số tín chỉ được miễn
+  let weighted = 0;
+  let any = false;
+
+  for (const s of semesters) {
+    for (const sub of s.subjects) {
+      if (sub.credits <= 0) continue;
+
+      // Trường hợp 1: Môn miễn điểm
+      if (sub.isExempt) {
+        exemptCredits += sub.credits;
+        passedCredits += sub.credits;
+        continue;
+      }
+
+      const sc = effectiveScore10(sub, precisionMode);
+      const passed = subjectPassed(sub, subjectPass, compEnabled, compThreshold, precisionMode);
+
+      // Nếu môn chưa có điểm thì mới bỏ qua
+      if (sc === null) continue;
+
+      any = true;
+      weighted += sc * sub.credits;     // 💡 Điểm rớt (ví dụ 2.0 hoặc 3.0) vẫn nhân vào tử số để kéo điểm xuống
+      registeredCredits += sub.credits; // 💡 Môn rớt vẫn cộng vào mẫu số
+
+      if (passed === true) {
+        passedCredits += sub.credits;
+      }
+    }
+  }
+
+  const res = {
+    // Điểm TBC hệ 10 chia cho tổng số tín chỉ đã ĐĂNG KÝ (có điểm)
+    gpa10: any && registeredCredits > 0 ? roundGpa(weighted / registeredCredits, 2) : null,
+    credits: passedCredits + exemptCredits,
+    passedCredits,
+    exemptCredits,
+  };
+
+  return res;
 }
 
 export function cumulativeGPA4(
@@ -239,7 +361,12 @@ export function cumulativeGPA4(
         continue;
       }
 
-      const sc = effectiveScore10(sub, compEnabled, compThreshold, precisionMode);
+      const sc = effectiveScore10(
+        sub,
+        // compEnabled, 
+        // compThreshold, 
+        precisionMode
+      );
       const passed = subjectPassed(sub, subjectPass, compEnabled, compThreshold, precisionMode);
 
       // Trường hợp 2: Môn bị trượt hoặc chưa có điểm -> Bỏ qua hoàn toàn khỏi CPA tích lũy
@@ -254,7 +381,7 @@ export function cumulativeGPA4(
 
   const res = {
     // Điểm tích lũy hệ 4 chỉ chia cho tổng số tín chỉ của các môn đã đạt có điểm thực tế
-    gpa4: any && passedCredits > 0 ? roundGpa(weighted / passedCredits, precisionMode) : null,
+    gpa4: any && passedCredits > 0 ? roundGpa(weighted / passedCredits, 2) : null,
     // Tổng số tín chỉ tích lũy hiển thị = Tín chỉ môn có điểm đạt + Tín chỉ môn miễn
     credits: passedCredits + exemptCredits,
     passedCredits,
@@ -293,7 +420,12 @@ export function cumulativeGPA10(
         continue;
       }
 
-      const sc = effectiveScore10(sub, compEnabled, compThreshold, precisionMode);
+      const sc = effectiveScore10(
+        sub,
+        // compEnabled, 
+        // compThreshold, 
+        precisionMode
+      );
       const passed = subjectPassed(sub, subjectPass, compEnabled, compThreshold, precisionMode);
 
       // Trường hợp 2: Môn bị trượt hoặc chưa có điểm -> Bỏ qua hoàn toàn khỏi CPA tích lũy
@@ -307,7 +439,7 @@ export function cumulativeGPA10(
   }
 
   const res = {
-    gpa10: any && passedCredits > 0 ? roundGpa(weighted / passedCredits, precisionMode) : null,
+    gpa10: any && passedCredits > 0 ? roundGpa(weighted / passedCredits, 2) : null,
     credits: passedCredits + exemptCredits,
     passedCredits,
     exemptCredits,

@@ -55,47 +55,95 @@ export function RoadmapPage() {
 
   const distribution = useMemo(() => {
     const buckets: Record<string, { letter: string; subjects: number; credits: number }> = {};
-    for (const r of state.letterGrades) buckets[r.letter] = { letter: r.letter, subjects: 0, credits: 0 };
+    for (const r of state.letterGrades)
+      buckets[r.letter] = { letter: r.letter, subjects: 0, credits: 0 };
+
+    buckets["M"] = { letter: t("common.exemptShort"), subjects: 0, credits: 0 }; // For exempt subjects
+
     for (const s of state.semesters) {
       for (const sub of s.subjects) {
-        const sc = effectiveScore10(
+        const rawScore = effectiveScore10(
           sub,
           // state.subjectPassThreshold,
-          state.componentPassEnabled,
-          state.componentPassThreshold,
+          // state.componentPassEnabled,
+          // state.componentPassThreshold,
           state.precisionMode,
         );
-        if (sc === null) continue;
-        const l = toLetter(sc, state.letterGrades);
+
+        if (sub.isExempt) {
+          buckets["M"].subjects += 1;
+          buckets["M"].credits += sub.credits;
+          continue;
+        }
+
+        if (rawScore === null) continue;
+
+        const l = toLetter(rawScore, state.letterGrades);
+
         if (!buckets[l]) buckets[l] = { letter: l, subjects: 0, credits: 0 };
+
         buckets[l].subjects += 1;
         buckets[l].credits += sub.credits;
       }
     }
+
     return Object.values(buckets);
-  }, [state.semesters, state.letterGrades, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold, state.precisionMode]);
+  }, [
+    state.semesters,
+    state.letterGrades,
+    // state.subjectPassThreshold,
+    // state.componentPassEnabled,
+    // state.componentPassThreshold,
+    state.precisionMode,
+    t
+  ]);
 
   const perfStats = useMemo(() => {
-    let perfect = 0, above9 = 0, above8 = 0, failed = 0, totalSubjects = 0;
+    let perfect = 0,
+      above9 = 0,
+      above8 = 0,
+      failed = 0,
+      exemptSubjects = 0,
+      totalSubjects = 0;
+
     for (const s of state.semesters)
       for (const sub of s.subjects) {
-        const raw = subjectScore10(sub, state.precisionMode);
+        const rawScore = subjectScore10(sub, state.precisionMode);
         const eff = effectiveScore10(
           sub,
           // state.subjectPassThreshold,
-          state.componentPassEnabled,
-          state.componentPassThreshold,
+          // state.componentPassEnabled,
+          // state.componentPassThreshold,
           state.precisionMode,
         );
-        if (raw === null) continue;
+
+        if (rawScore === null) {
+          if (sub.isExempt) {
+            exemptSubjects++;
+            totalSubjects++;
+          }
+          continue;
+        }
+
         totalSubjects++;
-        if (raw >= 10) perfect++;
-        if (raw >= 9) above9++;
-        if (raw >= 8) above8++;
+
+        if (rawScore >= 10) perfect++;
+        if (rawScore >= 9) above9++;
+        if (rawScore >= 8) above8++;
+
         if (eff === null || eff < state.subjectPassThreshold) failed++;
       }
-    return { perfect, above9, above8, failed, totalSubjects };
-  }, [state.semesters, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold, state.precisionMode]);
+
+    const res = { perfect, above9, above8, failed, totalSubjects, exemptSubjects };
+
+    return res;
+  }, [
+    state.semesters,
+    state.subjectPassThreshold,
+    // state.componentPassEnabled,
+    // state.componentPassThreshold,
+    state.precisionMode
+  ]);
 
   const precisionMode = state.precisionMode;
   const formatGpa = (value: number | null) => (value === null ? "—" : value.toFixed(precisionMode));
@@ -145,7 +193,7 @@ export function RoadmapPage() {
                 {requiredAvg === null ? (
                   <p className="text-sm text-muted-foreground">
                     {cumulative.gpa10 !== null &&
-                    roundGpa(cumulative.gpa10, precisionMode) >= roundGpa(state.targetGPA, precisionMode)
+                      roundGpa(cumulative.gpa10, precisionMode) >= roundGpa(state.targetGPA, precisionMode)
                       ? t("roadmap.secured")
                       : t("roadmap.unreachable")}
                   </p>
@@ -183,7 +231,12 @@ export function RoadmapPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                   <XAxis dataKey="letter" stroke="var(--color-muted-foreground)" fontSize={12} />
                   <YAxis allowDecimals={false} stroke="var(--color-muted-foreground)" fontSize={12} />
-                  <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 6, fontSize: 12 }} />
+                  <Tooltip contentStyle={{
+                    background: "var(--color-card)",
+                    border: "1px solid var(--color-border)",
+                    borderRadius: 6,
+                    fontSize: 12
+                  }}  />
                   <Bar dataKey="credits" fill="var(--color-accent)" radius={[4, 4, 0, 0]} name="Credits" />
                   <Bar dataKey="subjects" fill="var(--color-primary)" radius={[4, 4, 0, 0]} name="Subjects" />
                 </BarChart>
@@ -212,6 +265,7 @@ export function RoadmapPage() {
           <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{t("roadmap.stats")}</h3>
           <div className="mt-4 space-y-3">
             <StatRow label={t("roadmap.totalSubjects")} value={perfStats.totalSubjects} />
+            <StatRow label={t("roadmap.exemptSubjects")} value={perfStats.exemptSubjects} />
             <StatRow label={t("roadmap.perfect")} value={perfStats.perfect} tone="success" />
             <StatRow label={t("roadmap.over9")} value={perfStats.above9} tone="success" />
             <StatRow label={t("roadmap.over8")} value={perfStats.above8} tone="primary" />

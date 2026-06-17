@@ -15,6 +15,8 @@ import {
     cumulativeGPA10,
     cumulativeGPA4,
     gpa4FromScore10,
+    grossGPA10,
+    grossGPA4,
     roundGpa,
     semesterGPA10,
     semesterGPA4,
@@ -66,6 +68,36 @@ export function GoalsPage() {
                 : { gpa4: null, credits: 0, passedCredits: 0, exemptCredits: 0 },
         [selected, state.letterGrades, precisionMode, ...passOpts],
     );
+
+    const gross10UpTo = useMemo(() => {
+        if (selectedIndex < 0) return {
+            gpa10: null,
+            credits: 0,
+            passedCredits: 0,
+            exemptCredits: 0,
+        };
+
+        return grossGPA10(
+            state.semesters.slice(0, selectedIndex + 1),
+            ...passOpts,
+            precisionMode,
+        )
+    }, [state.semesters, selectedIndex, precisionMode, ...passOpts]);
+
+    const gross4UpTo = useMemo(() => {
+        if (selectedIndex < 0) return {
+            gpa4: null,
+            credits: 0,
+            passedCredits: 0,
+            exemptCredits: 0
+        };
+
+        return grossGPA4(
+            state.semesters.slice(0, selectedIndex + 1),
+            state.letterGrades,
+            precisionMode
+        );
+    }, [state.semesters, state.letterGrades, selectedIndex, precisionMode]);
 
     const cumulative10UpTo = useMemo(() => {
         if (selectedIndex < 0) return {
@@ -127,7 +159,7 @@ export function GoalsPage() {
     };
 
     const formatGpa = (value: number | null) =>
-        value === null ? "—" : value.toFixed(precisionMode);
+        value === null ? "—" : value.toFixed(2);
 
     if (state.semesters.length === 0) {
         return (
@@ -149,7 +181,14 @@ export function GoalsPage() {
                 ? roundGpa(semData.gpa10 * 10, precisionMode)
                 : semData.gpa10;
 
-    const displayCumulativeGPA =
+    const displayGrossCPA =
+        activeScale === "4"
+            ? gross4UpTo.gpa4
+            : activeScale === "100" && gross10UpTo.gpa10 !== null
+                ? roundGpa(gross10UpTo.gpa10 * 10, precisionMode)
+                : gross10UpTo.gpa10;
+
+    const displayCurrentCPA =
         activeScale === "4"
             ? cumulative4UpTo.gpa4
             : activeScale === "100" && cumulative10UpTo.gpa10 !== null
@@ -164,7 +203,7 @@ export function GoalsPage() {
                 : selected?.targetGPA ?? 0;
 
     const roundedCurrentGPA =
-        displayCurrentGPA !== null ? roundGpa(displayCurrentGPA, precisionMode) : null;
+        displayCurrentGPA !== null ? roundGpa(displayCurrentGPA, 2) : null;
 
     const roundedTargetGPA = roundGpa(displayTargetGPARaw, precisionMode);
 
@@ -244,7 +283,7 @@ export function GoalsPage() {
                 </select>
                 <div className="mt-4">
                     <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Độ chính xác GPA
+                        {t("goals.precision")}
                     </Label>
                     <RadioGroup
                         value={String(precisionMode)}
@@ -253,11 +292,11 @@ export function GoalsPage() {
                     >
                         <label className="flex cursor-pointer items-center gap-2 text-sm">
                             <RadioGroupItem value="1" />
-                            1 chữ số thập phân
+                            {t("goals.precision.{number}", { number: 1 })}
                         </label>
                         <label className="flex cursor-pointer items-center gap-2 text-sm">
                             <RadioGroupItem value="2" />
-                            2 chữ số thập phân
+                            {t("goals.precision.{number}", { number: 2 })}
                         </label>
                     </RadioGroup>
                 </div>
@@ -265,55 +304,70 @@ export function GoalsPage() {
 
             {selected && (
                 <>
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                        <SummaryCard
-                            icon={Layers}
-                            label={t("common.credits")}
-                            value={String(semData.credits)}
-                        />
-                        <SummaryCard
-                            icon={BookMarked}
-                            label={t("goals.activeSubjects")}
-                            value={String(active)}
-                        />
-                        <Card className="p-4">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-6 lg:grid-cols-40 items-stretch">
+                        <div className="col-span-1 sm:col-span-2 lg:col-span-5 grid sm:max-lg:order-1 lg:order-0">
+                            <SummaryCard
+                                icon={Layers}
+                                label={t("common.credits")}
+                                value={String(semData.credits)}
+                            />
+                        </div>
+                        <div className="col-span-1 sm:col-span-2 lg:col-span-6 grid sm:max-lg:order-2 lg:order-0">
+                            <SummaryCard
+                                icon={BookMarked}
+                                label={t("goals.activeSubjects")}
+                                value={String(active)}
+                            />
+                        </div>
+                        <Card className="col-span-2 max-sm:col-span-1 sm:max-md:col-span-full md:max-lg:col-span-2 lg:col-span-11 p-4 grid sm:max-lg:order-4 lg:order-0">
                             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 <Target className="h-4 w-4 text-accent" /> {t("goals.targetGpa")}
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">
                                 {t("goals.help.inputTarget")}
                             </div>
-                            <div className="mt-2">
-                                <Input type="number" inputMode="decimal"
-                                    min={0} max={10} step={0.1}
-                                    value={selected.targetGPA}
-                                    onChange={(e) => setSemesterTarget(Number(e.target.value) || 0)}
-                                    className="h-9 text-lg font-semibold"
-                                />
-                                <Select
-                                    value={activeScale}
-                                    onValueChange={(v) => setActiveScale(v as GradingScale)}
-                                >
-                                    <SelectTrigger className="w-full max-w-72 mt-2">
-                                        <SelectValue placeholder={t("goals.selectGpa")} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            <SelectItem value="10">Hệ 10</SelectItem>
-                                            <SelectItem value="4">Hệ 4</SelectItem>
-                                            <SelectItem value="100">Hệ 100</SelectItem>
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
+                            <div className="mt-2 block sm:flex gap-2">
+                                <div className="max-sm:w-full w-1/2">
+                                    <Input type="number" inputMode="decimal"
+                                        min={0} max={10} step={0.1}
+                                        value={selected.targetGPA}
+                                        onChange={(e) => setSemesterTarget(Number(e.target.value) || 0)}
+                                        className="h-9 text-lg font-semibold"
+                                    />
+                                </div>
+                                <div className="max-sm:w-full w-1/2 max-sm:mt-2">
+                                    <Select
+                                        value={activeScale}
+                                        onValueChange={(v) => setActiveScale(v as GradingScale)}
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder={t("goals.selectGpa")} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                <SelectItem value="10">{getScaleSuffix("10", t)}</SelectItem>
+                                                <SelectItem value="4">{getScaleSuffix("4", t)}</SelectItem>
+                                                <SelectItem value="100">{getScaleSuffix("100", t)}</SelectItem>
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         </Card>
-                        <SummaryCard icon={GraduationCap} label={t("goals.actual")} value={formatGpa(displayCurrentGPA)} />
-                        <SummaryCard
-                            icon={TrendingUp}
-                            label={t("goals.cumulativeUpTo")}
-                            value={formatGpa(displayCumulativeGPA)}
-                            hint={`${cumulative10UpTo.credits} ${t("common.credits").toLowerCase()}`}
-                        />
+                        <div className="col-span-1 sm:max-lg:col-span-2 lg:col-span-6 grid sm:max-lg:order-3 lg:order-0">
+                            <SummaryCard icon={GraduationCap} label={t("goals.actual")} value={formatGpa(displayCurrentGPA)} />
+                        </div>
+                        <div className="col-span-1 sm:col-span-3 md:col-span-2 lg:col-span-6 grid sm:max-lg:order-5 lg:order-0">
+                            <SummaryCard icon={GraduationCap} label={t("goals.grossUpTo")} value={formatGpa(displayGrossCPA)} />
+                        </div>
+                        <div className="col-span-1 sm:col-span-3 md:col-span-2 lg:col-span-6 grid sm:max-lg:order-6 lg:order-0">
+                            <SummaryCard
+                                icon={TrendingUp}
+                                label={t("goals.cumulativeUpTo")}
+                                value={formatGpa(displayCurrentCPA)}
+                                hint={`${cumulative10UpTo.credits} ${t("common.credits").toLowerCase()}`}
+                            />
+                        </div>
                     </div>
 
                     <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -321,14 +375,14 @@ export function GoalsPage() {
                             <div className="flex items-center gap-2 text-xs uppercase tracking-wide opacity-80"><Target className="h-4 w-4" /> {t("goals.achieved")}</div>
                             <div className="mt-2 text-3xl font-bold">{goalAchieved ? t("goals.yes") : t("goals.no")}</div>
                             <p className="mt-1 text-sm opacity-90">
-                                {formatGpa(displayCurrentGPA)} / {roundedTargetGPA.toFixed(precisionMode)} ({useScaleSuffix(activeScale)})
+                                {formatGpa(displayCurrentGPA)} / {roundedTargetGPA.toFixed(precisionMode)} ({getScaleSuffix(activeScale, t)})
                             </p>
                         </Card>
                         <Card className={`p-5 ${scholarship ? "bg-success text-success-foreground" : "bg-muted"}`}>
                             <div className="flex items-center gap-2 text-xs uppercase tracking-wide opacity-80"><Award className="h-4 w-4" /> {t("goals.scholarship")}</div>
                             <div className="mt-2 text-3xl font-bold">{scholarship ? t("goals.yes") : t("goals.nope")}</div>
                             <p className="mt-1 text-sm opacity-80">
-                                ≥ {roundedScholarshipGPA.toFixed(precisionMode)} required ({useScaleSuffix(activeScale)})
+                                ≥ {roundedScholarshipGPA.toFixed(precisionMode)} required ({getScaleSuffix(activeScale, t)})
                             </p>
                         </Card>
                     </div>
@@ -401,8 +455,8 @@ function SummaryCard({
                 <Icon className="h-4 w-4 text-primary" />
                 {label}
             </div>
-            <div className="mt-2 text-2xl font-semibold tracking-tight tabular-nums">{value}</div>
-            {hint && <div className="text-xs text-muted-foreground">{hint}</div>}
+            <div className="mt-2 text-2xl font-semibold tracking-tight tabular-nums text-center">{value}</div>
+            {hint && <div className="text-xs text-muted-foreground text-center">{hint}</div>}
         </Card>
     );
 }
