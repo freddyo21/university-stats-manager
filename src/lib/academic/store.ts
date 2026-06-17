@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { type AppState, DEFAULT_STATE, type Semester, type Subject } from "./types";
+import { type AppState, DEFAULT_STATE, type Semester, type Subject } from "../../types/types";
 
 const KEY = "academic-hub-v2";
 const LEGACY_KEY = "academic-hub-v1";

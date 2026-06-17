@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, Trash2, ChevronDown, ChevronRight, Settings2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { useAcademicStore } from "@/lib/academic/store";
-import type { AppState, LetterGradeRange, PrecisionMode, Semester, Subject } from "@/lib/academic/types";
+import type { AppState, LetterGradeRange, PrecisionMode, Semester, Subject } from "@/types/types";
 import {
     hasComponentFail,
     gpa4FromScore10,
@@ -19,9 +19,9 @@ import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
-import { useI18n } from "@/lib/academic/i18n";
 import { PageHeader } from "@/components/Header";
 import { uuidv7 } from "@/utils/uuid";
+import { useI18n } from "@/hooks/use-i18n";
 
 function newSubject(): Subject {
     return {

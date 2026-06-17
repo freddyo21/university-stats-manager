@@ -1,6 +1,6 @@
-import './App.css'
-import { I18nProvider } from './lib/academic/i18n'
-import { RoutesConfig } from './routes'
+import './App.css';
+import { I18nProvider } from './providers/I18nProvider';
+import { RoutesConfig } from './routes';
 
 export default function App() {
 

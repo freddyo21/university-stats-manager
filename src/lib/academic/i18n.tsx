@@ -1,10 +1,6 @@
-import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from "react";
+import type { Dict } from "@/types/interfaces/i18n";
 
-export type Lang = "en" | "vi";
-
-type Dict = Record<string, { en: string; vi: string }>;
-
-const D: Dict = {
+export const D: Dict = {
   "app.title": { en: "Academic Performance Hub", vi: "Trung tâm Học vụ" },
   "app.tagline": { en: "Multi-scale GPA · Local-first", vi: "GPA đa thang · Lưu cục bộ" },
   "nav.entry": { en: "Grade Entry", vi: "Nhập điểm" },
@@ -20,6 +16,7 @@ const D: Dict = {
   "common.preset": { en: "Preset", vi: "Trường" },
   "common.language": { en: "Language", vi: "Ngôn ngữ" },
   "common.exempt": { en: "Exempt", vi: "Miễn học" },
+  "common.exemptShort": { en: "Exempt", vi: "Miễn" },
   "common.status": { en: "Status", vi: "Trạng thái" },
   "common.passed": { en: "Passed", vi: "Đậu" },
   "common.failed": { en: "Failed", vi: "Trượt" },
@@ -69,10 +66,13 @@ const D: Dict = {
   "goals.title": { en: "Semester Goals", vi: "Mục tiêu học kỳ" },
   "goals.desc": { en: "Tactical per-semester targets and scholarship gating.", vi: "Mục tiêu chiến thuật và điều kiện học bổng theo kỳ." },
   "goals.pick": { en: "Select semester", vi: "Chọn học kỳ" },
+  "goals.precision": { en: "GPA Precision", vi: "Độ chính xác GPA" },
+  "goals.precision.{number}": { en: "{number} decimal place", vi: "{number} chữ số thập phân" },
   "goals.targetGpa": { en: "GPA Target (this semester)", vi: "GPA mục tiêu (kỳ này)" },
   "goals.selectGpa": { en: "Select GPA Scale", vi: "Chọn thang điểm" },
   "goals.actual": { en: "Grade Point Average", vi: "Điểm trung bình học kỳ" },
-  "goals.cumulativeUpTo": { en: "Cumulative Point Average", vi: "Điểm trung bình tích lũy" },
+  "goals.grossUpTo": { en: "Gross Point Average", vi: "Điểm trung bình chung" },
+  "goals.cumulativeUpTo": { en: "Cumulative Point Average", vi: "Điểm trung bình chung tích lũy" },
   "goals.activeSubjects": { en: "Active subjects", vi: "Số môn" },
   "goals.achieved": { en: "Goal Achieved", vi: "Đạt mục tiêu" },
   "goals.scholarship": { en: "Scholarship Eligibility", vi: "Có thể đạt học bổng" },
@@ -96,6 +96,7 @@ const D: Dict = {
   "roadmap.distribution": { en: "Grade Distribution", vi: "Phân bố điểm chữ" },
   "roadmap.stats": { en: "Performance Statistics", vi: "Thống kê hiệu suất" },
   "roadmap.totalSubjects": { en: "Total subjects entered", vi: "Tổng số môn đã nhập" },
+  "roadmap.exemptSubjects": { en: "Exempt subjects", vi: "Môn được miễn" },
   "roadmap.perfect": { en: "Perfect score (10/10)", vi: "Điểm tuyệt đối (10/10)" },
   "roadmap.over9": { en: "Subjects ≥ 9.0", vi: "Môn ≥ 9.0" },
   "roadmap.over8": { en: "Subjects ≥ 8.0", vi: "Môn ≥ 8.0" },
@@ -111,40 +112,3 @@ const D: Dict = {
   "data.confirm": { en: "Yes, clear everything", vi: "Đồng ý, xóa hết" },
 };
 
-type Ctx = {
-  lang: Lang;
-  setLang: (l: Lang) => void;
-  t: (key: keyof typeof D) => string;
-};
-
-const I18nContext = createContext<Ctx | null>(null);
-
-const LANG_KEY = "academic-hub-lang";
-
-export function I18nProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>("en");
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(LANG_KEY) as Lang | null;
-      if (saved === "en" || saved === "vi") setLangState(saved);
-    } catch { }
-  }, []);
-
-  const setLang = useCallback((l: Lang) => {
-    setLangState(l);
-    try {
-      localStorage.setItem(LANG_KEY, l);
-    } catch { }
-  }, []);
-
-  const t = useCallback((key: keyof typeof D) => D[key]?.[lang] ?? String(key), [lang]);
-
-  return <I18nContext.Provider value={{ lang, setLang, t }}>{children}</I18nContext.Provider>;
-}
-
-export function useI18n() {
-  const ctx = useContext(I18nContext);
-  if (!ctx) throw new Error("useI18n must be used within I18nProvider");
-  return ctx;
-}

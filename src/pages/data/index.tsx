@@ -2,8 +2,7 @@ import { useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAcademicStore } from "@/lib/academic/store";
-import { type AppState, DEFAULT_STATE } from "@/lib/academic/types";
-import { useI18n } from "@/lib/academic/i18n";
+import { type AppState, DEFAULT_STATE } from "@/types/types";
 import { Download, Upload, Trash2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -17,6 +16,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { PageHeader } from "@/components/Header";
+import { useI18n } from "@/hooks/use-i18n";
 
 export function DataPage() {
   const { state, replace, reset } = useAcademicStore();

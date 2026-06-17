@@ -1,4 +1,4 @@
-import { type AppState, DEFAULT_LETTER_GRADES, type LetterGradeRange, type PresetId } from "./types";
+import { type AppState, DEFAULT_LETTER_GRADES, type LetterGradeRange, type PresetId } from "../../types/types";
 
 // Factory Pattern: presets produce institution-specific defaults.
 type Preset = {

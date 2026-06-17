@@ -1,8 +1,7 @@
 import { GraduationCap, BookOpen, Target, Map, LifeBuoy, ScrollText, ShieldCheck, Globe } from "lucide-react";
-import { useI18n } from "@/lib/academic/i18n";
 import { useAcademicStore } from "@/lib/academic/store";
 import { applyPreset, listPresets } from "@/lib/academic/presets";
-import type { PresetId } from "@/lib/academic/types";
+import type { PresetId } from "@/types/types";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { useI18n } from "@/hooks/use-i18n";
 
 export function Layout() {
   const { t, lang, setLang } = useI18n();

@@ -1,0 +1,1 @@
+export const LANG_KEY = "academic-hub-lang";

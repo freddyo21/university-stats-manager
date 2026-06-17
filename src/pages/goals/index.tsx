@@ -21,13 +21,13 @@ import {
     subjectPassed,
     subjectScore10,
 } from "@/lib/academic/calc";
-import { useI18n } from "@/lib/academic/i18n";
 import { useAcademicStore } from "@/lib/academic/store";
-import type { GradingScale, PrecisionMode } from "@/lib/academic/types";
+import type { GradingScale, PrecisionMode } from "@/types/types";
 import { Award, BookMarked, GraduationCap, Layers, Target, TrendingUp, TriangleAlert } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useScaleSuffix } from "@/hooks/use-scale-suffix";
+import { useI18n } from "@/hooks/use-i18n";
+import { getScaleSuffix } from "@/utils/helpers";
 
 const SCALE_4_FACTOR = 2.5;
 

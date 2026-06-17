@@ -15,8 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Target, GraduationCap, BookCheck, BookMinus, Sparkles } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { cn } from "@/lib/utils";
-import { useI18n } from "@/lib/academic/i18n";
 import { PageHeader } from "@/components/Header";
+import { useI18n } from "@/hooks/use-i18n";
 
 export function RoadmapPage() {
   const { state, update } = useAcademicStore();

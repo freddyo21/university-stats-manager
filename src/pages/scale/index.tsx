@@ -2,10 +2,10 @@ import { PageHeader } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useI18n } from "@/lib/academic/i18n";
+import { useI18n } from "@/hooks/use-i18n";
 import { STANDARD_REFERENCE } from "@/lib/academic/presets";
 import { useAcademicStore } from "@/lib/academic/store";
-import type { LetterGradeRange } from "@/lib/academic/types";
+import type { LetterGradeRange } from "@/types/types";
 import { Plus, Trash2 } from "lucide-react";
 
 function clampNum(v: string, min: number, max: number) {

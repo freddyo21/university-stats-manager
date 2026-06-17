@@ -1,4 +1,4 @@
-import type { LetterGradeRange, PrecisionMode, Semester, Subject, Weights } from "./types";
+import type { LetterGradeRange, PrecisionMode, Semester, Subject, Weights } from "../../types/types";
 
 /** Component scores are entered at 1 decimal place by instructors. */
 const SUBJECT_COMPONENT_PRECISION = 1;

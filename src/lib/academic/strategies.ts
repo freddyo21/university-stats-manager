@@ -1,4 +1,4 @@
-import { type LetterGradeRange } from "./types";
+import { type LetterGradeRange } from "../../types/types";
 
 // Strategy Pattern: pluggable scale converters from Scale 10 baseline.
 export type ScaleStrategy = {

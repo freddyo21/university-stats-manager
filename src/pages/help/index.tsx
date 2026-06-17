@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { BookOpen, Calculator, Download, Shield, Sliders, Target } from "lucide-react";
-import { useI18n } from "@/lib/academic/i18n";
 import { PageHeader } from "@/components/Header";
+import { useI18n } from "@/hooks/use-i18n";
 
 type Section = {
   icon: React.ComponentType<{ className?: string }>;
