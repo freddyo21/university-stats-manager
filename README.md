@@ -1,75 +1,64 @@
-# React + TypeScript + Vite
+# Study Stats Suite - Core Grading Logic Engine
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Bộ thư viện xử lý và tính toán chỉ số học tập (GPA/CPA) nâng cao dành cho sinh viên, được tối ưu hóa theo quy chế đào tạo tín chỉ đại chúng và cấu hình linh hoạt theo từng trường Đại học (ví dụ: UIT).
 
-Currently, two official plugins are available:
+## 🚀 Tính năng cốt lõi
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Fix triệt để lỗi dấu phẩy động (Floating-point):** Loại bỏ hoàn toàn hiện tượng hụt điểm hệ 10 khi làm tròn các mốc sát nút như `5.85 -> 5.8` hay `7.95 -> 7.9` của JavaScript.
+- **Phân tách rạch ròi GPA và CPA:**
+  - **Điểm trung bình học kỳ (GPA):** Tính tất cả các môn đã đăng ký trong kỳ, bao gồm cả các môn bị trượt để phản ánh đúng năng lực học kỳ.
+  - **Điểm trung bình tích lũy (CPA):** Chỉ tính các môn đã đạt (`Pass`). Các môn trượt sẽ bị loại bỏ hoàn toàn khỏi tử số và mẫu số tích lũy cho đến khi có điểm học lại.
+- **Xử lý trọn vẹn môn điểm miễn:** Tự động đếm và cộng số tín chỉ đã miễn vào tổng số tín chỉ tích lũy toàn khóa, nhưng cô lập hoàn toàn điểm số (`null`) khỏi bộ chia trung bình GPA/CPA.
+- **Dynamic Precision Mode:** Hỗ trợ cấu hình động số chữ số thập phân hiển thị (1 hoặc 2 chữ số) linh hoạt từ State UI xuống tầng core util.
+- **Không Hardcode Thang Điểm:** Loại bỏ hoàn toàn việc hardcode thang điểm cố định, chuyển sang cơ chế quét khoảng điểm động theo cấu hình riêng biệt của từng trường đại học khi runtime.
 
-## React Compiler
+## 🛠️ Thiết kế Kiến trúc (Design Patterns)
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+Dự án áp dụng các mẫu thiết kế chuẩn mực để đảm bảo code clean, dễ scale và bảo trì:
 
-Note: This will impact Vite dev & build performances.
+1. **Facade Pattern:** Toàn bộ logic tính toán phân bố điểm chữ (`computeDistribution`) và thống kê hiệu suất chuyên sâu (`computePerformance`) được gom vào giao diện `GradeStatsFacade`. Tầng UI Component chỉ việc gọi Facade, che giấu hoàn toàn các vòng lặp lồng nhau phức tạp bên dưới.
+2. **Strategy Pattern:** Cơ chế quy đổi điểm và dò mốc học bổng/mục tiêu thay đổi thuật toán linh hoạt dựa trên trạng thái cấu hình thang điểm (`activeScale: "10" | "4" | "100"`).
 
-## Expanding the ESLint configuration
+## 📂 Mã nguồn Logic Tính Toán Cốt Lõi
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Hệ thống tính toán phân tách cấu trúc minh bạch qua các hàm chính trong `calc.ts`:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+```typescript
+// Tính điểm tổng kết học phần hệ 10 kèm xử lý an toàn dấu phẩy động
+export function subjectScore10(subject: Subject, precision: number = 2): number | null;
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+// Tính GPA học kỳ hệ 10 (Bao gồm cả môn trượt)
+export function semesterGPA10(s: Semester, ...): { gpa10: number | null; credits: number; ... };
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+// Tính CPA tích lũy hệ 4 (Loại bỏ môn trượt, đếm kèm môn miễn chỉ)
+export function cumulativeGPA4(semesters: Semester[], letterGrades: LetterGradeRange[], ...): { gpa4: number | null; credits: number; ... };
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 📦 Lệnh triển khai dự án
+Chạy kiểm tra cú pháp strict-type của TypeScript và đóng gói ứng dụng:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+# Kiểm tra lỗi biên dịch Type và Build Production
+npm run build
+# Hoặc chạy thủ công qua bộ công cụ
+tsc -b && vite build
 ```
+
+## 📝 Quy chuẩn đóng góp mã nguồn (Contribution Guidelines)
+* Strict TypeScript: Luôn khai báo kiểu dữ liệu tường minh, không lạm dụng kiểu any rác.
+
+
+## 📬 Liên hệ & Hỗ trợ (Contact)
+
+Nếu bạn có bất kỳ câu hỏi, góp ý hoặc phát hiện lỗ hổng logic/bảo mật nào trong bộ mã nguồn tính toán này, vui lòng liên hệ qua các kênh sau:
+
+- **Người phát triển:** Bùi Duy Anh (Freddy)
+- **Email liên hệ:** <a href="mailto:freddy.preo21@gmail.com">freddy.preo21@gmail.com</a>
+- **GitHub:** [Tại đây](https://github.com/freddyo21)
+- **LinkedIn:** [Tại đây](https://www.linkedin.com/in/freddy0605/)
+- **Số điện thoại:** <a href="tel:0984528986">0984528986</a>
+- **Lĩnh vực hoạt động:** Backend Development & Information Security (Red Team Operations)
+- **Tổ chức/Trường học:** Trường Đại học Công nghệ Thông tin, ĐHQG TP.HCM (UIT)
+
+---
+*Dự án được xây dựng và phát triển với mục tiêu tối ưu hóa hiệu suất quản lý học tập cá nhân, cam kết tuân thủ các quy chuẩn clean code và thiết kế hệ thống hướng đối tượng.*

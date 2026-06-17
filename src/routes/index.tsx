@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { IndexRoutes } from './IndexRoute';
 import { Layout } from '@/layouts/Layout';
+import type { ReactNode } from 'react';
 
 const routesConfig = [
     {
@@ -14,9 +15,16 @@ const routesConfig = [
     }
 ];
 
+interface CustomRouteObject {
+    path?: string;
+    index?: boolean;
+    element: ReactNode;
+    children?: CustomRouteObject[];
+}
+
 // Helper function to recursively render routes from config
-function renderRoutes(routesArray: any) {
-    return routesArray.map((route: any, idx: number) => {
+function renderRoutes(routesArray: CustomRouteObject[]) {
+    return routesArray.map((route: CustomRouteObject, idx: number) => {
         if (route.index) {
             return <Route key={`route-${idx}`} index element={route.element} />;
         }
