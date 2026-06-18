@@ -1,0 +1,10 @@
+# Cho phép tất cả các con bot tìm kiếm truy cập vào hệ thống
+User-agent: *
+Allow: /
+
+# Chặn bot cào dữ liệu vào các phân vùng nhạy cảm (ví dụ: trang quản trị admin)
+Disallow: /admin/
+Disallow: /private/
+
+# Khai báo đường dẫn Sitemap của bạn để bot tìm bài/trang nhanh hơn (Thay bằng domain thật của bạn)
+Sitemap: https://study-stats-suite.vercel.app/sitemap.xml
