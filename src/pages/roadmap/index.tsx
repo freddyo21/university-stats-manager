@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/Header";
 import { useI18n } from "@/hooks/use-i18n";
 
-export function RoadmapPage() {
+export default function RoadmapPage() {
   const { state, update } = useAcademicStore();
   const { t, lang } = useI18n();
 

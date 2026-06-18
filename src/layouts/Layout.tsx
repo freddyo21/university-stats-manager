@@ -45,7 +45,7 @@ export function Layout() {
           <div className="flex shrink-0 items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8">
+                <Button variant="outline" size="sm" className="h-8" aria-label={t("common.preset")}>
                   {t("common.preset")}: {t(`common.preset${state.presetId.charAt(0).toUpperCase() + state.presetId.slice(1)}`)}
                 </Button>
               </DropdownMenuTrigger>
@@ -64,7 +64,7 @@ export function Layout() {
             </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 gap-1.5">
+                <Button variant="ghost" size="sm" className="h-8 gap-1.5" aria-label={t("common.language")}>
                   <Globe className="h-4 w-4" /> {lang.toUpperCase()}
                 </Button>
               </DropdownMenuTrigger>

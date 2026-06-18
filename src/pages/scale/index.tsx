@@ -14,7 +14,7 @@ function clampNum(v: string, min: number, max: number) {
     return Math.min(max, Math.max(min, n));
 }
 
-export function ScalePage() {
+export default function ScalePage() {
     const { state, update } = useAcademicStore();
     const { t } = useI18n();
 
@@ -69,7 +69,7 @@ export function ScalePage() {
                             <h3 className="text-sm font-semibold">{t("scale.active")}</h3>
                             <p className="text-xs text-muted-foreground">Lower ≤ Score &lt; Upper</p>
                         </div>
-                        <Button size="sm" variant="outline" onClick={addRange}>
+                        <Button size="sm" variant="outline" onClick={addRange} aria-label={t("common.add")}>
                             <Plus className="h-3 w-3" /> {t("common.add")}
                         </Button>
                     </div>
@@ -126,7 +126,8 @@ export function ScalePage() {
                                             />
                                         </td>
                                         <td className="px-3 py-2 text-right">
-                                            <Button size="icon" variant="ghost" onClick={() => removeRange(i)} aria-label="Remove">
+                                            <Button size="icon" variant="ghost" aria-label={t("common.delete")}
+                                                onClick={() => removeRange(i)} disabled={state.presetId === "UIT" || state.presetId === "HUST"}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </td>

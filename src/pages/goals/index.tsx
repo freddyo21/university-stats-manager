@@ -33,7 +33,7 @@ import { getScaleSuffix } from "@/utils/helpers";
 
 const SCALE_4_FACTOR = 2.5;
 
-export function GoalsPage() {
+export default function GoalsPage() {
     const { state, update } = useAcademicStore();
     const { t } = useI18n();
     const [selectedId, setSelectedId] = useState<string>("");

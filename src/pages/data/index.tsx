@@ -18,7 +18,7 @@ import {
 import { PageHeader } from "@/components/Header";
 import { useI18n } from "@/hooks/use-i18n";
 
-export function DataPage() {
+export default function DataPage() {
   const { state, replace, reset } = useAcademicStore();
   const { t } = useI18n();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -43,7 +43,7 @@ export function DataPage() {
         if (!parsed || !Array.isArray(parsed.semesters)) throw new Error("Invalid file");
 
         replace({ ...DEFAULT_STATE, ...parsed } as AppState);
-        
+
         toast.success("Imported");
       } catch {
         toast.error("Invalid JSON file");
@@ -58,14 +58,24 @@ export function DataPage() {
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="p-5">
-          <div className="flex items-center gap-2 text-sm font-semibold"><Download className="h-4 w-4 text-primary" /> {t("data.export")}</div>
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <Download className="h-4 w-4 text-primary" /> {t("data.export")}
+          </div>
+
           <p className="mt-2 text-sm text-muted-foreground">Download a JSON snapshot of every semester, subject, and configuration.</p>
-          <Button onClick={exportJSON} className="mt-4 w-full"><Download className="h-4 w-4" /> {t("data.export")}</Button>
+
+          <Button onClick={exportJSON} className="mt-4 w-full" aria-label="Export data">
+            <Download className="h-4 w-4" /> {t("data.export")}
+          </Button>
         </Card>
 
         <Card className="p-5">
-          <div className="flex items-center gap-2 text-sm font-semibold"><Upload className="h-4 w-4 text-primary" /> {t("data.import")}</div>
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <Upload className="h-4 w-4 text-primary" /> {t("data.import")}
+          </div>
+
           <p className="mt-2 text-sm text-muted-foreground">Restore a previously exported JSON snapshot. Replaces current data.</p>
+
           <input
             ref={fileRef}
             type="file"
@@ -77,7 +87,9 @@ export function DataPage() {
               e.target.value = "";
             }}
           />
-          <Button variant="outline" onClick={() => fileRef.current?.click()} className="mt-4 w-full">
+
+          <Button variant="outline" className="mt-4 w-full" aria-label="Import data"
+            onClick={() => fileRef.current?.click()}>
             <Upload className="h-4 w-4" /> {t("data.import")}
           </Button>
         </Card>
@@ -85,7 +97,8 @@ export function DataPage() {
         <Card className="p-5">
           <div className="flex items-center gap-2 text-sm font-semibold"><Trash2 className="h-4 w-4 text-destructive" /> {t("data.clear")}</div>
           <p className="mt-2 text-sm text-muted-foreground">Wipes every key the app stores in this browser. Cannot be undone.</p>
-          <Button variant="destructive" onClick={() => setConfirmOpen(true)} className="mt-4 w-full">
+          <Button variant="destructive" aria-label={t("data.clear")}
+            onClick={() => setConfirmOpen(true)} className="mt-4 w-full">
             <Trash2 className="h-4 w-4" /> {t("data.clear")}
           </Button>
         </Card>

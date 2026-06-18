@@ -1,10 +1,12 @@
-import { GradeEntryPage } from "@/pages";
-import { DataPage } from "@/pages/data";
-import { GoalsPage } from "@/pages/goals";
-import { HelpPage } from "@/pages/help";
-import { RoadmapPage } from "@/pages/roadmap";
-import { ScalePage } from "@/pages/scale";
+import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
+
+const GradeEntryPage = lazy(() => import("@/pages/index"));
+const DataPage = lazy(() => import("@/pages/data"));
+const GoalsPage = lazy(() => import("@/pages/goals"));
+const HelpPage = lazy(() => import("@/pages/help"));
+const RoadmapPage = lazy(() => import("@/pages/roadmap"));
+const ScalePage = lazy(() => import("@/pages/scale"));
 
 export const IndexRoutes = () => {
 

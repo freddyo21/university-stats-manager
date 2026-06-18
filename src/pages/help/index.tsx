@@ -61,7 +61,7 @@ const sections: Section[] = [
   },
 ];
 
-export function HelpPage() {
+export default function HelpPage() {
   const { lang, t } = useI18n();
   return (
     <>

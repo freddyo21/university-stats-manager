@@ -44,7 +44,7 @@ function newSemester(index: number, targetGPA: number): Semester {
     };
 }
 
-export function GradeEntryPage() {
+export default function GradeEntryPage() {
     const { state, update } = useAcademicStore();
     const { t } = useI18n();
     const [showConfig, setShowConfig] = useState(false);
@@ -173,7 +173,7 @@ export function GradeEntryPage() {
                 title={t("entry.title")}
                 description={t("entry.desc")}
                 actions={
-                    <Button size="sm" onClick={() => setShowConfig((v) => !v)}>
+                    <Button size="sm" onClick={() => setShowConfig((v) => !v)} aria-label={t("common.settings")}>
                         <Settings2 className="h-4 w-4" /> <span className="hidden sm:inline">{t("common.settings")}</span>
                     </Button>
                 }
@@ -184,7 +184,7 @@ export function GradeEntryPage() {
             {state.semesters.length === 0 ? (
                 <Card className="border-dashed bg-muted/30 p-10 text-center">
                     <p className="text-sm text-muted-foreground">{t("entry.empty")}</p>
-                    <Button onClick={addSemester} className="mt-4">
+                    <Button onClick={addSemester} className="mt-4" aria-label={t("entry.addSemester")}>
                         <Plus className="h-4 w-4" /> {t("entry.addSemester")}
                     </Button>
                 </Card>
@@ -197,7 +197,7 @@ export function GradeEntryPage() {
             )}
 
             <div className="mt-6 flex justify-center">
-                <Button onClick={addSemester} variant="outline">
+                <Button onClick={addSemester} variant="outline" aria-label={t("entry.addSemester")}>
                     <Plus className="h-4 w-4" /> {t("entry.addSemester")}
                 </Button>
             </div>
@@ -225,7 +225,7 @@ function ConfigPanel({
         <Card className="mb-6 p-5">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
                 <h3 className="text-base font-semibold">{t("common.settings")}</h3>
-                <Button variant="ghost" size="sm" onClick={onClose}>
+                <Button variant="ghost" size="sm" onClick={onClose} aria-label={t("common.done")}>
                     {t("common.done")}
                 </Button>
             </div>
@@ -346,11 +346,12 @@ function SemesterCard({ semester }: { semester: Semester; index: number }) {
             <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3 border-b border-border bg-muted/30 p-4">
                 <button
                     onClick={() => setOpen(!open)}
-                    className="grid h-8 w-8 place-items-center rounded-md hover:bg-muted"
-                    aria-label="Toggle"
+                    className="grid h-8 w-8 place-items-center rounded-md hover:bg-muted cursor-pointer"
+                    aria-label={`${open ? t("common.collapse") : t("common.expand")} ${t("common.semester")}`}
                 >
                     {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                 </button>
+
                 <div className="min-w-0">
                     <Input
                         value={semester.name}
@@ -362,10 +363,14 @@ function SemesterCard({ semester }: { semester: Semester; index: number }) {
                         <span className="font-semibold text-foreground">{gpa10?.toFixed(2) ?? "—"}</span>
                     </div>
                 </div>
-                <Button size="sm" variant="ghost" onClick={() => broadcastOpen(!semExpanded)} className="text-xs px-2">
-                    {semExpanded ? "Collapse All" : "Expand All"}
+
+                <Button size="sm" variant="ghost" className="text-xs px-2"
+                    onClick={() => broadcastOpen(!semExpanded)}
+                    aria-label={semExpanded ? t("common.collapse.all") : t("common.expand.all")}>
+                    {semExpanded ? t("common.collapse.all") : t("common.expand.all")}
                 </Button>
-                <Button size="icon" variant="ghost" onClick={remove} aria-label="Delete semester">
+
+                <Button size="icon" variant="ghost" onClick={remove} aria-label={t("common.delete")}>
                     <Trash2 className="h-4 w-4" />
                 </Button>
             </div>
@@ -386,7 +391,8 @@ function SemesterCard({ semester }: { semester: Semester; index: number }) {
                             onDelete={() => removeSubject(sub.id)}
                         />
                     ))}
-                    <Button variant="outline" size="sm" onClick={addSubject}>
+                    <Button variant="outline" size="sm" onClick={addSubject}
+                        aria-label={t("entry.addSubject")}>
                         <Plus className="h-4 w-4" /> {t("entry.addSubject")}
                     </Button>
                 </div>
@@ -482,13 +488,19 @@ function SubjectRow({
                 <button
                     onClick={() => setOpen(!open)}
                     className="grid h-7 w-7 shrink-0 place-items-center rounded-md hover:bg-muted"
-                    aria-label="Toggle subject"
+                    aria-label={`${open ? t("common.collapse") : t("common.expand")} ${t("common.subject")}`}
                 >
                     {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                 </button>
                 <div className="w-28 shrink-0">
-                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">{t("entry.subjectCode")}</Label>
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground"
+                        htmlFor={`subject-code-${subject.id}`}
+                    >
+                        {t("entry.subjectCode")}
+                    </Label>
+
                     <Input
+                        id={`subject-code-${subject.id}`}
                         value={subject.code}
                         placeholder="CS101"
                         onChange={(e) => onChange({ code: e.target.value.slice(0, 16) })}
@@ -496,8 +508,13 @@ function SubjectRow({
                     />
                 </div>
                 <div className="min-w-40 flex-1">
-                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">{t("entry.subjectName")}</Label>
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground"
+                        htmlFor={`subject-name-${subject.id}`}
+                    >
+                        {t("entry.subjectName")}
+                    </Label>
                     <Input
+                        id={`subject-name-${subject.id}`}
                         value={subject.name}
                         placeholder="Introduction to Programming"
                         onChange={(e) => onChange({ name: e.target.value.slice(0, 120) })}
@@ -505,8 +522,13 @@ function SubjectRow({
                     />
                 </div>
                 <div className="w-20 shrink-0">
-                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">{t("common.credits")}</Label>
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground"
+                        htmlFor={`subject-credits-${subject.id}`}
+                    >
+                        {t("common.credits")}
+                    </Label>
                     <Input
+                        id={`subject-credits-${subject.id}`}
                         type="number"
                         min={0}
                         max={20}
@@ -530,7 +552,9 @@ function SubjectRow({
                         {t("common.exempt")}
                     </label>
                 </div>
-                <Button size="icon" variant="ghost" onClick={onDelete} aria-label="Delete subject" className="h-8 w-8 shrink-0">
+                <Button size="icon" variant="ghost" onClick={onDelete}
+                    aria-label={`${t("common.delete")} ${t("common.subject")}`}
+                    className="h-8 w-8 shrink-0">
                     <Trash2 className="h-4 w-4" />
                 </Button>
             </div>
