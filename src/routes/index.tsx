@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { IndexRoutes } from './IndexRoute';
 import { Layout } from '@/layouts/Layout';
-import type { ReactNode } from 'react';
+import { Suspense, type ReactNode } from 'react';
 
 const routesConfig = [
     {
@@ -51,8 +51,10 @@ function renderRoutes(routesArray: CustomRouteObject[]) {
 
 export function RoutesConfig() {
     return (
-        <Routes>
-            {renderRoutes(routesConfig)}
-        </Routes>
+        <Suspense fallback={<div className="min-h-screen bg-background" />}>
+            <Routes>
+                {renderRoutes(routesConfig)}
+            </Routes>
+        </Suspense>
     );
 }
