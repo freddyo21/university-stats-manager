@@ -1,8 +1,16 @@
 {
-    "rewrites": [
+    "routes": [
         {
-            "source": "/((?!.*\\.(?:html|js|css|ico|png|jpg|jpeg|svg|txt|xml)$).*)",
-            "destination": "/index.html"
+            "src": "/api/(.*)",
+            "dest": "/api/$1"
+        },
+        {
+            "src": "/((?!api|src|node_modules|@vite|@id|@fs|index\\.html|favicon\\.svg).*\\.[^/]*)",
+            "dest": "/$1"
+        },
+        {
+            "src": "/((?!api|src|node_modules|@vite|@id|@fs|index\\.html|favicon\\.svg)[^.]*)",
+            "dest": "/index.html"
         }
     ]
 }
