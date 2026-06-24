@@ -1,4 +1,8 @@
-import type { LetterGradeRange, PrecisionMode, Semester, Subject, Weights } from "../../types/types";
+import type { TLetterGradeRange } from "@/types/TLetterGradeRange";
+import type { TSemester } from "@/types/TSemester";
+import type { TSubject } from "@/types/TSubject";
+import type { TSubjectWeights } from "@/types/TSubjectWeights";
+import type { TPrecisionMode } from "@/types/types";
 
 /** Component scores are entered at 1 decimal place by instructors. */
 const SUBJECT_COMPONENT_PRECISION = 1;
@@ -8,7 +12,7 @@ export function roundToPrecision(value: number, precision: number): number {
   return Math.round(value * factor) / factor;
 }
 
-export function roundGpa(value: number, precisionMode: PrecisionMode): number {
+export function roundGpa(value: number, precisionMode: TPrecisionMode): number {
   return roundToPrecision(value, precisionMode);
 }
 
@@ -16,11 +20,11 @@ export function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
 }
 
-export function weightTotal(w: Weights) {
+export function weightTotal(w: TSubjectWeights) {
   return w.process + w.midterm + w.practice + w.final;
 }
 
-export function subjectScore10(subject: Subject, precision: PrecisionMode = 2): number | null {
+export function subjectScore10(subject: TSubject, precision: TPrecisionMode = 2): number | null {
   const { weights, scores } = subject;
 
   const total = weightTotal(weights);
@@ -50,9 +54,9 @@ export function subjectScore10(subject: Subject, precision: PrecisionMode = 2): 
   return Math.round(rawScore * factor) / factor;
 }
 
-export function hasComponentFail(subject: Subject, enabled: boolean, threshold: number): boolean {
+export function hasComponentFail(subject: TSubject, enabled: boolean, threshold: number): boolean {
   if (!enabled) return false;
-  const keys: (keyof Subject["weights"])[] = ["process", "midterm", "practice", "final"];
+  const keys: (keyof TSubject["weights"])[] = ["process", "midterm", "practice", "final"];
   for (const k of keys) {
     if (subject.weights[k] > 0) {
       const s = subject.scores[k];
@@ -63,11 +67,11 @@ export function hasComponentFail(subject: Subject, enabled: boolean, threshold: 
 }
 
 export function subjectPassed(
-  subject: Subject,
+  subject: TSubject,
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
-  precision: PrecisionMode = 2,
+  precision: TPrecisionMode = 2,
 ): boolean | null {
   if (subject.isExempt) return true;
 
@@ -81,11 +85,11 @@ export function subjectPassed(
 }
 
 export function effectiveScore10(
-  subject: Subject,
+  subject: TSubject,
   // subjectPass: number,
   // compEnabled: boolean,
   // compThreshold: number,
-  precision: PrecisionMode = 2,
+  precision: TPrecisionMode = 2,
 ): number | null {
   const sc = subjectScore10(subject, precision);
 
@@ -97,7 +101,7 @@ export function effectiveScore10(
   return sc;
 }
 
-export function gpa4FromScore10(score10: number, letterGrades: LetterGradeRange[]): number {
+export function gpa4FromScore10(score10: number, letterGrades: TLetterGradeRange[]): number {
   const matchedRange = letterGrades.find((r) => score10 >= r.min && score10 < r.max);
   return matchedRange ? matchedRange.gpa4 : 0.0;
 }
@@ -106,7 +110,7 @@ export function to100(score10: number) {
   return Math.round(score10 * 10);
 }
 
-export function toLetter(score10: number, ranges: LetterGradeRange[]): string {
+export function toLetter(score10: number, ranges: TLetterGradeRange[]): string {
   for (const r of ranges) {
     if (score10 >= r.min && score10 < r.max) return r.letter;
   }
@@ -114,11 +118,11 @@ export function toLetter(score10: number, ranges: LetterGradeRange[]): string {
 }
 
 export function semesterGPA10(
-  s: Semester,
+  s: TSemester,
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
-  precisionMode: PrecisionMode = 2,
+  precisionMode: TPrecisionMode = 2,
 ): {
   gpa10: number | null;
   credits: number;
@@ -167,12 +171,12 @@ export function semesterGPA10(
 }
 
 export function semesterGPA4(
-  s: Semester,
-  letterGrades: LetterGradeRange[],
+  s: TSemester,
+  letterGrades: TLetterGradeRange[],
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
-  precisionMode: PrecisionMode = 2,
+  precisionMode: TPrecisionMode = 2,
 ): {
   gpa4: number | null;
   credits: number;
@@ -221,9 +225,9 @@ export function semesterGPA4(
 }
 
 export function grossGPA4(
-  semesters: Semester[],
-  letterGrades: LetterGradeRange[],
-  precisionMode: PrecisionMode = 2,
+  semesters: TSemester[],
+  letterGrades: TLetterGradeRange[],
+  precisionMode: TPrecisionMode = 2,
 ): {
   gpa4: number | null;
   credits: number;        // Tổng tín chỉ đã đăng ký học (gồm cả đạt + trượt + miễn)
@@ -278,11 +282,11 @@ export function grossGPA4(
 }
 
 export function grossGPA10(
-  semesters: Semester[],
+  semesters: TSemester[],
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
-  precisionMode: PrecisionMode = 2,
+  precisionMode: TPrecisionMode = 2,
 ): {
   gpa10: number | null;
   credits: number;
@@ -334,12 +338,12 @@ export function grossGPA10(
 }
 
 export function cumulativeGPA4(
-  semesters: Semester[],
-  letterGrades: LetterGradeRange[],
+  semesters: TSemester[],
+  letterGrades: TLetterGradeRange[],
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
-  precisionMode: PrecisionMode = 2,
+  precisionMode: TPrecisionMode = 2,
 ): {
   gpa4: number | null;
   credits: number;
@@ -394,11 +398,11 @@ export function cumulativeGPA4(
 }
 
 export function cumulativeGPA10(
-  semesters: Semester[],
+  semesters: TSemester[],
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
-  precisionMode: PrecisionMode = 2,
+  precisionMode: TPrecisionMode = 2,
 ): {
   gpa10: number | null;
   credits: number;
@@ -449,11 +453,11 @@ export function cumulativeGPA10(
 }
 
 export function passedCredits(
-  semesters: Semester[],
+  semesters: TSemester[],
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
-  precision: PrecisionMode = 2,
+  precision: TPrecisionMode = 2,
 ): number {
   let credits = 0;
   for (const s of semesters) {

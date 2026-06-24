@@ -112,9 +112,29 @@ export const D: Dict = {
   "data.export": { en: "Export JSON", vi: "Xuất JSON" },
   "data.import": { en: "Import JSON", vi: "Nhập JSON" },
   "data.clear": { en: "Clear all data", vi: "Xóa toàn bộ dữ liệu" },
-  "data.confirmTitle": { en: "Clear all data?", vi: "Xóa toàn bộ dữ liệu?" },
-  "data.confirmBody": { en: "This wipes every semester, subject, and setting from this browser. This cannot be undone.", vi: "Hành động này xóa mọi học kỳ, môn và cấu hình khỏi trình duyệt. Không thể hoàn tác." },
-  "data.cancel": { en: "Cancel", vi: "Hủy" },
-  "data.confirm": { en: "Yes, clear everything", vi: "Đồng ý, xóa hết" },
+  "data.clearDesc": {
+    en: "Wipes every key the app stores in this browser. Cannot be undone.",
+    vi: "Xóa mọi dữ liệu ứng dụng đã lưu trong trình duyệt. Không thể hoàn tác."
+  },
+  "data.deleteAlert.confirmTitle": { en: "Clear all data?", vi: "Xóa toàn bộ dữ liệu?" },
+  "data.deleteAlert.confirmBody": {
+    en: "This wipes every semester, subject, and setting from this browser. This cannot be undone.",
+    vi: "Hành động này xóa mọi học kỳ, môn và cấu hình khỏi trình duyệt. Không thể hoàn tác."
+  },
+  "data.deleteAlert.cancel": { en: "Cancel", vi: "Hủy" },
+  "data.deleteAlert.confirm": { en: "Yes, clear everything", vi: "Đồng ý, xóa hết" },
+  "data.clearSuccess": { en: "All data cleared", vi: "Đã xóa toàn bộ dữ liệu" },
+  "data.clearFailed": { en: "Failed to clear data safely", vi: "Xóa dữ liệu không thành công" },
+  "data.importDesc": { en: "Restore a previously exported JSON snapshot. Replaces current data.", vi: "Khôi phục dữ liệu từ file JSON đã xuất trước đó. Thao tác này sẽ thay thế dữ liệu hiện tại." },
+  "data.importSuccess": { en: "Data imported successfully", vi: "Nhập dữ liệu thành công" },
+  "data.importFailed": { en: "Failed to import data", vi: "Nhập dữ liệu không thành công" },
+  "data.exportDesc": { en: "Export a JSON snapshot of your current data. Keep it safe for later import.", vi: "Xuất dữ liệu hiện tại ra file JSON. Hãy giữ an toàn để nhập lại sau." },
+  "data.exportSuccess": { en: "Data exported successfully", vi: "Xuất dữ liệu thành công" },
+  "data.exportFailed": { en: "Failed to export data", vi: "Xuất dữ liệu không thành công" },
+  "data.privacyHeader": { en: "Privacy guarantee", vi: "Cam kết riêng tư" },
+  "data.privacyDesc": {
+    en: "The app uses only browser localStorage. Nothing is sent to a server. Export regularly if data is important.",
+    vi: "Ứng dụng chỉ sử dụng storage có sẵn của trình duyệt. Không gửi dữ liệu lên máy chủ. Hãy sao lưu dữ liệu thường xuyên nếu quan trọng."
+  }
 };
 
