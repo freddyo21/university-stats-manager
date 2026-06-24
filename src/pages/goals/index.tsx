@@ -23,50 +23,76 @@ import {
     subjectPassed,
     subjectScore10,
 } from "@/lib/academic/calc";
-import { useAcademicStore } from "@/lib/academic/store";
-import type { GradingScale, PrecisionMode } from "@/types/types";
+import type { TGradingScale, TPrecisionMode } from "@/types/types";
 import { Award, BookMarked, GraduationCap, Layers, Target, TrendingUp, TriangleAlert } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useI18n } from "@/hooks/use-i18n";
 import { getScaleSuffix } from "@/utils/helpers";
+import { useAcademicStore } from "@/hooks/useAcademicStore";
 
 const SCALE_4_FACTOR = 2.5;
 
 export default function GoalsPage() {
     const { state, update } = useAcademicStore();
     const { t } = useI18n();
-    const [selectedId, setSelectedId] = useState<string>("");
 
-    useEffect(() => {
-        if (!selectedId && state.semesters[0]) setSelectedId(state.semesters[0].id);
-    }, [state.semesters, selectedId]);
+    const [selectedId, setSelectedId] = useState<string>("");
+    const [prevSemesters, setPrevSemesters] = useState(state.semesters);
+
+    if (state.semesters !== prevSemesters || (!selectedId && state.semesters.length > 0)) {
+        setPrevSemesters(state.semesters);
+
+        // Nếu ID hiện tại không còn tồn tại trong danh sách kỳ mới, tự động reset về kỳ đầu tiên
+        const exists = state.semesters.some((s) => s.id === selectedId);
+        setSelectedId(exists && selectedId ? selectedId : (state.semesters[0]?.id ?? ""));
+    }
 
     const selectedIndex = state.semesters.findIndex((s) => s.id === selectedId);
     const selected = state.semesters[selectedIndex];
-
-    const passOpts = [
-        state.subjectPassThreshold,
-        state.componentPassEnabled,
-        state.componentPassThreshold,
-    ] as const;
 
     const precisionMode = state.precisionMode;
 
     const semData = useMemo(
         () =>
             selected
-                ? semesterGPA10(selected, ...passOpts, precisionMode)
+                ? semesterGPA10(
+                    selected,
+                    state.subjectPassThreshold,
+                    state.componentPassEnabled,
+                    state.componentPassThreshold,
+                    precisionMode
+                )
                 : { gpa10: null, credits: 0, passedCredits: 0, exemptCredits: 0 },
-        [selected, precisionMode, ...passOpts],
+        [
+            selected,
+            precisionMode,
+            state.subjectPassThreshold,
+            state.componentPassEnabled,
+            state.componentPassThreshold
+        ],
     );
 
     const semData4 = useMemo(
         () =>
             selected
-                ? semesterGPA4(selected, state.letterGrades, ...passOpts, precisionMode)
+                ? semesterGPA4(
+                    selected,
+                    state.letterGrades,
+                    state.subjectPassThreshold,
+                    state.componentPassEnabled,
+                    state.componentPassThreshold,
+                    precisionMode
+                )
                 : { gpa4: null, credits: 0, passedCredits: 0, exemptCredits: 0 },
-        [selected, state.letterGrades, precisionMode, ...passOpts],
+        [
+            selected,
+            state.letterGrades,
+            precisionMode,
+            state.subjectPassThreshold,
+            state.componentPassEnabled,
+            state.componentPassThreshold
+        ],
     );
 
     const gross10UpTo = useMemo(() => {
@@ -79,10 +105,19 @@ export default function GoalsPage() {
 
         return grossGPA10(
             state.semesters.slice(0, selectedIndex + 1),
-            ...passOpts,
+            state.subjectPassThreshold,
+            state.componentPassEnabled,
+            state.componentPassThreshold,
             precisionMode,
         )
-    }, [state.semesters, selectedIndex, precisionMode, ...passOpts]);
+    }, [
+        state.semesters,
+        selectedIndex,
+        precisionMode,
+        state.subjectPassThreshold,
+        state.componentPassEnabled,
+        state.componentPassThreshold
+    ]);
 
     const gross4UpTo = useMemo(() => {
         if (selectedIndex < 0) return {
@@ -109,10 +144,19 @@ export default function GoalsPage() {
 
         return cumulativeGPA10(
             state.semesters.slice(0, selectedIndex + 1),
-            ...passOpts,
+            state.subjectPassThreshold,
+            state.componentPassEnabled,
+            state.componentPassThreshold,
             precisionMode,
         );
-    }, [state.semesters, selectedIndex, precisionMode, ...passOpts]);
+    }, [
+        state.semesters,
+        selectedIndex,
+        precisionMode,
+        state.subjectPassThreshold,
+        state.componentPassEnabled,
+        state.componentPassThreshold
+    ]);
 
     const cumulative4UpTo = useMemo(() => {
         if (selectedIndex < 0) return {
@@ -125,14 +169,30 @@ export default function GoalsPage() {
         return cumulativeGPA4(
             state.semesters.slice(0, selectedIndex + 1),
             state.letterGrades,
-            ...passOpts,
+            state.subjectPassThreshold,
+            state.componentPassEnabled,
+            state.componentPassThreshold,
             precisionMode,
         );
-    }, [state.semesters, state.letterGrades, selectedIndex, precisionMode, ...passOpts]);
+    }, [
+        state.semesters,
+        state.letterGrades,
+        selectedIndex,
+        precisionMode,
+        state.subjectPassThreshold,
+        state.componentPassEnabled,
+        state.componentPassThreshold
+    ]);
 
     const active = selected
         ? selected.subjects.filter(
-            (s) => subjectPassed(s, ...passOpts, precisionMode) !== null,
+            (s) => subjectPassed(
+                s,
+                state.subjectPassThreshold,
+                state.componentPassEnabled,
+                state.componentPassThreshold,
+                precisionMode
+            ) !== null,
         ).length
         : 0;
 
@@ -146,7 +206,7 @@ export default function GoalsPage() {
         }));
     };
 
-    const setActiveScale = (scale: GradingScale) => {
+    const setActiveScale = (scale: TGradingScale) => {
         update((s) => ({
             ...s,
             activeScale: scale,
@@ -154,7 +214,7 @@ export default function GoalsPage() {
         }));
     };
 
-    const setPrecisionMode = (mode: PrecisionMode) => {
+    const setPrecisionMode = (mode: TPrecisionMode) => {
         update((s) => ({ ...s, precisionMode: mode }));
     };
 
@@ -249,7 +309,7 @@ export default function GoalsPage() {
                     <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         {t("goals.selectGpa")}
                     </Label>
-                    <Select onValueChange={(v) => setActiveScale(v as GradingScale)}>
+                    <Select onValueChange={(v) => setActiveScale(v as TGradingScale)}>
                         <SelectTrigger className="mt-2 w-full">
                             <SelectValue placeholder={t("goals.selectGpa")} />
                         </SelectTrigger>
@@ -287,7 +347,7 @@ export default function GoalsPage() {
                     </Label>
                     <RadioGroup
                         value={String(precisionMode)}
-                        onValueChange={(v) => setPrecisionMode(Number(v) as PrecisionMode)}
+                        onValueChange={(v) => setPrecisionMode(Number(v) as TPrecisionMode)}
                         className="mt-2 flex flex-col gap-2 sm:flex-row sm:gap-6"
                     >
                         <label className="flex cursor-pointer items-center gap-2 text-sm">
@@ -338,7 +398,7 @@ export default function GoalsPage() {
                                 <div className="max-sm:w-full w-1/2 max-sm:mt-2">
                                     <Select
                                         value={activeScale}
-                                        onValueChange={(v) => setActiveScale(v as GradingScale)}
+                                        onValueChange={(v) => setActiveScale(v as TGradingScale)}
                                     >
                                         <SelectTrigger className="w-full">
                                             <SelectValue placeholder={t("goals.selectGpa")} />
@@ -406,7 +466,7 @@ export default function GoalsPage() {
                                 <tbody>
                                     {selected.subjects.map((sub) => {
                                         const sc10 = subjectScore10(sub, precisionMode);
-                                        const passed = subjectPassed(sub, ...passOpts, precisionMode);
+                                        const passed = subjectPassed(sub, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold, precisionMode);
                                         const sc4 = sc10 === null ? null : gpa4FromScore10(sc10, state.letterGrades);
 
                                         return (

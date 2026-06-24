@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Trash2, ChevronDown, ChevronRight, Settings2, AlertTriangle, CheckCircle2 } from "lucide-react";
-import { useAcademicStore } from "@/lib/academic/store";
-import type { AppState, LetterGradeRange, PrecisionMode, Semester, Subject } from "@/types/types";
 import {
     hasComponentFail,
     gpa4FromScore10,
@@ -22,8 +20,14 @@ import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/Header";
 import { uuidv7 } from "@/utils/uuid";
 import { useI18n } from "@/hooks/use-i18n";
+import { useAcademicStore } from "@/hooks/useAcademicStore";
+import type { TAppState } from "@/types/TAppState";
+import type { TLetterGradeRange } from "@/types/TLetterGradeRange";
+import type { TSemester } from "@/types/TSemester";
+import type { TSubject } from "@/types/TSubject";
+import type { TPrecisionMode } from "@/types/types";
 
-function newSubject(): Subject {
+function newSubject(): TSubject {
     return {
         id: uuidv7(),
         code: "",
@@ -35,7 +39,7 @@ function newSubject(): Subject {
     };
 }
 
-function newSemester(index: number, targetGPA: number): Semester {
+function newSemester(index: number, targetGPA: number): TSemester {
     return {
         id: uuidv7(),
         name: `Semester ${index + 1}`,
@@ -216,8 +220,8 @@ function ConfigPanel({
     update,
     onClose,
 }: {
-    state: AppState;
-    update: (u: (s: AppState) => AppState) => void;
+    state: TAppState;
+    update: (u: (s: TAppState) => TAppState) => void;
     onClose: () => void;
 }) {
     const { t } = useI18n();
@@ -280,7 +284,7 @@ function ConfigPanel({
                     <RadioGroup
                         value={String(state.precisionMode)}
                         onValueChange={(v) =>
-                            update((s) => ({ ...s, precisionMode: Number(v) as PrecisionMode }))
+                            update((s) => ({ ...s, precisionMode: Number(v) as TPrecisionMode }))
                         }
                         className="mt-2 flex flex-col gap-2 sm:flex-row sm:gap-6"
                     >
@@ -299,7 +303,7 @@ function ConfigPanel({
     );
 }
 
-function SemesterCard({ semester }: { semester: Semester; index: number }) {
+function SemesterCard({ semester }: { semester: TSemester; index: number }) {
     const { state, update } = useAcademicStore();
     const { t } = useI18n();
     const [open, setOpen] = useState(true);
@@ -317,7 +321,7 @@ function SemesterCard({ semester }: { semester: Semester; index: number }) {
         [semester, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold, state.precisionMode],
     );
 
-    const setSemester = (patch: Partial<Semester>) =>
+    const setSemester = (patch: Partial<TSemester>) =>
         update((s) => ({
             ...s,
             semesters: s.semesters.map((x) => (x.id === semester.id ? { ...x, ...patch } : x)),
@@ -328,7 +332,7 @@ function SemesterCard({ semester }: { semester: Semester; index: number }) {
 
     const addSubject = () => setSemester({ subjects: [...semester.subjects, newSubject()] });
 
-    const updateSubject = (id: string, patch: Partial<Subject>) =>
+    const updateSubject = (id: string, patch: Partial<TSubject>) =>
         setSemester({
             subjects: semester.subjects.map((sub) => (sub.id === id ? { ...sub, ...patch } : sub)),
         });
@@ -412,22 +416,24 @@ function SubjectRow({
     onChange,
     onDelete,
 }: {
-    subject: Subject;
-    letterGrades: LetterGradeRange[];
-    precisionMode: PrecisionMode;
+    subject: TSubject;
+    letterGrades: TLetterGradeRange[];
+    precisionMode: TPrecisionMode;
     subjectPass: number;
     componentPassEnabled: boolean;
     componentPass: number;
     openSignal: { open: boolean; tick: number } | null;
-    onChange: (patch: Partial<Subject>) => void;
+    onChange: (patch: Partial<TSubject>) => void;
     onDelete: () => void;
 }) {
     const { t } = useI18n();
     const [open, setOpen] = useState(true);
+    const [prevSignal, setPrevSignal] = useState(openSignal);
 
-    useEffect(() => {
-        if (openSignal !== null) setOpen(openSignal.open);
-    }, [openSignal]);
+    if (openSignal !== prevSignal) {
+        setPrevSignal(openSignal);
+        setOpen(openSignal !== null ? openSignal.open : true);
+    }
 
     const score = subjectScore10(subject, precisionMode);
     const wTotal = weightTotal(subject.weights);
@@ -447,14 +453,14 @@ function SubjectRow({
 
     const scale100Display = score === null ? "—" : compFail ? "0" : String(to100(score));
 
-    const setScore = (k: keyof Subject["scores"], v: string) => {
+    const setScore = (k: keyof TSubject["scores"], v: string) => {
         const n = v === "" ? null : Number(v);
         onChange({
             scores: { ...subject.scores, [k]: n === null || isNaN(n) ? null : Math.min(10, Math.max(0, n)) },
         });
     };
 
-    const setWeight = (k: keyof Subject["weights"], v: string) => {
+    const setWeight = (k: keyof TSubject["weights"], v: string) => {
         const n = Number(v);
         onChange({ weights: { ...subject.weights, [k]: isNaN(n) ? 0 : Math.min(100, Math.max(0, n)) } });
     };
@@ -463,7 +469,7 @@ function SubjectRow({
         onChange({ isExempt: v });
     };
 
-    const components: { key: keyof Subject["scores"]; label: string }[] = [
+    const components: { key: keyof TSubject["scores"]; label: string }[] = [
         { key: "process", label: t("entry.process") },
         { key: "midterm", label: t("entry.midterm") },
         { key: "practice", label: t("entry.practice") },

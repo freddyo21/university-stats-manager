@@ -1,5 +1,4 @@
-import { useMemo } from "react";
-import { useAcademicStore } from "@/lib/academic/store";
+import { useMemo, useState } from "react";
 import {
   classify,
   cumulativeGPA10,
@@ -9,6 +8,7 @@ import {
   subjectScore10,
   toLetter,
 } from "@/lib/academic/calc";
+import type { TGradingScale } from "@/types/types";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,10 +17,18 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/Header";
 import { useI18n } from "@/hooks/use-i18n";
+import { useAcademicStore } from "@/hooks/useAcademicStore";
 
 export default function RoadmapPage() {
   const { state, update } = useAcademicStore();
   const { t, lang } = useI18n();
+
+  const [activeScale, setActiveScale] = useState<TGradingScale>(state.activeScale ?? "10");
+
+  const handleScaleChange = (scale: TGradingScale) => {
+    setActiveScale(scale);
+    update((s) => ({ ...s, activeScale: scale }));
+  }
 
   const cumulative = useMemo(
     () =>
@@ -33,6 +41,7 @@ export default function RoadmapPage() {
       ),
     [state.semesters, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold, state.precisionMode],
   );
+
   const passed = useMemo(
     () =>
       passedCredits(
@@ -44,6 +53,7 @@ export default function RoadmapPage() {
       ),
     [state.semesters, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold, state.precisionMode],
   );
+
   const remaining = Math.max(0, state.totalCourseCredits - passed);
 
   const requiredAvg = useMemo(() => {
@@ -145,8 +155,8 @@ export default function RoadmapPage() {
     state.precisionMode
   ]);
 
-  const precisionMode = state.precisionMode;
-  const formatGpa = (value: number | null) => (value === null ? "—" : value.toFixed(precisionMode));
+  // const precisionMode = state.precisionMode;
+  const formatGpa = (value: number | null) => (value === null ? "—" : value.toFixed(2));
 
   const advisory = classify(cumulative.gpa10);
 
@@ -156,7 +166,25 @@ export default function RoadmapPage() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="p-5 lg:col-span-2">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Simulator</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Simulator</h3>
+            <div className="flex rounded-md border border-border overflow-hidden text-xs font-semibold">
+              {(["10", "4", "100"] as TGradingScale[]).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => handleScaleChange(s)}
+                  className={cn(
+                    "px-2.5 py-1 transition-colors",
+                    activeScale === s
+                      ? "bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  /{s}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="mt-3 grid gap-4 sm:grid-cols-2">
             <div>
               <Label className="text-xs uppercase tracking-wide text-muted-foreground">{t("roadmap.targetGrad")}</Label>
@@ -180,7 +208,7 @@ export default function RoadmapPage() {
             <Metric icon={GraduationCap} label={t("roadmap.currentGpa")} value={formatGpa(cumulative.gpa10)} />
             <Metric icon={BookCheck} label={t("roadmap.passedCredits")} value={String(passed)} />
             <Metric icon={BookMinus} label={t("roadmap.remaining")} value={String(remaining)} />
-            <Metric icon={Target} label={t("common.target")} value={roundGpa(state.targetGPA, precisionMode).toFixed(precisionMode)} />
+            <Metric icon={Target} label={t("common.target")} value={roundGpa(state.targetGPA, 2).toFixed(2)} />
           </div>
 
           <div className="mt-5 rounded-lg border border-accent/30 bg-accent/5 p-4">
@@ -193,17 +221,17 @@ export default function RoadmapPage() {
                 {requiredAvg === null ? (
                   <p className="text-sm text-muted-foreground">
                     {cumulative.gpa10 !== null &&
-                      roundGpa(cumulative.gpa10, precisionMode) >= roundGpa(state.targetGPA, precisionMode)
+                      roundGpa(cumulative.gpa10, 2) >= roundGpa(state.targetGPA, 2)
                       ? t("roadmap.secured")
                       : t("roadmap.unreachable")}
                   </p>
                 ) : requiredAvg > 10 ? (
-                  <p className="text-sm text-destructive">{t("roadmap.unreachable")} (need {roundGpa(requiredAvg, precisionMode).toFixed(precisionMode)}/10)</p>
+                  <p className="text-sm text-destructive">{t("roadmap.unreachable")} (need {roundGpa(requiredAvg, 2).toFixed(2)}/10)</p>
                 ) : requiredAvg < 0 ? (
                   <p className="text-sm text-success">{t("roadmap.secured")}</p>
                 ) : (
                   <p className="text-sm">
-                    <span className="font-bold text-accent">{roundGpa(requiredAvg, precisionMode).toFixed(precisionMode)}/10</span> · {remaining} {t("common.credits")} → {roundGpa(state.targetGPA, precisionMode).toFixed(precisionMode)}
+                    <span className="font-bold text-accent">{roundGpa(requiredAvg, 2).toFixed(2)}/10</span> · {remaining} {t("common.credits")} → {roundGpa(state.targetGPA, 2).toFixed(2)}
                   </p>
                 )}
               </div>
@@ -236,7 +264,7 @@ export default function RoadmapPage() {
                     border: "1px solid var(--color-border)",
                     borderRadius: 6,
                     fontSize: 12
-                  }}  />
+                  }} />
                   <Bar dataKey="credits" fill="var(--color-accent)" radius={[4, 4, 0, 0]} name="Credits" />
                   <Bar dataKey="subjects" fill="var(--color-primary)" radius={[4, 4, 0, 0]} name="Subjects" />
                 </BarChart>
