@@ -1,112 +1,101 @@
-import { useCallback, useEffect, useState } from "react";
-import { type AppState, DEFAULT_STATE, type Semester, type Subject } from "../../types/types";
+import type { TAppState } from "@/types/TAppState";
+import type { TSemester } from "@/types/TSemester";
+import type { TSubject } from "@/types/TSubject";
+import { DEFAULT_STATE } from "@/utils/constants";
 
-const KEY = "academic-hub-v2";
-const LEGACY_KEY = "academic-hub-v1";
+export const STORAGE_KEY = "academic-hub-v2";
+export const LEGACY_STORAGE_KEY = "academic-hub-v1";
 
-function load(): AppState {
-  if (typeof window === "undefined") return DEFAULT_STATE;
+const VALID_SCALES = ["10", "4", "100"] as const;
+type Scale = (typeof VALID_SCALES)[number];
+function isValidScale(v: unknown): v is Scale {
+  return typeof v === "string" && (VALID_SCALES as readonly string[]).includes(v);
+}
+
+function migrate(parsed: unknown): TAppState {
+  // shallow merge; nested defaults handled explicitly below
+  const next: TAppState = { ...DEFAULT_STATE, ...(parsed as Partial<TAppState>) };
+
+  if (next.precisionMode !== 1 && next.precisionMode !== 2) {
+    next.precisionMode = DEFAULT_STATE.precisionMode;
+  }
+
+  // legacy field "gradingScale" -> "activeScale"; validate dù giá trị đã có sẵn
+  const legacyScale = (parsed as { gradingScale?: unknown })?.gradingScale;
+  if (!isValidScale(next.activeScale)) {
+    next.activeScale = isValidScale(legacyScale) ? legacyScale : null;
+  }
+
+  // migrate: ensure subject.code & semester.targetGPA exist
+  next.semesters = (next.semesters ?? []).map((sem: TSemester) => ({
+    id: sem.id,
+    name: sem.name,
+    targetGPA: typeof sem.targetGPA === "number" ? sem.targetGPA : DEFAULT_STATE.targetGPA,
+    subjects: (sem.subjects ?? []).map((sub: TSubject) => ({
+      id: sub.id,
+      code: sub.code ?? "",
+      name: sub.name ?? "",
+      credits: sub.credits ?? 0,
+      weights: sub.weights ?? { process: 10, midterm: 20, practice: 20, final: 50 },
+      scores: sub.scores ?? { process: null, midterm: null, practice: null, final: null },
+      isExempt: sub.isExempt ?? false,
+    })),
+  }));
+
+  return next;
+}
+
+export interface LoadResult {
+  state: TAppState;
+  /** true nếu dữ liệu được đọc từ key cũ (cần ghi lại sang key mới + xoá key cũ) */
+  migratedFromLegacy: boolean;
+}
+
+export function loadAcademicState(): LoadResult {
+  if (typeof window === "undefined") {
+    return { state: DEFAULT_STATE, migratedFromLegacy: false };
+  }
   try {
-    const raw = localStorage.getItem(KEY) ?? localStorage.getItem(LEGACY_KEY);
-    if (!raw) return DEFAULT_STATE;
-    const parsed = JSON.parse(raw);
-    // shallow merge; nested defaults handled by callers
-    const next: AppState = { ...DEFAULT_STATE, ...parsed };
+    const currentRaw = localStorage.getItem(STORAGE_KEY);
+    const legacyRaw = currentRaw ? null : localStorage.getItem(LEGACY_STORAGE_KEY);
+    const raw = currentRaw ?? legacyRaw;
+    if (!raw) return { state: DEFAULT_STATE, migratedFromLegacy: false };
 
-    if (next.precisionMode !== 1 && next.precisionMode !== 2) {
-      next.precisionMode = DEFAULT_STATE.precisionMode;
-    }
-    
-    const legacyScale = (parsed as { gradingScale?: string }).gradingScale;
-    
-    if (next.activeScale === undefined || next.activeScale === null) {
-      next.activeScale =
-        legacyScale === "10" || legacyScale === "4" || legacyScale === "100"
-          ? legacyScale
-          : null;
-    }
-    // migrate: ensure subject.code & semester.targetGPA exist
-    next.semesters = (next.semesters ?? []).map((sem: Semester) => ({
-      id: sem.id,
-      name: sem.name,
-      targetGPA: typeof sem.targetGPA === "number" ? sem.targetGPA : DEFAULT_STATE.targetGPA,
-      subjects: (sem.subjects ?? []).map((sub: Subject) => ({
-        id: sub.id,
-        code: sub.code ?? "",
-        name: sub.name ?? "",
-        credits: sub.credits ?? 0,
-        weights: sub.weights ?? { process: 10, midterm: 20, practice: 20, final: 50 },
-        scores: sub.scores ?? { process: null, midterm: null, practice: null, final: null },
-        isExempt: sub.isExempt ?? false,
-      })),
-    }));
-    return next;
-  } catch {
-    return DEFAULT_STATE;
+    const parsed = JSON.parse(raw);
+    return {
+      state: migrate(parsed),
+      migratedFromLegacy: !currentRaw && !!legacyRaw,
+    };
+  } catch (err) {
+    console.error("[academic-hub] Failed to load/migrate stored state:", err);
+    return { state: DEFAULT_STATE, migratedFromLegacy: false };
   }
 }
 
-let memory: AppState = DEFAULT_STATE;
-let hydrated = false;
-const listeners = new Set<() => void>();
-function emit() {
-  listeners.forEach((l) => l());
+export function persistAcademicState(state: TAppState) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (err) {
+    console.error("[academic-hub] Failed to persist state:", err);
+  }
 }
 
-export function useAcademicStore() {
-  const [, setTick] = useState(0);
-  const [state, setState] = useState<AppState>(memory);
+export function removeLegacyAcademicState() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
+  } catch (err) {
+    console.error("[academic-hub] Failed to remove legacy state:", err);
+  }
+}
 
-  useEffect(() => {
-    if (!hydrated) {
-      memory = load();
-      hydrated = true;
-      emit();
-    }
-    const listener = () => {
-      setState(memory);
-      setTick((t) => t + 1);
-    };
-
-    listeners.add(listener);
-    listener();
-
-    return () => {
-      listeners.delete(listener);
-    };
-  }, []);
-
-  const update = useCallback((updater: (s: AppState) => AppState) => {
-    memory = updater(memory);
-
-    try {
-      localStorage.setItem(KEY, JSON.stringify(memory));
-    } catch { }
-
-    emit();
-  }, []);
-
-  const replace = useCallback((next: AppState) => {
-    memory = next;
-
-    try {
-      localStorage.setItem(KEY, JSON.stringify(memory));
-    } catch { }
-
-    emit();
-  }, []);
-
-  const reset = useCallback(() => {
-    memory = DEFAULT_STATE;
-
-    try {
-      localStorage.removeItem(KEY);
-      localStorage.removeItem(LEGACY_KEY);
-
-    } catch { }
-
-    emit();
-  }, []);
-
-  return { state, update, replace, reset, hydrated };
+export function clearAcademicState() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
+  } catch (err) {
+    console.error("[academic-hub] Failed to clear state:", err);
+  }
 }
