@@ -1,7 +1,6 @@
 import { GraduationCap, BookOpen, Target, Map, LifeBuoy, ScrollText, ShieldCheck, Globe } from "lucide-react";
-import { useAcademicStore } from "@/lib/academic/store";
 import { applyPreset, listPresets } from "@/lib/academic/presets";
-import type { PresetId } from "@/types/types";
+import type { TPresetId } from "@/types/types";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useI18n } from "@/hooks/use-i18n";
+import { useAcademicStore } from "@/hooks/useAcademicStore";
 
 export function Layout() {
   const { t, lang, setLang } = useI18n();
@@ -53,7 +53,7 @@ export function Layout() {
                 <DropdownMenuLabel>{t("common.preset")}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {listPresets().map((p) => (
-                  <DropdownMenuItem key={p.id} onSelect={() => update((s) => applyPreset(s, p.id as PresetId))}>
+                  <DropdownMenuItem key={p.id} onSelect={() => update((s) => applyPreset(s, p.id as TPresetId))}>
                     <div className="flex flex-col cursor-pointer">
                       <span className="font-medium">{t(`common.preset${p.id}`)}</span>
                       <span className="text-xs text-muted-foreground">{p.description}</span>
