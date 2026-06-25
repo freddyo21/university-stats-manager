@@ -1,4 +1,4 @@
-import schools from "./universities.json";
+import schools from "./universities.json" with { type: "json" };
 import { ScrapingStrategy } from "./scraping-strategy.js";
 import { UitScrapingStrategy } from "../schools/uit.js";
 
