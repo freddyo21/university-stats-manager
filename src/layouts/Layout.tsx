@@ -13,6 +13,8 @@ import {
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useI18n } from "@/hooks/use-i18n";
 import { useAcademicStore } from "@/hooks/useAcademicStore";
+import { useEffect } from "react";
+import { mergeAcademicStateFromExtension } from "@/lib/academic/store";
 
 export function Layout() {
   const { t, lang, setLang } = useI18n();
@@ -28,6 +30,24 @@ export function Layout() {
     { to: "/data", label: t("nav.data"), icon: ShieldCheck },
     { to: "/help", label: t("nav.help"), icon: LifeBuoy },
   ] as const;
+  
+  useEffect(() => {
+    const handleExtensionMessage = (event: any) => {
+      // Bảo mật ATTT: Chỉ nhận dữ liệu đúng nguồn từ Extension Bridge của bạn
+      if (event.data && event.data.source === "EXTENSION_BRIDGE") {
+        if (event.data.action === "SYNC_DATA") {
+          const receivedData = event.data.data;
+
+          console.log("Đã nhận dữ liệu điểm từ Extension:", receivedData);
+
+          mergeAcademicStateFromExtension(receivedData.data);
+        }
+      }
+    };
+
+    window.addEventListener("message", handleExtensionMessage);
+    return () => window.removeEventListener("message", handleExtensionMessage);
+  }, [mergeAcademicStateFromExtension]);
 
   return (
     <div className="min-h-screen bg-background">
