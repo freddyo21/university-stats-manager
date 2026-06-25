@@ -11,7 +11,7 @@ export class StrategyFactory {
 
     getStrategy(domain: string): ScrapingStrategy {
         // 1. Tìm trường trong file JSON cấu hình bằng domain
-        const school = schools.find((s) => s.link.includes(domain) && s.isActive);
+        const school = schools.find((s) => s.link.some(link => link.includes(domain)) && s.isActive);
 
         if (!school) {
             throw new Error("Trường học này chưa được hệ thống hỗ trợ hoặc đang bảo trì!");
