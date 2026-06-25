@@ -14,24 +14,28 @@ const i18n: Dict = {
         vi: "Sau khi tải về extension, làm theo các bước sau để cài đặt vào trình duyệt của bạn."
     },
     "downloadHelperStep1": {
-        en: "Download the <code style=\"color: oklch(70.7% 0.165 254.624)\">.crx</code> file above.",
-        vi: "Tải file <code style=\"color: oklch(70.7% 0.165 254.624)\">.crx</code> ở trên về máy."
+        en: "Download the <code style=\"color: oklch(70.7% 0.165 254.624)\">.zip</code> file above.",
+        vi: "Tải file <code style=\"color: oklch(70.7% 0.165 254.624)\">.zip</code> ở trên về máy."
     },
     "downloadHelperStep2": {
+        en: "Extract the <code style=\"color: oklch(70.7% 0.165 254.624)\">.zip</code> file to a folder.",
+        vi: "Giải nén file <code style=\"color: oklch(70.7% 0.165 254.624)\">.zip</code> ra một thư mục."
+    },
+    "downloadHelperStep3": {
         en: "Open a new tab and go to <code style=\"color: oklch(70.7% 0.165 254.624)\">chrome://extensions/</code>",
         vi: "Mở tab mới và truy cập: <code style=\"color: oklch(70.7% 0.165 254.624)\">chrome://extensions/</code>"
     },
-    "downloadHelperStep3": {
-        en: "Enable <b>\"Developer Mode\"</b> in the top right corner.",
-        vi: "Bật <b>\"Chế độ dành cho nhà phát triển\"</b> ở góc trên bên phải."
-    },
     "downloadHelperStep4": {
-        en: "Drag and drop the downloaded file into the browser to install.",
-        vi: "Kéo thả file vừa tải vào giữa trình duyệt để cài đặt."
+        en: "Enable <b style=\"color: oklch(70.7% 0.165 254.624)\">\"Developer Mode\"</b> in the top right corner.",
+        vi: "Bật <b style=\"color: oklch(70.7% 0.165 254.624)\">\"Chế độ dành cho nhà phát triển\"</b> ở góc trên bên phải."
     },
     "downloadHelperStep5": {
-        en: "Refresh the page and click on the extension icon, then find \"Grade Crawler Assistant\".",
-        vi: "Refresh lại trang rồi bấm vào biểu tượng extension, tìm đến <b style=\"color: oklch(70.7% 0.165 254.624)\">Grade Crawler Assistant</b>."
+        en: "Click the <b style=\"color: oklch(70.7% 0.165 254.624)\">\"Load unpacked\"</b> button and select the folder where you extracted the extension.",
+        vi: "Bấm vào nút <b style=\"color: oklch(70.7% 0.165 254.624)\">\"Tải tiện ích đã giải nén\"</b> rồi chọn đường dẫn của thư mục đã giải nén để cài đặt."
+    },
+    "downloadHelperStep6": {
+        en: "Refresh both the subjects page and this page, then click on the extension icon and find <b style=\"color: oklch(70.7% 0.165 254.624)\">Grade Crawler Assistant</b> to start syncing your grades.",
+        vi: "Refresh lại cả trang môn học và trang này rồi bấm vào biểu tượng extension, tìm đến <b style=\"color: oklch(70.7% 0.165 254.624)\">Grade Crawler Assistant</b> để cấp quyền cho extension."
     }
 }
 
@@ -63,8 +67,9 @@ export default function ExtensionDownloadSection() {
                     <li dangerouslySetInnerHTML={{ __html: i18n.downloadHelperStep3[lang] }} />
                     <li dangerouslySetInnerHTML={{ __html: i18n.downloadHelperStep4[lang] }} />
                     <li dangerouslySetInnerHTML={{ __html: i18n.downloadHelperStep5[lang] }} />
+                    <li dangerouslySetInnerHTML={{ __html: i18n.downloadHelperStep6[lang] }} />
                 </ol>
             </div>
-        </div> 
+        </div>
     );
 }
