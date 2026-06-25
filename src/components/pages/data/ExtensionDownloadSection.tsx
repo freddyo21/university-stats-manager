@@ -47,7 +47,7 @@ export default function ExtensionDownloadSection() {
 
             {/* Thẻ download file crx trực tiếp từ thư mục public */}
             <a
-                href="/extension/grade-scraper.crx"
+                href="/extensions/grade-scraper.crx"
                 download="grade-scraper.crx"
                 className="px-6 py-3 bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm transition-colors duration-200"
             >
