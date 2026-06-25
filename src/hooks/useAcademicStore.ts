@@ -6,10 +6,10 @@ import {
     clearAcademicState,
 } from "../lib/academic/store";
 import { DEFAULT_STATE } from "@/utils/constants";
-import type { TAppState } from "@/types/TAppState";
+import type { IAppState } from "@/types/interfaces/IAppState";
 
 // --- module-level store: 1 nguồn sự thật duy nhất, chia sẻ giữa mọi component ---
-let memory: TAppState = DEFAULT_STATE; // khớp với server render -> không hydration mismatch
+let memory: IAppState = DEFAULT_STATE; // khớp với server render -> không hydration mismatch
 let hydrated = false;
 const listeners = new Set<() => void>();
 
@@ -45,7 +45,7 @@ function ensureHydrated() {
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
 const PERSIST_DEBOUNCE_MS = 200;
 
-function schedulePersist(state: TAppState) {
+function schedulePersist(state: IAppState) {
     if (persistTimer) clearTimeout(persistTimer);
     persistTimer = setTimeout(() => {
         persistTimer = null;
@@ -80,13 +80,13 @@ export function useAcademicStore() {
     }, []);
 
     // ⚠️ `updater` PHẢI trả về object MỚI (immutable update), không mutate `s` trực tiếp.
-    const update = useCallback((updater: (s: TAppState) => TAppState) => {
+    const update = useCallback((updater: (s: IAppState) => IAppState) => {
         memory = updater(memory);
         schedulePersist(memory);
         emit();
     }, []);
 
-    const replace = useCallback((next: TAppState) => {
+    const replace = useCallback((next: IAppState) => {
         memory = next;
         schedulePersist(memory);
         emit();

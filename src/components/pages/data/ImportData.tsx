@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useI18n } from "@/hooks/use-i18n";
 import { useAcademicStore } from "@/hooks/useAcademicStore";
-import type { TAppState } from "@/types/TAppState";
+import type { IAppState } from "@/types/interfaces/IAppState";
 import { DEFAULT_STATE } from "@/utils/constants";
 import { Upload } from "lucide-react";
 import { useRef } from "react";
@@ -18,10 +18,10 @@ export function ImportData() {
         const reader = new FileReader();
         reader.onload = () => {
             try {
-                const parsed = JSON.parse(String(reader.result)) as Partial<TAppState>;
+                const parsed = JSON.parse(String(reader.result)) as Partial<IAppState>;
                 if (!parsed || !Array.isArray(parsed.semesters)) throw new Error("Invalid file");
 
-                replace({ ...DEFAULT_STATE, ...parsed } as TAppState);
+                replace({ ...DEFAULT_STATE, ...parsed } as IAppState);
 
                 toast.success(t("data.importSuccess") || "Data imported successfully");
             } catch {

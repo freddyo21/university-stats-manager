@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useI18n } from "@/hooks/use-i18n";
 import { useAcademicStore } from "@/hooks/useAcademicStore";
 import { STANDARD_REFERENCE } from "@/lib/academic/presets";
-import type { TLetterGradeRange } from "@/types/TLetterGradeRange";
+import type { ILetterGradeRange } from "@/types/interfaces/ILetterGradeRange";
 import { Plus, Trash2 } from "lucide-react";
 
 function clampNum(v: string, min: number, max: number) {
@@ -18,7 +18,7 @@ export default function ScalePage() {
     const { state, update } = useAcademicStore();
     const { t } = useI18n();
 
-    const setRange = (i: number, patch: Partial<TLetterGradeRange>) =>
+    const setRange = (i: number, patch: Partial<ILetterGradeRange>) =>
         update((s) => ({
             ...s,
             letterGrades: s.letterGrades.map((r, idx) => (idx === i ? { ...r, ...patch } : r)),

@@ -21,13 +21,13 @@ import { PageHeader } from "@/components/Header";
 import { uuidv7 } from "@/utils/uuid";
 import { useI18n } from "@/hooks/use-i18n";
 import { useAcademicStore } from "@/hooks/useAcademicStore";
-import type { TAppState } from "@/types/TAppState";
-import type { TLetterGradeRange } from "@/types/TLetterGradeRange";
-import type { TSemester } from "@/types/TSemester";
-import type { TSubject } from "@/types/TSubject";
+import type { IAppState } from "@/types/interfaces/IAppState";
+import type { ILetterGradeRange } from "@/types/interfaces/ILetterGradeRange";
+import type { ISemester } from "@/types/interfaces/ISemester";
+import type { ISubject } from "@/types/interfaces/ISubject";
 import type { TPrecisionMode } from "@/types/types";
 
-function newSubject(): TSubject {
+function newSubject(): ISubject {
     return {
         id: uuidv7(),
         code: "",
@@ -39,10 +39,11 @@ function newSubject(): TSubject {
     };
 }
 
-function newSemester(index: number, targetGPA: number): TSemester {
+function newSemester(index: number, targetGPA: number): ISemester {
     return {
         id: uuidv7(),
         name: `Semester ${index + 1}`,
+        semesterNumber: index + 1,
         targetGPA,
         subjects: [newSubject()]
     };
@@ -175,7 +176,13 @@ export default function GradeEntryPage() {
         <>
             <PageHeader
                 title={t("entry.title")}
-                description={t("entry.desc")}
+                description={
+                    <>
+                        {t("entry.desc")}
+                        <br />
+                        {t("entry.desc2")}
+                    </>
+                }
                 actions={
                     <Button size="sm" onClick={() => setShowConfig((v) => !v)} aria-label={t("common.settings")}>
                         <Settings2 className="h-4 w-4" /> <span className="hidden sm:inline">{t("common.settings")}</span>
@@ -220,8 +227,8 @@ function ConfigPanel({
     update,
     onClose,
 }: {
-    state: TAppState;
-    update: (u: (s: TAppState) => TAppState) => void;
+    state: IAppState;
+    update: (u: (s: IAppState) => IAppState) => void;
     onClose: () => void;
 }) {
     const { t } = useI18n();
@@ -303,7 +310,7 @@ function ConfigPanel({
     );
 }
 
-function SemesterCard({ semester }: { semester: TSemester; index: number }) {
+function SemesterCard({ semester }: { semester: ISemester; index: number }) {
     const { state, update } = useAcademicStore();
     const { t } = useI18n();
     const [open, setOpen] = useState(true);
@@ -321,7 +328,7 @@ function SemesterCard({ semester }: { semester: TSemester; index: number }) {
         [semester, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold, state.precisionMode],
     );
 
-    const setSemester = (patch: Partial<TSemester>) =>
+    const setSemester = (patch: Partial<ISemester>) =>
         update((s) => ({
             ...s,
             semesters: s.semesters.map((x) => (x.id === semester.id ? { ...x, ...patch } : x)),
@@ -332,7 +339,7 @@ function SemesterCard({ semester }: { semester: TSemester; index: number }) {
 
     const addSubject = () => setSemester({ subjects: [...semester.subjects, newSubject()] });
 
-    const updateSubject = (id: string, patch: Partial<TSubject>) =>
+    const updateSubject = (id: string, patch: Partial<ISubject>) =>
         setSemester({
             subjects: semester.subjects.map((sub) => (sub.id === id ? { ...sub, ...patch } : sub)),
         });
@@ -416,14 +423,14 @@ function SubjectRow({
     onChange,
     onDelete,
 }: {
-    subject: TSubject;
-    letterGrades: TLetterGradeRange[];
+    subject: ISubject;
+    letterGrades: ILetterGradeRange[];
     precisionMode: TPrecisionMode;
     subjectPass: number;
     componentPassEnabled: boolean;
     componentPass: number;
     openSignal: { open: boolean; tick: number } | null;
-    onChange: (patch: Partial<TSubject>) => void;
+    onChange: (patch: Partial<ISubject>) => void;
     onDelete: () => void;
 }) {
     const { t } = useI18n();
@@ -453,14 +460,14 @@ function SubjectRow({
 
     const scale100Display = score === null ? "—" : compFail ? "0" : String(to100(score));
 
-    const setScore = (k: keyof TSubject["scores"], v: string) => {
+    const setScore = (k: keyof ISubject["scores"], v: string) => {
         const n = v === "" ? null : Number(v);
         onChange({
             scores: { ...subject.scores, [k]: n === null || isNaN(n) ? null : Math.min(10, Math.max(0, n)) },
         });
     };
 
-    const setWeight = (k: keyof TSubject["weights"], v: string) => {
+    const setWeight = (k: keyof ISubject["weights"], v: string) => {
         const n = Number(v);
         onChange({ weights: { ...subject.weights, [k]: isNaN(n) ? 0 : Math.min(100, Math.max(0, n)) } });
     };
@@ -469,7 +476,7 @@ function SubjectRow({
         onChange({ isExempt: v });
     };
 
-    const components: { key: keyof TSubject["scores"]; label: string }[] = [
+    const components: { key: keyof ISubject["scores"]; label: string }[] = [
         { key: "process", label: t("entry.process") },
         { key: "midterm", label: t("entry.midterm") },
         { key: "practice", label: t("entry.practice") },

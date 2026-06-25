@@ -40,6 +40,7 @@ export const D: Dict = {
   "common.presetCustom": { en: "Custom", vi: "Tùy chỉnh" },
   "entry.title": { en: "Grade Entry", vi: "Nhập điểm & Trọng số" },
   "entry.desc": { en: "Capture each subject's components and weights for live GPA preview.", vi: "Nhập thành phần và trọng số mỗi môn để xem GPA tức thời." },
+  "entry.desc2": { en: "Note: Summer semester grades will be combined into Semester 2.", vi: "Lưu ý: Điểm của học kỳ hè sẽ được gộp vào Học kỳ 2." },
   "entry.addSemester": { en: "Add Semester", vi: "Thêm học kỳ" },
   "entry.addSubject": { en: "Add subject", vi: "Thêm môn" },
   "entry.empty": { en: "No semesters yet — add one to begin.", vi: "Chưa có học kỳ – thêm để bắt đầu." },

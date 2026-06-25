@@ -1,13 +1,13 @@
-import type { TLetterGradeRange } from "@/types/TLetterGradeRange";
+import type { ILetterGradeRange } from "@/types/interfaces/ILetterGradeRange";
 
 // Strategy Pattern: pluggable scale converters from Scale 10 baseline.
 export type TScaleStrategy = {
   id: "scale10" | "scale4" | "scale100" | "letter";
   label: string;
-  format: (score10: number, ranges: TLetterGradeRange[]) => string;
+  format: (score10: number, ranges: ILetterGradeRange[]) => string;
 };
 
-function pickRange(score10: number, ranges: TLetterGradeRange[]) {
+function pickRange(score10: number, ranges: ILetterGradeRange[]) {
   return ranges.find((r) => score10 >= r.min && score10 < r.max) ?? null;
 }
 
@@ -40,6 +40,6 @@ export const LETTER: TScaleStrategy = {
 
 export const ALL_STRATEGIES = [SCALE_10, SCALE_4, SCALE_100, LETTER];
 
-export function convert(score10: number, ranges: TLetterGradeRange[], id: TScaleStrategy["id"]) {
+export function convert(score10: number, ranges: ILetterGradeRange[], id: TScaleStrategy["id"]) {
   return ALL_STRATEGIES.find((s) => s.id === id)!.format(score10, ranges);
 }

@@ -72,7 +72,7 @@ export function loadAcademicState(): LoadResult {
   }
 }
 
-export function persistAcademicState(state: TAppState) {
+export function persistAcademicState(state: IAppState) {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));

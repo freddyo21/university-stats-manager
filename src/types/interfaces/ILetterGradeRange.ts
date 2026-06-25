@@ -1,4 +1,4 @@
-export type TLetterGradeRange = {
+export interface ILetterGradeRange {
     letter: string;
     min: number;
     max: number;

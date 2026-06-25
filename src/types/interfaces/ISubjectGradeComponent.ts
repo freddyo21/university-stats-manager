@@ -1,4 +1,4 @@
-export type TSubjectGradeComponent = {
+export interface ISubjectGradeComponent {
     process: number | null;
     midterm: number | null;
     practice: number | null;

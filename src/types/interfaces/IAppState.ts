@@ -1,11 +1,11 @@
-import type { TLetterGradeRange } from "./TLetterGradeRange";
-import type { TSemester } from "./TSemester";
-import type { TGradingScale, TPrecisionMode, TPresetId } from "./types";
+import type { ILetterGradeRange } from "./ILetterGradeRange";
+import type { ISemester } from "./ISemester";
+import type { TGradingScale, TPrecisionMode, TPresetId } from "../types";
 
-export type TAppState = {
+export interface IAppState {
     presetId: TPresetId;
-    semesters: TSemester[];
-    letterGrades: TLetterGradeRange[];
+    semesters: ISemester[];
+    letterGrades: ILetterGradeRange[];
     subjectPassThreshold: number;
     componentPassEnabled: boolean;
     componentPassThreshold: number;

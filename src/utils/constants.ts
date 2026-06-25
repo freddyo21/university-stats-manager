@@ -1,9 +1,9 @@
-import type { TAppState } from "@/types/TAppState";
-import type { TLetterGradeRange } from "@/types/TLetterGradeRange";
+import type { IAppState } from "@/types/interfaces/IAppState";
+import type { ILetterGradeRange } from "@/types/interfaces/ILetterGradeRange";
 
 export const LANG_KEY = "academic-hub-lang";
 
-export const DEFAULT_LETTER_GRADES: TLetterGradeRange[] = [
+export const DEFAULT_LETTER_GRADES: ILetterGradeRange[] = [
     { letter: "A+", min: 9.0, max: 10.0, gpa4: 4.0 },
     { letter: "A", min: 8.5, max: 9.0, gpa4: 4.0 },
     { letter: "B+", min: 8.0, max: 8.5, gpa4: 3.5 },
@@ -15,7 +15,7 @@ export const DEFAULT_LETTER_GRADES: TLetterGradeRange[] = [
     { letter: "F", min: 0, max: 4.0, gpa4: 0 },
 ];
 
-export const DEFAULT_STATE: TAppState = {
+export const DEFAULT_STATE: IAppState = {
     presetId: "UIT",
     semesters: [],
     letterGrades: DEFAULT_LETTER_GRADES,

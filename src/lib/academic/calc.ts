@@ -1,7 +1,7 @@
-import type { TLetterGradeRange } from "@/types/TLetterGradeRange";
-import type { TSemester } from "@/types/TSemester";
-import type { TSubject } from "@/types/TSubject";
-import type { TSubjectWeights } from "@/types/TSubjectWeights";
+import type { ILetterGradeRange } from "@/types/interfaces/ILetterGradeRange";
+import type { ISemester } from "@/types/interfaces/ISemester";
+import type { ISubject } from "@/types/interfaces/ISubject";
+import type { ISubjectWeights } from "@/types/interfaces/ISubjectWeights";
 import type { TPrecisionMode } from "@/types/types";
 
 /** Component scores are entered at 1 decimal place by instructors. */
@@ -20,11 +20,11 @@ export function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
 }
 
-export function weightTotal(w: TSubjectWeights) {
+export function weightTotal(w: ISubjectWeights) {
   return w.process + w.midterm + w.practice + w.final;
 }
 
-export function subjectScore10(subject: TSubject, precision: TPrecisionMode = 2): number | null {
+export function subjectScore10(subject: ISubject, precision: TPrecisionMode = 2): number | null {
   const { weights, scores } = subject;
 
   const total = weightTotal(weights);
@@ -54,9 +54,9 @@ export function subjectScore10(subject: TSubject, precision: TPrecisionMode = 2)
   return Math.round(rawScore * factor) / factor;
 }
 
-export function hasComponentFail(subject: TSubject, enabled: boolean, threshold: number): boolean {
+export function hasComponentFail(subject: ISubject, enabled: boolean, threshold: number): boolean {
   if (!enabled) return false;
-  const keys: (keyof TSubject["weights"])[] = ["process", "midterm", "practice", "final"];
+  const keys: (keyof ISubject["weights"])[] = ["process", "midterm", "practice", "final"];
   for (const k of keys) {
     if (subject.weights[k] > 0) {
       const s = subject.scores[k];
@@ -67,7 +67,7 @@ export function hasComponentFail(subject: TSubject, enabled: boolean, threshold:
 }
 
 export function subjectPassed(
-  subject: TSubject,
+  subject: ISubject,
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
@@ -85,7 +85,7 @@ export function subjectPassed(
 }
 
 export function effectiveScore10(
-  subject: TSubject,
+  subject: ISubject,
   // subjectPass: number,
   // compEnabled: boolean,
   // compThreshold: number,
@@ -101,7 +101,7 @@ export function effectiveScore10(
   return sc;
 }
 
-export function gpa4FromScore10(score10: number, letterGrades: TLetterGradeRange[]): number {
+export function gpa4FromScore10(score10: number, letterGrades: ILetterGradeRange[]): number {
   const matchedRange = letterGrades.find((r) => score10 >= r.min && score10 < r.max);
   return matchedRange ? matchedRange.gpa4 : 0.0;
 }
@@ -110,7 +110,7 @@ export function to100(score10: number) {
   return Math.round(score10 * 10);
 }
 
-export function toLetter(score10: number, ranges: TLetterGradeRange[]): string {
+export function toLetter(score10: number, ranges: ILetterGradeRange[]): string {
   for (const r of ranges) {
     if (score10 >= r.min && score10 < r.max) return r.letter;
   }
@@ -118,7 +118,7 @@ export function toLetter(score10: number, ranges: TLetterGradeRange[]): string {
 }
 
 export function semesterGPA10(
-  s: TSemester,
+  s: ISemester,
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
@@ -171,8 +171,8 @@ export function semesterGPA10(
 }
 
 export function semesterGPA4(
-  s: TSemester,
-  letterGrades: TLetterGradeRange[],
+  s: ISemester,
+  letterGrades: ILetterGradeRange[],
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
@@ -225,8 +225,8 @@ export function semesterGPA4(
 }
 
 export function grossGPA4(
-  semesters: TSemester[],
-  letterGrades: TLetterGradeRange[],
+  semesters: ISemester[],
+  letterGrades: ILetterGradeRange[],
   precisionMode: TPrecisionMode = 2,
 ): {
   gpa4: number | null;
@@ -282,7 +282,7 @@ export function grossGPA4(
 }
 
 export function grossGPA10(
-  semesters: TSemester[],
+  semesters: ISemester[],
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
@@ -338,8 +338,8 @@ export function grossGPA10(
 }
 
 export function cumulativeGPA4(
-  semesters: TSemester[],
-  letterGrades: TLetterGradeRange[],
+  semesters: ISemester[],
+  letterGrades: ILetterGradeRange[],
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
@@ -398,7 +398,7 @@ export function cumulativeGPA4(
 }
 
 export function cumulativeGPA10(
-  semesters: TSemester[],
+  semesters: ISemester[],
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
@@ -453,7 +453,7 @@ export function cumulativeGPA10(
 }
 
 export function passedCredits(
-  semesters: TSemester[],
+  semesters: ISemester[],
   subjectPass: number,
   compEnabled: boolean,
   compThreshold: number,
