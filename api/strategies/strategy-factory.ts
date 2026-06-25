@@ -1,6 +1,6 @@
 import schools from "./universities.json";
-import { ScrapingStrategy } from "./scraping-strategy";
-import { UitScrapingStrategy } from "../schools/uit";
+import { ScrapingStrategy } from "./scraping-strategy.js";
+import { UitScrapingStrategy } from "../schools/uit.js";
 
 export class StrategyFactory {
     // Registry nằm ở đây là chuẩn bài, tách biệt hoàn toàn với lớp chiến thuật

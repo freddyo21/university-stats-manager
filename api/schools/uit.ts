@@ -1,4 +1,4 @@
-import { ScrapingStrategy } from "../strategies/scraping-strategy";
+import { ScrapingStrategy } from "../strategies/scraping-strategy.js";
 
 export class UitScrapingStrategy extends ScrapingStrategy {
     getSchoolKey(): string {
