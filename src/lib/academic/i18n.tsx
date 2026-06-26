@@ -34,13 +34,28 @@ export const D: Dict = {
   "common.credits.exempt": { en: "Exempt Credits", vi: "Tín chỉ được miễn" },
   "common.gpa": { en: "GPA", vi: "GPA" },
   "common.target": { en: "Target", vi: "Mục tiêu" },
-  "common.slogan": { en: "Built for students. Data stored locally in your browser", vi: "Dành riêng cho sinh viên. Dữ liệu lưu cục bộ trong trình duyệt của bạn, không cần phải lo lắng về việc chúng tôi thu thập dữ liệu" },
-  "common.presetHUST": { en: "Hanoi University of Science and Technology", vi: "Đại học Bách Khoa Hà Nội" },
-  "common.presetUIT": { en: "University of Information Technology - VNUHCM", vi: "Trường Đại học Công nghệ Thông tin" },
+  "common.slogan": {
+    en: "Open-source application for students. Your academic data is stored 100% locally in your browser. The server only manages synchronization configurations and never collects your grades or school credentials.",
+    vi: "Ứng dụng mã nguồn mở dành riêng cho sinh viên. Kết quả học tập được lưu cục bộ 100% trên trình duyệt của bạn. Hệ thống máy chủ chỉ lưu cấu hình đồng bộ, cam kết không thu thập điểm số hay tài khoản trường."
+  },
+  "common.presetHUST": {
+    en: "Hanoi University of Science and Technology",
+    vi: "Đại học Bách Khoa Hà Nội"
+  },
+  "common.presetUIT": {
+    en: "University of Information Technology - VNUHCM",
+    vi: "Trường Đại học Công nghệ Thông tin"
+  },
   "common.presetCustom": { en: "Custom", vi: "Tùy chỉnh" },
   "entry.title": { en: "Grade Entry", vi: "Nhập điểm & Trọng số" },
-  "entry.desc": { en: "Capture each subject's components and weights for live GPA preview.", vi: "Nhập thành phần và trọng số mỗi môn để xem GPA tức thời." },
-  "entry.desc2": { en: "Note: Summer semester grades will be combined into Semester 2.", vi: "Lưu ý: Điểm của học kỳ hè sẽ được gộp vào Học kỳ 2." },
+  "entry.desc": {
+    en: "Capture each subject's components and weights for live GPA preview.",
+    vi: "Nhập thành phần và trọng số mỗi môn để xem GPA tức thời."
+  },
+  "entry.desc2": {
+    en: "Note: Summer semester grades will be combined into Semester 2.",
+    vi: "Lưu ý: Điểm của học kỳ hè sẽ được gộp vào Học kỳ 2."
+  },
   "entry.addSemester": { en: "Add Semester", vi: "Thêm học kỳ" },
   "entry.addSubject": { en: "Add subject", vi: "Thêm môn" },
   "entry.empty": { en: "No semesters yet — add one to begin.", vi: "Chưa có học kỳ – thêm để bắt đầu." },
@@ -60,7 +75,10 @@ export const D: Dict = {
   "settings.componentToggle": { en: "Enable component-level pass (Liệt thành phần)", vi: "Bật chấm liệt thành phần" },
   "settings.componentThreshold": { en: "Component pass threshold", vi: "Mốc đậu thành phần" },
   "scale.title": { en: "Grading Scale & Reference", vi: "Thang điểm & Tham chiếu" },
-  "scale.desc": { en: "Standard reference and your institution's active mapping.", vi: "Tham chiếu chuẩn và thang trường đang dùng." },
+  "scale.desc": {
+    en: "Standard reference and your institution's active mapping.",
+    vi: "Tham chiếu chuẩn và thang trường đang dùng."
+  },
   "scale.standard": { en: "Standard Reference Table", vi: "Bảng Thang điểm Chuẩn" },
   "scale.active": { en: "Active Institution Scale", vi: "Mốc điểm thực tế trường" },
   "scale.range": { en: "Range (Scale 10)", vi: "Khoảng điểm (Hệ 10)" },
@@ -71,7 +89,10 @@ export const D: Dict = {
   "scale.lower": { en: "Lower (≥)", vi: "Cận dưới (≥)" },
   "scale.upper": { en: "Upper (<)", vi: "Cận trên (<)" },
   "goals.title": { en: "Semester Goals", vi: "Mục tiêu học kỳ" },
-  "goals.desc": { en: "Tactical per-semester targets and scholarship gating.", vi: "Mục tiêu chiến thuật và điều kiện học bổng theo kỳ." },
+  "goals.desc": {
+    en: "Tactical per-semester targets and scholarship gating.",
+    vi: "Mục tiêu chiến thuật và điều kiện học bổng theo kỳ."
+  },
   "goals.pick": { en: "Select semester", vi: "Chọn học kỳ" },
   "goals.precision": { en: "GPA Precision", vi: "Độ chính xác GPA" },
   "goals.precision.{number}": { en: "{number} decimal place", vi: "{number} chữ số thập phân" },
@@ -98,7 +119,10 @@ export const D: Dict = {
   "roadmap.passedCredits": { en: "Accumulated (Passed) Credits", vi: "Tín chỉ đã tích lũy" },
   "roadmap.remaining": { en: "Remaining Credits", vi: "Tín chỉ còn lại" },
   "roadmap.required": { en: "Required average for remaining credits", vi: "GPA trung bình cần đạt cho phần còn lại" },
-  "roadmap.unreachable": { en: "Target unreachable — lower target or check credits.", vi: "Không thể đạt mục tiêu — hãy giảm hoặc kiểm tra tín chỉ." },
+  "roadmap.unreachable": {
+    en: "Target unreachable — lower target or check credits.",
+    vi: "Không thể đạt mục tiêu — hãy giảm hoặc kiểm tra tín chỉ."
+  },
   "roadmap.secured": { en: "Target already secured. Coast to graduation.", vi: "Đã đảm bảo mục tiêu. Thoải mái đến ngày tốt nghiệp." },
   "roadmap.distribution": { en: "Grade Distribution", vi: "Phân bố điểm chữ" },
   "roadmap.stats": { en: "Performance Statistics", vi: "Thống kê hiệu suất" },
@@ -109,7 +133,10 @@ export const D: Dict = {
   "roadmap.over8": { en: "Subjects ≥ 8.0", vi: "Môn ≥ 8.0" },
   "roadmap.failed": { en: "Failed subjects (< 5.0 or Under failing threshold)", vi: "Môn trượt (< 5.0 hoặc bị điểm liệt)" },
   "data.title": { en: "Local Data & Privacy", vi: "Dữ liệu cục bộ" },
-  "data.desc": { en: "Everything lives in your browser. Export, import, or wipe.", vi: "Mọi dữ liệu lưu trong trình duyệt. Xuất, nhập hoặc xóa." },
+  "data.desc": {
+    en: "Everything lives in your browser. Export, import, or wipe.",
+    vi: "Mọi dữ liệu lưu trong trình duyệt. Xuất, nhập hoặc xóa."
+  },
   "data.export": { en: "Export JSON", vi: "Xuất JSON" },
   "data.import": { en: "Import JSON", vi: "Nhập JSON" },
   "data.clear": { en: "Clear all data", vi: "Xóa toàn bộ dữ liệu" },
@@ -126,10 +153,16 @@ export const D: Dict = {
   "data.deleteAlert.confirm": { en: "Yes, clear everything", vi: "Đồng ý, xóa hết" },
   "data.clearSuccess": { en: "All data cleared", vi: "Đã xóa toàn bộ dữ liệu" },
   "data.clearFailed": { en: "Failed to clear data safely", vi: "Xóa dữ liệu không thành công" },
-  "data.importDesc": { en: "Restore a previously exported JSON snapshot. Replaces current data.", vi: "Khôi phục dữ liệu từ file JSON đã xuất trước đó. Thao tác này sẽ thay thế dữ liệu hiện tại." },
+  "data.importDesc": {
+    en: "Restore a previously exported JSON snapshot. Replaces current data.",
+    vi: "Khôi phục dữ liệu từ file JSON đã xuất trước đó. Thao tác này sẽ thay thế dữ liệu hiện tại."
+  },
   "data.importSuccess": { en: "Data imported successfully", vi: "Nhập dữ liệu thành công" },
   "data.importFailed": { en: "Failed to import data", vi: "Nhập dữ liệu không thành công" },
-  "data.exportDesc": { en: "Export a JSON snapshot of your current data. Keep it safe for later import.", vi: "Xuất dữ liệu hiện tại ra file JSON. Hãy giữ an toàn để nhập lại sau." },
+  "data.exportDesc": {
+    en: "Export a JSON snapshot of your current data. Keep it safe for later import.",
+    vi: "Xuất dữ liệu hiện tại ra file JSON. Hãy giữ an toàn để nhập lại sau."
+  },
   "data.exportSuccess": { en: "Data exported successfully", vi: "Xuất dữ liệu thành công" },
   "data.exportFailed": { en: "Failed to export data", vi: "Xuất dữ liệu không thành công" },
   "data.privacyHeader": { en: "Privacy guarantee", vi: "Cam kết riêng tư" },
