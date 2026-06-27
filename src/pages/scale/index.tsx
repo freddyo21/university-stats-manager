@@ -100,7 +100,7 @@ export default function ScalePage() {
                                                 value={r.min}
                                                 onChange={(e) => setRange(i, { min: clampNum(e.target.value, 0, 10) })}
                                                 className="h-8 w-20"
-                                                disabled={state.presetId === "UIT" || state.presetId === "HUST"}
+                                                disabled={state.presetId === "uit" || state.presetId === "hust"}
                                             />
                                         </td>
                                         <td className="px-3 py-2">
@@ -111,7 +111,7 @@ export default function ScalePage() {
                                                 value={r.max}
                                                 onChange={(e) => setRange(i, { max: clampNum(e.target.value, 0, 10.0) })}
                                                 className="h-8 w-20"
-                                                disabled={state.presetId === "UIT" || state.presetId === "HUST"}
+                                                disabled={state.presetId === "uit" || state.presetId === "hust"}
                                             />
                                         </td>
                                         <td className="px-3 py-2">
@@ -122,12 +122,12 @@ export default function ScalePage() {
                                                 value={r.gpa4}
                                                 onChange={(e) => setRange(i, { gpa4: clampNum(e.target.value, 0, 4) })}
                                                 className="h-8 w-20"
-                                                disabled={state.presetId === "UIT" || state.presetId === "HUST"}
+                                                disabled={state.presetId === "uit" || state.presetId === "hust"}
                                             />
                                         </td>
                                         <td className="px-3 py-2 text-right">
                                             <Button size="icon" variant="ghost" aria-label={t("common.delete")}
-                                                onClick={() => removeRange(i)} disabled={state.presetId === "UIT" || state.presetId === "HUST"}>
+                                                onClick={() => removeRange(i)} disabled={state.presetId === "uit" || state.presetId === "hust"}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </td>

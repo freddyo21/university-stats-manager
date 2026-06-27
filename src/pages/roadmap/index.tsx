@@ -231,7 +231,7 @@ export default function RoadmapPage() {
                   <p className="text-sm text-success">{t("roadmap.secured")}</p>
                 ) : (
                   <p className="text-sm">
-                    <span className="font-bold text-accent">{roundGpa(requiredAvg, 2).toFixed(2)}/10</span> · {remaining} {t("common.credits")} → {roundGpa(state.targetGPA, 2).toFixed(2)}
+                    <span className="font-bold text-accent">{roundGpa(requiredAvg, 2).toFixed(2)}/10</span> · {remaining} {t("common.credits.DEFAULT")} → {roundGpa(state.targetGPA, 2).toFixed(2)}
                   </p>
                 )}
               </div>
@@ -273,7 +273,7 @@ export default function RoadmapPage() {
             <div className="mt-3 overflow-x-auto">
               <table className="w-full min-w-[320px] text-sm">
                 <thead className="text-xs uppercase tracking-wide text-muted-foreground">
-                  <tr><th className="py-2 text-left">{t("scale.letter")}</th><th>{t("common.subjects")}</th><th>{t("common.credits")}</th></tr>
+                  <tr><th className="py-2 text-left">{t("scale.letter")}</th><th>{t("common.subjects")}</th><th>{t("common.credits.DEFAULT")}</th></tr>
                 </thead>
                 <tbody>
                   {distribution.map((d) => (

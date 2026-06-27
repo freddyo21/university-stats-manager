@@ -358,7 +358,7 @@ function SemesterCard({ semester }: { semester: ISemester; index: number }) {
                 <button
                     onClick={() => setOpen(!open)}
                     className="grid h-8 w-8 place-items-center rounded-md hover:bg-muted cursor-pointer"
-                    aria-label={`${open ? t("common.collapse") : t("common.expand")} ${t("common.semester")}`}
+                    aria-label={`${open ? t("common.collapse.DEFAULT") : t("common.expand.DEFAULT")} ${t("common.semester")}`}
                 >
                     {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                 </button>
@@ -370,7 +370,7 @@ function SemesterCard({ semester }: { semester: ISemester; index: number }) {
                         className="h-8 max-w-xs border-none bg-transparent px-3 text-base font-semibold focus-visible:ring-0"
                     />
                     <div className="mt-0.5 text-xs text-muted-foreground">
-                        {semester.subjects.length} {t("common.subjects")} · {credits} {t("common.credits")} · {passedCredits} {t("common.credits.passed")} · {credits - passedCredits - exemptCredits} {t("common.credits.failed")} · {exemptCredits} {t("common.credits.exempt")} · {t("common.gpa")}{" "}
+                        {semester.subjects.length} {t("common.subjects")} · {credits} {t("common.credits.DEFAULT")} · {passedCredits} {t("common.credits.passed")} · {credits - passedCredits - exemptCredits} {t("common.credits.failed")} · {exemptCredits} {t("common.credits.exempt")} · {t("common.gpa")}{" "}
                         <span className="font-semibold text-foreground">{gpa10?.toFixed(2) ?? "—"}</span>
                     </div>
                 </div>
@@ -501,7 +501,7 @@ function SubjectRow({
                 <button
                     onClick={() => setOpen(!open)}
                     className="grid h-7 w-7 shrink-0 place-items-center rounded-md hover:bg-muted"
-                    aria-label={`${open ? t("common.collapse") : t("common.expand")} ${t("common.subject")}`}
+                    aria-label={`${open ? t("common.collapse.DEFAULT") : t("common.expand.DEFAULT")} ${t("common.subject")}`}
                 >
                     {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                 </button>
@@ -538,7 +538,7 @@ function SubjectRow({
                     <Label className="text-xs uppercase tracking-wide text-muted-foreground"
                         htmlFor={`subject-credits-${subject.id}`}
                     >
-                        {t("common.credits")}
+                        {t("common.credits.DEFAULT")}
                     </Label>
                     <Input
                         id={`subject-credits-${subject.id}`}
