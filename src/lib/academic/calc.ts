@@ -3,14 +3,10 @@ import type { ISemester } from "@/types/interfaces/ISemester";
 import type { ISubject } from "@/types/interfaces/ISubject";
 import type { ISubjectWeights } from "@/types/interfaces/ISubjectWeights";
 import type { TPrecisionMode } from "@/types/types";
+import { roundToPrecision } from "@/utils/helpers";
 
 /** Component scores are entered at 1 decimal place by instructors. */
 const SUBJECT_COMPONENT_PRECISION = 1;
-
-export function roundToPrecision(value: number, precision: number): number {
-  const factor = Math.pow(10, precision);
-  return Math.round(value * factor) / factor;
-}
 
 export function roundGpa(value: number, precisionMode: TPrecisionMode): number {
   return roundToPrecision(value, precisionMode);
@@ -50,8 +46,7 @@ export function subjectScore10(subject: ISubject, precision: TPrecisionMode = 2)
   }
 
   const rawScore = sum / total;
-  const factor = Math.pow(10, precision);
-  return Math.round(rawScore * factor) / factor;
+  return roundToPrecision(rawScore, precision);
 }
 
 export function hasComponentFail(subject: ISubject, enabled: boolean, threshold: number): boolean {

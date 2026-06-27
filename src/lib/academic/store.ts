@@ -3,6 +3,7 @@ import type { IExtensionSemester } from "@/types/interfaces/IExtensionSemester";
 import type { ISemester } from "@/types/interfaces/ISemester";
 import type { ISubject } from "@/types/interfaces/ISubject";
 import { DEFAULT_STATE } from "@/utils/constants";
+import { uuidv7 } from "@/utils/uuid";
 
 export const STORAGE_KEY = "academic-hub-v2";
 export const LEGACY_STORAGE_KEY = "academic-hub-v1";
@@ -111,6 +112,7 @@ export function mergeAcademicStateFromExtension(data: IExtensionSemester[]) {
     // Sao chép sâu danh sách học kỳ hiện tại để tránh mutate state gốc
     const updatedSemesters = currentState.semesters.map((s) => ({
       ...s,
+      id: uuidv7(), // Đảm bảo mỗi học kỳ có id mới để lưu vết thời gian merge, tránh trùng id với học kỳ cũ
       subjects: [...s.subjects], // clone luôn subjects array để tránh mutate ngược
     }));
 
@@ -127,7 +129,7 @@ export function mergeAcademicStateFromExtension(data: IExtensionSemester[]) {
       // Nếu chưa có học kỳ này, tiến hành khởi tạo mới
       if (!localSem) {
         localSem = {
-          id: window.crypto.randomUUID(),
+          id: uuidv7(),
           name: `${currentState.language === "vi" ? "Học kỳ" : "Semester"} ${extSem.semester}`,
           semesterNumber: extSem.semester,
           targetGPA: currentState.targetGPA ?? 8,
@@ -172,7 +174,7 @@ export function mergeAcademicStateFromExtension(data: IExtensionSemester[]) {
         } else {
           // Kịch bản B: Môn mới tinh từ hệ thống trường -> Tạo mới và sinh UUID tại đây
           return {
-            id: window.crypto.randomUUID(),
+            id: uuidv7(),
             code: extSub.code ?? "",
             name: extSub.name ?? "",
             credits: extSub.credits ?? 0,
