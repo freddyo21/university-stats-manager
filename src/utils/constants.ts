@@ -16,7 +16,7 @@ export const DEFAULT_LETTER_GRADES: ILetterGradeRange[] = [
 ];
 
 export const DEFAULT_STATE: IAppState = {
-    presetId: "UIT",
+    presetId: "uit",
     semesters: [],
     letterGrades: DEFAULT_LETTER_GRADES,
     subjectPassThreshold: 5.0,

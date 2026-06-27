@@ -19,7 +19,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/Header";
 import { uuidv7 } from "@/utils/uuid";
-import { useI18n } from "@/hooks/use-i18n";
+import { useI18n } from "@/i18n/use-i18n";
 import { useAcademicStore } from "@/hooks/useAcademicStore";
 import type { IAppState } from "@/types/interfaces/IAppState";
 import type { ILetterGradeRange } from "@/types/interfaces/ILetterGradeRange";

@@ -2,7 +2,7 @@ import { PageHeader } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useI18n } from "@/hooks/use-i18n";
+import { useI18n } from "@/i18n/use-i18n";
 import { useAcademicStore } from "@/hooks/useAcademicStore";
 import { STANDARD_REFERENCE } from "@/lib/academic/presets";
 import type { ILetterGradeRange } from "@/types/interfaces/ILetterGradeRange";

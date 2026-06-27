@@ -1,0 +1,172 @@
+{
+  "app": {
+    "title": "Trung tâm Học vụ",
+    "tagline": "GPA đa thang · Lưu cục bộ"
+  },
+  "nav": {
+    "entry": "Nhập điểm",
+    "scale": "Thang điểm",
+    "goals": "Mục tiêu kỳ",
+    "roadmap": "Lộ trình 4 năm",
+    "data": "Dữ liệu & Riêng tư",
+    "help": "Hướng dẫn"
+  },
+  "footer": {
+    "contact": {
+      "DEFAULT": "Liên hệ",
+      "email": "Email",
+      "phone": "Điện thoại"
+    },
+    "links": "Liên kết nhanh"
+  },
+  "common": {
+    "add": "Thêm",
+    "delete": "Xóa",
+    "settings": "Cài đặt",
+    "done": "Xong",
+    "collapse": {
+      "DEFAULT": "Thu gọn",
+      "all": "Thu gọn Tất cả"
+    },
+    "expand": {
+      "DEFAULT": "Mở rộng",
+      "all": "Mở rộng Tất cả"
+    },
+    "preset": {
+      "DEFAULT": "Trường",
+      "hust": "Đại học Bách Khoa Hà Nội",
+      "uit": "Trường Đại học Công nghệ Thông tin",
+      "custom": "Tùy chỉnh"
+    },
+    "language": "Ngôn ngữ",
+    "exempt": "Miễn học",
+    "exemptShort": "Miễn",
+    "status": "Trạng thái",
+    "passed": "Đậu",
+    "failed": "Trượt",
+    "inProgress": "Đang học",
+    "semester": "Học kỳ",
+    "subject": "Môn học",
+    "subjects": "Các môn học",
+    "credits": {
+      "DEFAULT": "Tín chỉ",
+      "passed": "Tín chỉ đã qua",
+      "failed": "Tín chỉ trượt",
+      "exempt": "Tín chỉ được miễn"
+    },
+    "gpa": "GPA",
+    "target": "Mục tiêu",
+    "slogan": "Ứng dụng mã nguồn mở dành riêng cho sinh viên. Kết quả học tập được lưu cục bộ 100% trên trình duyệt của bạn. Hệ thống máy chủ chỉ lưu cấu hình đồng bộ, cam kết không thu thập điểm số hay tài khoản trường."
+  },
+  "entry": {
+    "title": "Nhập điểm & Trọng số",
+    "desc": "Nhập thành phần và trọng số mỗi môn để xem GPA tức thời.",
+    "desc2": "Lưu ý: Điểm của học kỳ hè sẽ được gộp vào Học kỳ 2.",
+    "addSemester": "Thêm học kỳ",
+    "addSubject": "Thêm môn",
+    "empty": "Chưa có học kỳ – thêm để bắt đầu.",
+    "subjectCode": "Mã HP",
+    "subjectName": "Tên học phần",
+    "weight": "Trọng số (%)",
+    "score": "Điểm (0–10)",
+    "process": "Quá trình",
+    "midterm": "Giữa kỳ",
+    "practice": "Thực hành",
+    "final": "Cuối kỳ",
+    "weightDisabled": "Đã khóa (trọng số 0%)",
+    "componentFail": "Liệt thành phần",
+    "subjectFail": "Trượt môn",
+    "weightsMustTotal": "Tổng trọng số phải = 100%"
+  },
+  "settings": {
+    "subjectPass": "Mốc đậu môn",
+    "componentToggle": "Bật chấm liệt thành phần",
+    "componentThreshold": "Mốc đậu thành phần"
+  },
+  "scale": {
+    "title": "Thang điểm & Tham chiếu",
+    "desc": "Tham chiếu chuẩn và thang trường đang dùng.",
+    "standard": "Bảng Thang điểm Chuẩn",
+    "active": "Mốc điểm thực tế trường",
+    "range": "Khoảng điểm (Hệ 10)",
+    "letter": "Chữ",
+    "gpa4": "Hệ 4",
+    "gpa10": "Hệ 10",
+    "gpa100": "Hệ 100",
+    "lower": "Cận dưới (≥)",
+    "upper": "Cận trên (<)"
+  },
+  "goals": {
+    "title": "Mục tiêu học kỳ",
+    "desc": "Mục tiêu chiến thuật và điều kiện học bổng theo kỳ.",
+    "pick": "Chọn học kỳ",
+    "precision": {
+      "DEFAULT": "Độ chính xác GPA",
+      "number": "{number} chữ số thập phân"
+    },
+    "targetGpa": "GPA mục tiêu (kỳ này)",
+    "selectGpa": "Chọn thang điểm",
+    "actual": "Điểm trung bình học kỳ",
+    "grossUpTo": "Điểm trung bình chung",
+    "cumulativeUpTo": "Điểm trung bình chung tích lũy",
+    "activeSubjects": "Số môn",
+    "achieved": "Đạt mục tiêu",
+    "scholarship": "Có thể đạt học bổng",
+    "yes": "CÓ",
+    "no": "KHÔNG",
+    "nope": "KHÔNG",
+    "help": {
+      "inputTarget": "Nhập điểm mục tiêu hệ 10 vào dưới đây. Ứng dụng sẽ tự động tính điểm hệ 4 cho bạn."
+    }
+  },
+  "roadmap": {
+    "title": "Lộ trình 4 năm",
+    "desc": "Chiến lược dài hạn, mô phỏng và phân tích.",
+    "targetGrad": "GPA tốt nghiệp mục tiêu",
+    "totalCourse": "Tổng tín chỉ toàn khóa",
+    "currentGpa": "GPA tích lũy hiện tại",
+    "passedCredits": "Tín chỉ đã tích lũy",
+    "remaining": "Tín chỉ còn lại",
+    "required": "GPA trung bình cần đạt cho phần còn lại",
+    "unreachable": "Không thể đạt mục tiêu — hãy giảm hoặc kiểm tra tín chỉ.",
+    "secured": "Đã đảm bảo mục tiêu. Thoải mái đến ngày tốt nghiệp.",
+    "distribution": "Phân bố điểm chữ",
+    "stats": "Thống kê hiệu suất",
+    "totalSubjects": "Tổng số môn đã nhập",
+    "exemptSubjects": "Môn được miễn",
+    "perfect": "Điểm tuyệt đối (10/10)",
+    "over9": "Môn ≥ 9.0",
+    "over8": "Môn ≥ 8.0",
+    "failed": "Môn trượt (< 5.0 hoặc bị điểm liệt)"
+  },
+  "data": {
+    "title": "Dữ liệu cục bộ",
+    "desc": "Mọi dữ liệu lưu trong trình duyệt. Xuất, nhập hoặc xóa.",
+    "export": {
+      "DEFAULT": "Xuất JSON",
+      "desc": "Xuất dữ liệu hiện tại ra file JSON. Hãy giữ an toàn để nhập lại sau.",
+      "success": "Xuất dữ liệu thành công",
+      "failed": "Xuất dữ liệu không thành công"
+    },
+    "import": {
+      "DEFAULT": "Nhập JSON",
+      "desc": "Khôi phục dữ liệu từ file JSON đã xuất trước đó. Thao tác này sẽ thay thế dữ liệu hiện tại.",
+      "success": "Nhập dữ liệu thành công",
+      "failed": "Nhập dữ liệu không thành công"
+    },
+    "clear": {
+      "DEFAULT": "Xóa toàn bộ dữ liệu",
+      "desc": "Xóa mọi dữ liệu ứng dụng đã lưu trong trình duyệt. Không thể hoàn tác.",
+      "success": "Đã xóa toàn bộ dữ liệu",
+      "failed": "Xóa dữ liệu không thành công"
+    },
+    "privacyHeader": "Cam kết riêng tư",
+    "privacyDesc": "Ứng dụng chỉ sử dụng storage có sẵn của trình duyệt. Không gửi dữ liệu lên máy chủ. Hãy sao lưu dữ liệu thường xuyên nếu quan trọng.",
+    "deleteAlert": {
+      "confirmTitle": "Xóa toàn bộ dữ liệu?",
+      "confirmBody": "Hành động này xóa mọi học kỳ, môn và cấu hình khỏi trình duyệt. Không thể hoàn tác.",
+      "cancel": "Hủy",
+      "confirm": "Đồng ý, xóa hết"
+    }
+  }
+}

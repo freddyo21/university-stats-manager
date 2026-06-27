@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useI18n } from "@/hooks/use-i18n";
+import { useI18n } from "@/i18n/use-i18n";
 import { useAcademicStore } from "@/hooks/useAcademicStore";
 import { Trash2 } from "lucide-react";
 import { useState, useTransition } from "react";
@@ -27,9 +27,9 @@ export function DeleteAllDataAlert() {
         startTransition(() => {
             try {
                 reset();
-                toast.success(t("data.clearSuccess") || "All data cleared");
+                toast.success(t("data.clear.success") || "All data cleared");
             } catch (error) {
-                toast.error(t("data.clearFailed") || "Failed to clear data safely");
+                toast.error(t("data.clear.failed") || "Failed to clear data safely");
             }
         });
     };
@@ -39,31 +39,31 @@ export function DeleteAllDataAlert() {
             <Card className="p-5">
                 <div className="flex items-center gap-2 text-sm font-semibold">
                     <Trash2 className="h-4 w-4 text-destructive" />
-                    {t("data.clear")}
+                    {t("data.clear.DEFAULT") || "Clear All Data"}
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">
-                    {t("data.clearDesc") || "This will permanently delete all semesters, subjects, and configurations. This action cannot be undone."}
+                    {t("data.clear.desc") || "This will permanently delete all semesters, subjects, and configurations. This action cannot be undone."}
                 </p>
 
                 <Button
                     variant="destructive"
-                    aria-label={t("data.clear")}
+                    aria-label={t("data.clear.DEFAULT")}
                     onClick={() => setConfirmOpen(true)}
                     className="mt-4 w-full"
                 >
                     <Trash2 className="h-4 w-4" />
-                    {t("data.clear")}
+                    {t("data.clear.DEFAULT")}
                 </Button>
             </Card>
 
             <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>{t("data.confirmTitle")}</AlertDialogTitle>
-                        <AlertDialogDescription>{t("data.confirmBody")}</AlertDialogDescription>
+                        <AlertDialogTitle>{t("data.deleteAlert.confirmTitle")}</AlertDialogTitle>
+                        <AlertDialogDescription>{t("data.deleteAlert.confirmBody")}</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isPending}>{t("data.cancel")}</AlertDialogCancel>
+                        <AlertDialogCancel disabled={isPending}>{t("data.deleteAlert.cancel")}</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={(e) => {
                                 // Chặn hành vi đóng modal mặc định của Radix để đợi hàm xóa chạy xong an toàn
@@ -74,7 +74,7 @@ export function DeleteAllDataAlert() {
                             disabled={isPending}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
-                            {isPending ? "Clearing..." : t("data.confirm")}
+                            {isPending ? "Clearing..." : t("data.deleteAlert.confirm")}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

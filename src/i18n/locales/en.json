@@ -1,0 +1,172 @@
+{
+  "app": {
+    "title": "Academic Performance Hub",
+    "tagline": "Multi-scale GPA · Local-first"
+  },
+  "nav": {
+    "entry": "Grade Entry",
+    "scale": "Grading Scale",
+    "goals": "Semester Goals",
+    "roadmap": "4-Year Roadmap",
+    "data": "Data & Privacy",
+    "help": "User Manual"
+  },
+  "footer": {
+    "contact": {
+      "DEFAULT": "Contact",
+      "email": "Email",
+      "phone": "Phone"
+    },
+    "links": "Quick Links"
+  },
+  "common": {
+    "add": "Add",
+    "delete": "Delete",
+    "settings": "Settings",
+    "done": "Done",
+    "collapse": {
+      "DEFAULT": "Collapse",
+      "all": "Collapse All"
+    },
+    "expand": {
+      "DEFAULT": "Expand",
+      "all": "Expand All"
+    },
+    "preset": {
+      "DEFAULT": "Preset",
+      "hust": "Hanoi University of Science and Technology",
+      "uit": "University of Information Technology - VNUHCM",
+      "custom": "Custom"
+    },
+    "language": "Language",
+    "exempt": "Exempt",
+    "exemptShort": "Exempt",
+    "status": "Status",
+    "passed": "Passed",
+    "failed": "Failed",
+    "inProgress": "In progress",
+    "semester": "Semester",
+    "subject": "Subject",
+    "subjects": "Subjects",
+    "credits": {
+      "DEFAULT": "Credits",
+      "passed": "Passed Credits",
+      "failed": "Failed Credits",
+      "exempt": "Exempt Credits"
+    },
+    "gpa": "GPA",
+    "target": "Target",
+    "slogan": "Open-source application for students. Your academic data is stored 100% locally in your browser. The server only manages synchronization configurations and never collects your grades or school credentials."
+  },
+  "entry": {
+    "title": "Grade Entry",
+    "desc": "Capture each subject's components and weights for live GPA preview.",
+    "desc2": "Note: Summer semester grades will be combined into Semester 2.",
+    "addSemester": "Add Semester",
+    "addSubject": "Add subject",
+    "empty": "No semesters yet — add one to begin.",
+    "subjectCode": "Code",
+    "subjectName": "Subject name",
+    "weight": "Weight (%)",
+    "score": "Score (0–10)",
+    "process": "Process",
+    "midterm": "Midterm",
+    "practice": "Practice",
+    "final": "Final",
+    "weightDisabled": "Disabled (weight 0%)",
+    "componentFail": "Component fail (Liệt)",
+    "subjectFail": "Subject Failed",
+    "weightsMustTotal": "Weights must total 100%"
+  },
+  "settings": {
+    "subjectPass": "Subject passing threshold",
+    "componentToggle": "Enable component-level pass (Liệt thành phần)",
+    "componentThreshold": "Component pass threshold"
+  },
+  "scale": {
+    "title": "Grading Scale & Reference",
+    "desc": "Standard reference and your institution's active mapping.",
+    "standard": "Standard Reference Table",
+    "active": "Active Institution Scale",
+    "range": "Range (Scale 10)",
+    "letter": "Letter",
+    "gpa4": "Scale 4",
+    "gpa10": "Scale 10",
+    "gpa100": "Scale 100",
+    "lower": "Lower (≥)",
+    "upper": "Upper (<)"
+  },
+  "goals": {
+    "title": "Semester Goals",
+    "desc": "Tactical per-semester targets and scholarship gating.",
+    "pick": "Select semester",
+    "precision": {
+      "DEFAULT": "GPA Precision",
+      "number": "{number} decimal place"
+    },
+    "targetGpa": "GPA Target (this semester)",
+    "selectGpa": "Select GPA Scale",
+    "actual": "Grade Point Average",
+    "grossUpTo": "Gross Point Average",
+    "cumulativeUpTo": "Cumulative Point Average",
+    "activeSubjects": "Active subjects",
+    "achieved": "Goal Achieved",
+    "scholarship": "Scholarship Eligibility",
+    "yes": "YES",
+    "no": "NO",
+    "nope": "NOPE",
+    "help": {
+      "inputTarget": "Enter target GPA in scale 10 in the input below. The application will automatically calculate GPA in scale 4 for you."
+    }
+  },
+  "roadmap": {
+    "title": "4-Year Roadmap",
+    "desc": "Long-term GPA strategy, simulator, and analytics.",
+    "targetGrad": "Target Graduation GPA",
+    "totalCourse": "Total Required Course Credits",
+    "currentGpa": "Current Cumulative GPA",
+    "passedCredits": "Accumulated (Passed) Credits",
+    "remaining": "Remaining Credits",
+    "required": "Required average for remaining credits",
+    "unreachable": "Target unreachable — lower target or check credits.",
+    "secured": "Target already secured. Coast to graduation.",
+    "distribution": "Grade Distribution",
+    "stats": "Performance Statistics",
+    "totalSubjects": "Total subjects entered",
+    "exemptSubjects": "Exempt subjects",
+    "perfect": "Perfect score (10/10)",
+    "over9": "Subjects ≥ 9.0",
+    "over8": "Subjects ≥ 8.0",
+    "failed": "Failed subjects (< 5.0 or Under failing threshold)"
+  },
+  "data": {
+    "title": "Local Data & Privacy",
+    "desc": "All data is stored in your browser. Export, import, or clear.",
+    "export": {
+      "DEFAULT": "Export JSON",
+      "desc": "Export a JSON snapshot of your current data. Keep it safe for later import.",
+      "success": "Data exported successfully",
+      "failed": "Failed to export data"
+    },
+    "import": {
+      "DEFAULT": "Import JSON",
+      "desc": "Restore a previously exported JSON snapshot. Replaces current data.",
+      "success": "Data imported successfully",
+      "failed": "Failed to import data"
+    },
+    "clear": {
+      "DEFAULT": "Clear all data",
+      "desc": "Wipes every key the app stores in this browser. Cannot be undone.",
+      "success": "All data cleared",
+      "failed": "Failed to clear data safely"
+    },
+    "privacyHeader": "Privacy guarantee",
+    "privacyDesc": "The app uses only browser localStorage. Nothing is sent to a server. Export regularly if data is important.",
+    "deleteAlert": {
+      "confirmTitle": "Clear all data?",
+      "confirmBody": "This wipes every semester, subject, and setting from this browser. This cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Yes, clear everything"
+    }
+  }
+}

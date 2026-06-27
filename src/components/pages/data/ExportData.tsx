@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useI18n } from "@/hooks/use-i18n";
+import { useI18n } from "@/i18n/use-i18n";
 import { useAcademicStore } from "@/hooks/useAcademicStore";
+import type { TxKey } from "@/i18n/i18n-types";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
 
@@ -25,7 +26,7 @@ export function ExportData() {
     const { state } = useAcademicStore();
     const { t } = useI18n();
 
-    async function exportJSON(state: unknown, t: (key: string) => string | undefined) {
+    async function exportJSON(state: unknown, t: (key: TxKey) => string | undefined) {
         const json = JSON.stringify(state, null, 2);
         const filename = `academic-hub-${new Date().toISOString().slice(0, 10)}.json`;
 
@@ -41,14 +42,14 @@ export function ExportData() {
                 await writable.close();
 
                 // Chỉ tới đây khi user đã thực sự bấm "Save" và viết file xong
-                toast.success(t("data.exportSuccess") || "Data exported successfully");
+                toast.success(t("data.export.success") || "Data exported successfully");
             } catch (err: any) {
                 if (err?.name === "AbortError") {
                     // User bấm Cancel trong dialog -> không làm gì cả, không toast
                     return;
                 }
                 console.error("[academic-hub] Export failed:", err);
-                toast.error(t("data.exportError") || "Failed to export data");
+                toast.error(t("data.export.failed") || "Failed to export data");
             }
             return;
         }
@@ -71,7 +72,7 @@ export function ExportData() {
             // }, 100);
         } catch (err) {
             console.error("[academic-hub] Export failed:", err);
-            toast.error(t("data.exportError") || "Failed to export data");
+            toast.error(t("data.export.failed") || "Failed to export data");
         }
     }
 
@@ -79,15 +80,15 @@ export function ExportData() {
         <>
             <Card className="p-5">
                 <div className="flex items-center gap-2 text-sm font-semibold">
-                    <Download className="h-4 w-4 text-primary" /> {t("data.export")}
+                    <Download className="h-4 w-4 text-primary" /> {t("data.export.DEFAULT") || "Export Data"}
                 </div>
 
                 <p className="mt-2 text-sm text-muted-foreground">
-                    {t("data.exportDesc") || "Download a JSON snapshot of every semester, subject, and configuration."}
+                    {t("data.export.desc") || "Download a JSON snapshot of every semester, subject, and configuration."}
                 </p>
 
                 <Button onClick={() => exportJSON(state, t)} className="mt-4 w-full" aria-label="Export data">
-                    <Download className="h-4 w-4" /> {t("data.export")}
+                    <Download className="h-4 w-4" /> {t("data.export.DEFAULT") || "Export Data"}
                 </Button>
             </Card>
         </>

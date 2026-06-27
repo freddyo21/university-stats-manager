@@ -1,8 +1,12 @@
 import { I18nContext } from "@/contexts/I18nContext";
-import { D } from "@/lib/academic/i18n";
-import type { Lang, ReplaceOptions } from "@/types/interfaces/i18n";
+import { D } from "@/i18n/dict";
+import type { Lang, ReplaceOptions, TxKey } from "@/i18n/i18n-types";
 import { LANG_KEY } from "@/utils/constants";
 import { useCallback, useState, type ReactNode } from "react";
+
+// ============================================================================
+// TypeScript Magic: Tiện ích chuyển đổi Object lồng thành chuỗi Dot-Notation Paths
+// ============================================================================
 
 export function I18nProvider({ children }: { children: ReactNode }) {
     const [lang, setLangState] = useState<Lang>(() => {
@@ -10,7 +14,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
             const saved = localStorage.getItem(LANG_KEY) as Lang | null;
             if (saved === "en" || saved === "vi") return saved;
         } catch (error) {
-            // Bọc phòng hờ môi trường SSR hoặc trình duyệt chặn cookies
+            // Phòng hờ môi trường SSR hoặc trình duyệt chặn cookies
         }
         return "en";
     });
@@ -22,22 +26,50 @@ export function I18nProvider({ children }: { children: ReactNode }) {
         } catch { }
     }, []);
 
-    const t = useCallback((key: keyof typeof D, replaceOptions?: ReplaceOptions) => {
-        // 1. Trích xuất chuỗi thô theo ngôn ngữ, nếu không tìm thấy thì fallback về chính cái key
-        let template = D[key]?.[lang] ?? String(key);
+    const t = useCallback((key: TxKey, replaceOptions?: ReplaceOptions) => {
+        try {
+            // 1. Tìm bản dịch dựa trên ngôn ngữ hiện tại
+            const currentDict = D[lang];
+            const keys = key.split(".");
 
-        // 2. Nếu có truyền object các từ cần thay thế, tiến hành quét lặp qua để replace
-        if (replaceOptions) {
-            Object.keys(replaceOptions).forEach((variableName) => {
-                const targetValue = replaceOptions[variableName];
-                // Tạo Regex động để tìm kiếm tất cả các cụm nằm trong ngoặc nhọn, ví dụ: {number}
-                const regex = new RegExp(`\\{${variableName}\\}`, "g");
-                template = template.replace(regex, String(targetValue));
-            });
+            // Duyệt sâu qua từng tầng object theo mảng keys (ví dụ: ["common", "collapse", "all"])
+            let result: any = currentDict;
+            for (const k of keys) {
+                if (result && Object.prototype.hasOwnProperty.call(result, k)) {
+                    result = result[k];
+                } else {
+                    result = undefined;
+                    break;
+                }
+            }
+
+            // Xử lý kịch bản key DEFAULT thông minh: 
+            // Nếu đích đến cuối cùng vẫn là một object (do lồng lớp), tự động chọc tiếp vào node DEFAULT nếu có
+            if (result && typeof result === "object" && "DEFAULT" in result) {
+                result = result["DEFAULT"];
+            }
+
+            // Fallback về chính cái key nếu không tìm thấy chuỗi string hợp lệ
+            let template = typeof result === "string" ? result : String(key);
+
+            // 2. Nếu có truyền biến nội suy, tiến hành quét lặp qua để replace
+            if (replaceOptions) {
+                Object.keys(replaceOptions).forEach((variableName) => {
+                    const targetValue = replaceOptions[variableName];
+                    const regex = new RegExp(`\\{${variableName}\\}`, "g");
+                    template = template.replace(regex, String(targetValue));
+                });
+            }
+
+            return template;
+        } catch (error) {
+            return String(key);
         }
-
-        return template;
     }, [lang]);
 
-    return <I18nContext.Provider value={{ lang, setLang, t }}>{children}</I18nContext.Provider>;
+    return (
+        <I18nContext.Provider value={{ lang, setLang, t }}>
+            {children}
+        </I18nContext.Provider>
+    );
 }

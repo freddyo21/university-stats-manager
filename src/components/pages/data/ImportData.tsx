@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useI18n } from "@/hooks/use-i18n";
+import { useI18n } from "@/i18n/use-i18n";
 import { useAcademicStore } from "@/hooks/useAcademicStore";
 import type { IAppState } from "@/types/interfaces/IAppState";
 import { DEFAULT_STATE } from "@/utils/constants";
@@ -23,9 +23,9 @@ export function ImportData() {
 
                 replace({ ...DEFAULT_STATE, ...parsed } as IAppState);
 
-                toast.success(t("data.importSuccess") || "Data imported successfully");
+                toast.success(t("data.import.success") || "Data imported successfully");
             } catch {
-                toast.error(t("data.importFailed") || "Failed to import data. Please ensure the file is a valid JSON snapshot.");
+                toast.error(t("data.import.failed") || "Failed to import data. Please ensure the file is a valid JSON snapshot.");
             }
         };
         reader.readAsText(file);
@@ -35,10 +35,10 @@ export function ImportData() {
         <>
             <Card className="p-5">
                 <div className="flex items-center gap-2 text-sm font-semibold">
-                    <Upload className="h-4 w-4 text-primary" /> {t("data.import")}
+                    <Upload className="h-4 w-4 text-primary" /> {t("data.import.DEFAULT") || "Import Data"}
                 </div>
 
-                <p className="mt-2 text-sm text-muted-foreground">{t("data.importDesc") || "Restore a previously exported JSON snapshot. Replaces current data."}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{t("data.import.desc") || "Restore a previously exported JSON snapshot. Replaces current data."}</p>
 
                 <input
                     ref={fileRef}
@@ -54,7 +54,7 @@ export function ImportData() {
 
                 <Button variant="outline" className="mt-4 w-full" aria-label="Import data"
                     onClick={() => fileRef.current?.click()}>
-                    <Upload className="h-4 w-4" /> {t("data.import")}
+                    <Upload className="h-4 w-4" /> {t("data.import.DEFAULT") || "Import Data"}
                 </Button>
             </Card>
         </>

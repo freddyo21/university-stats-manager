@@ -1,5 +1,5 @@
-import { useI18n } from "@/hooks/use-i18n";
-import type { Dict } from "@/types/interfaces/i18n";
+import { useI18n } from "@/i18n/use-i18n";
+import type { Dict } from "@/i18n/i18n-types";
 
 const i18n: Dict = {
     "automaticFetch": { en: "Automatic Fetch", vi: "Đồng bộ điểm số tự động" },

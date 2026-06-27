@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { ShieldCheck } from "lucide-react";
 import { PageHeader } from "@/components/Header";
-import { useI18n } from "@/hooks/use-i18n";
+import { useI18n } from "@/i18n/use-i18n";
 import { DeleteAllDataAlert, ImportData, ExportData } from "@/components/pages/data";
 import ExtensionDownloadSection from "@/components/pages/data/ExtensionDownloadSection";
 

@@ -27,7 +27,7 @@ import type { TGradingScale, TPrecisionMode } from "@/types/types";
 import { Award, BookMarked, GraduationCap, Layers, Target, TrendingUp, TriangleAlert } from "lucide-react";
 import { useMemo, useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useI18n } from "@/hooks/use-i18n";
+import { useI18n } from "@/i18n/use-i18n";
 import { getScaleSuffix } from "@/utils/helpers";
 import { useAcademicStore } from "@/hooks/useAcademicStore";
 
@@ -343,7 +343,7 @@ export default function GoalsPage() {
                 </select>
                 <div className="mt-4">
                     <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        {t("goals.precision")}
+                        {t("goals.precision.DEFAULT")}
                     </Label>
                     <RadioGroup
                         value={String(precisionMode)}
@@ -352,11 +352,11 @@ export default function GoalsPage() {
                     >
                         <label className="flex cursor-pointer items-center gap-2 text-sm">
                             <RadioGroupItem value="1" />
-                            {t("goals.precision.{number}", { number: 1 })}
+                            {t("goals.precision.number", { number: 1 })}
                         </label>
                         <label className="flex cursor-pointer items-center gap-2 text-sm">
                             <RadioGroupItem value="2" />
-                            {t("goals.precision.{number}", { number: 2 })}
+                            {t("goals.precision.number", { number: 2 })}
                         </label>
                     </RadioGroup>
                 </div>
@@ -368,7 +368,7 @@ export default function GoalsPage() {
                         <div className="col-span-1 sm:col-span-2 lg:col-span-5 grid sm:max-lg:order-1 lg:order-0">
                             <SummaryCard
                                 icon={Layers}
-                                label={t("common.credits")}
+                                label={t("common.credits.DEFAULT")}
                                 value={String(semData.credits)}
                             />
                         </div>
@@ -425,7 +425,7 @@ export default function GoalsPage() {
                                 icon={TrendingUp}
                                 label={t("goals.cumulativeUpTo")}
                                 value={formatGpa(displayCurrentCPA)}
-                                hint={`${cumulative10UpTo.credits} ${t("common.credits").toLowerCase()}`}
+                                hint={`${cumulative10UpTo.credits} ${t("common.credits.DEFAULT").toLowerCase()}`}
                             />
                         </div>
                     </div>
@@ -457,7 +457,7 @@ export default function GoalsPage() {
                                     <tr>
                                         <th className="px-4 py-2 text-left">{t("entry.subjectCode")}</th>
                                         <th className="px-4 py-2 text-left">{t("entry.subjectName")}</th>
-                                        <th className="px-4 py-2 text-left">{t("common.credits")}</th>
+                                        <th className="px-4 py-2 text-left">{t("common.credits.DEFAULT")}</th>
                                         <th className="px-4 py-2 text-left">{t("scale.gpa10")}</th>
                                         <th className="px-4 py-2 text-left">{t("scale.gpa4")}</th>
                                         <th className="px-4 py-2 text-left">{t("common.status")}</th>

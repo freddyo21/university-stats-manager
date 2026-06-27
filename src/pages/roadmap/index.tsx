@@ -16,7 +16,7 @@ import { Target, GraduationCap, BookCheck, BookMinus, Sparkles } from "lucide-re
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/Header";
-import { useI18n } from "@/hooks/use-i18n";
+import { useI18n } from "@/i18n/use-i18n";
 import { useAcademicStore } from "@/hooks/useAcademicStore";
 
 export default function RoadmapPage() {
