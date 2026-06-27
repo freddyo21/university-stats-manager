@@ -29,13 +29,13 @@ const HUST_LETTERS: ILetterGradeRange[] = [
 ];
 
 export const PRESETS: Record<TPresetId, IPreset> = {
-  UIT: {
-    id: "UIT",
+  uit: {
+    id: "uit",
     label: "UIT (HCMC)",
     description: "Scale 10, passing 5.0. Failing threshold off by default.",
     apply: (s) => ({
       ...s,
-      presetId: "UIT",
+      presetId: "uit",
       letterGrades: UIT_LETTERS,
       subjectPassThreshold: 5.0,
       componentPassEnabled: false,
@@ -43,13 +43,13 @@ export const PRESETS: Record<TPresetId, IPreset> = {
       scholarshipGPA: 8.0,
     }),
   },
-  HUST: {
-    id: "HUST",
+  hust: {
+    id: "hust",
     label: "HUST (Hanoi)",
     description: "Scale 10, passing 4.0. Failing threshold at 3.0.",
     apply: (s) => ({
       ...s,
-      presetId: "HUST",
+      presetId: "hust",
       letterGrades: HUST_LETTERS,
       subjectPassThreshold: 4.0,
       componentPassEnabled: true,
@@ -57,11 +57,11 @@ export const PRESETS: Record<TPresetId, IPreset> = {
       scholarshipGPA: 3.2,
     }),
   },
-  Custom: {
-    id: "Custom",
+  custom: {
+    id: "custom",
     label: "Custom",
     description: "Free-form configuration.",
-    apply: (s) => ({ ...s, presetId: "Custom" }),
+    apply: (s) => ({ ...s, presetId: "custom" }),
   },
 };
 
