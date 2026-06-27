@@ -1,64 +1,146 @@
 # Study Stats Suite - Core Grading Logic Engine
 
-Bộ thư viện xử lý và tính toán chỉ số học tập (GPA/CPA) nâng cao dành cho sinh viên, được tối ưu hóa theo quy chế đào tạo tín chỉ đại chúng và cấu hình linh hoạt theo từng trường Đại học (ví dụ: UIT).
+A core library for processing and calculating advanced academic metrics (GPA/CPA) for students, optimized for standard credit-based academic regulations and flexibly configurable for individual universities.
 
-## 🚀 Tính năng cốt lõi
+---
 
-- **Fix triệt để lỗi dấu phẩy động (Floating-point):** Loại bỏ hoàn toàn hiện tượng hụt điểm hệ 10 khi làm tròn các mốc sát nút như `5.85 -> 5.8` hay `7.95 -> 7.9` của JavaScript.
-- **Phân tách rạch ròi GPA và CPA:**
-  - **Điểm trung bình học kỳ (GPA):** Tính tất cả các môn đã đăng ký trong kỳ, bao gồm cả các môn bị trượt để phản ánh đúng năng lực học kỳ.
-  - **Điểm trung bình tích lũy (CPA):** Chỉ tính các môn đã đạt (`Pass`). Các môn trượt sẽ bị loại bỏ hoàn toàn khỏi tử số và mẫu số tích lũy cho đến khi có điểm học lại.
-- **Xử lý trọn vẹn môn điểm miễn:** Tự động đếm và cộng số tín chỉ đã miễn vào tổng số tín chỉ tích lũy toàn khóa, nhưng cô lập hoàn toàn điểm số (`null`) khỏi bộ chia trung bình GPA/CPA.
-- **Dynamic Precision Mode:** Hỗ trợ cấu hình động số chữ số thập phân hiển thị (1 hoặc 2 chữ số) linh hoạt từ State UI xuống tầng core util.
-- **Không Hardcode Thang Điểm:** Loại bỏ hoàn toàn việc hardcode thang điểm cố định, chuyển sang cơ chế quét khoảng điểm động theo cấu hình riêng biệt của từng trường đại học khi runtime.
+## 🚀 Core Features & Business Logic
 
-## 🛠️ Thiết kế Kiến trúc (Design Patterns)
+- **Deterministic Floating-Point Precision:** Standardized decimal rounding algorithms (compensating for IEEE 754 binary floating-point errors) to ensure absolute accuracy in score data when calculating 10-point scale averages.
+- **Decoupled GPA/CPA Processing:** Modular business logic design separating two data streams:
+  - **Semester GPA:** Evaluates the full set of courses registered for the term to accurately reflect academic performance.
+  - **Cumulative GPA (CPA):** Implements an automatic "Drop-Filter" algorithm to exclude failed courses from both the numerator and denominator; data is updated only upon the recording of a successful course retake.
+- **Zero-Score Credit Isolation:** Automatically identifies and isolates exempt courses. The system aggregates these credits into the program total while completely excluding their score values ​​from the average calculation to prevent data distortion.
+- **Dynamic Precision Configuration:** Supports dynamic configuration of decimal places (1 or 2 digits) across the entire stack—from the UI layer down to core utilities—via a runtime synchronization mechanism.
+- **Data-Driven Scale Mapping (No Hardcoding):** Eliminates hardcoded grading scales. Implements a dynamic range mapping mechanism driven by university-specific policy configuration files at runtime.
 
-Dự án áp dụng các mẫu thiết kế chuẩn mực để đảm bảo code clean, dễ scale và bảo trì:
+## 🧩 Extension: Grade Crawler Assistant (Chrome Extension)
 
-1. **Facade Pattern:** Toàn bộ logic tính toán phân bố điểm chữ (`computeDistribution`) và thống kê hiệu suất chuyên sâu (`computePerformance`) được gom vào giao diện `GradeStatsFacade`. Tầng UI Component chỉ việc gọi Facade, che giấu hoàn toàn các vòng lặp lồng nhau phức tạp bên dưới.
-2. **Strategy Pattern:** Cơ chế quy đổi điểm và dò mốc học bổng/mục tiêu thay đổi thuật toán linh hoạt dựa trên trạng thái cấu hình thang điểm (`activeScale: "10" | "4" | "100"`).
+Developed a standalone Chrome Extension (Manifest V3) utilizing a **Secure Data Pipeline** architecture to automate the extraction of academic data directly from the academic portal (e.g., UIT's `daa.uit.edu.vn` portal) without requiring manual password entry by the user.
 
-## 📂 Mã nguồn Logic Tính Toán Cốt Lõi
+### 🛡️ Security Mechanism & Data Pipeline
 
-Hệ thống tính toán phân tách cấu trúc minh bạch qua các hàm chính trong `calc.ts`:
+To navigate the portal's strict security policies—specifically **CORS** and **Content Security Policy (CSP)** restrictions against `unsafe-eval` or `inline scripts`—the extension utilizes a **Bridge Content Script** model combined with an **Isolated World** architecture:
+
+1. **Popup Interaction:** An independent popup interface allows users to trigger the data scraping process without requiring write permissions or direct interaction with the university's academic portal.
+2. **Local Strategy Matching:** The extension automatically detects the current domain and activates the corresponding, locally embedded extraction function (e.g., `uitScrapingStrategy`), strictly adhering to Manifest V3 policies prohibiting remote code execution.
+3. **Isolated Execution:** Extraction algorithms run within an *Isolated World* to bypass CSP restrictions, handle complex HTML structures, normalize weights and scores, and output data in a secure JSON format.
+4. **Cross-Origin Bridge:** JSON data is relayed via `chrome.tabs.sendMessage` to `bridge-content-script.js` and then passed using `window.postMessage`—with strict Origin validation (`window.location.origin`)—to directly update the web application's React Context.
+
+### 📂 `manifest.json` settings
+
+```json
+{
+    "manifest_version": 3,
+    "name": "Grade Crawler Assistant",
+    "version": "1.0.0",
+    "description": "Hỗ trợ lấy GPA và CPA từ website các trường đại học",
+    "permissions": [
+        "scripting",
+        "activeTab",
+        "storage",
+        "tabs"
+    ],
+    "host_permissions": [
+        "http://localhost:3000/*",
+        "http://localhost:5173/*",
+        "https://study-stats-suite.vercel.app/*"
+    ],
+    "optional_host_permissions": [
+        "https://*.edu/*",
+        "https://*.edu.vn/*",
+        "http://*.edu/*",
+        "http://*.edu.vn/*"
+    ],
+    "background": {
+        "service_worker": "background.js",
+        "type": "module"
+    },
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "Grade Crawler Assistant"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "http://localhost:3000/*",
+                "https://study-stats-suite.vercel.app/*",
+                "http://localhost:5173/*"
+            ],
+            "js": [
+                "bridge-content-script.js"
+            ]
+        }
+    ],
+    "externally_connectable": {
+        "matches": [
+            "http://localhost:3000/*",
+            "https://study-stats-suite.vercel.app/*",
+            "http://localhost:5173/*"
+        ]
+    }
+}
+```
+
+### How it works:
+- **Extension Popup:** A standalone interface that appears when the user clicks the extension icon; it contains a button to trigger the data scraping process without modifying the school website's DOM.
+- **Background Script:** Listens for commands from the Popup, triggers the corresponding locally integrated data extraction function, and passes the JSON result to the Content Script.
+- **Bridge Content Script:** Runs on the Web App ([study-stats-suite.vercel.app](https://study-stats-suite.vercel.app)), securely receives the JSON data, and updates the application's state manager directly.
+
+### Notes:
+- **Just-In-Time Permissions:** To ensure absolute user privacy, the extension does not request permanent access permissions (host_permissions) for the academic portal in the Manifest file upfront. The system only triggers an API request for temporary permission for a specific domain when the user clicks to scrape grades from that page.
+- **Zero-Server Storage:** All sensitive data (such as grade reports and student IDs) is transmitted directly via the secure internal Chrome runtime pipeline to the Web App; it is never stored or sent to any intermediate servers.
+- **Data Synchronization Process:** Before opening the Popup to scrape grades, the user must ensure they are already logged into the school's academic portal in a browser tab and have the website [study-stats-suite.vercel.app](https://study-stats-suite.vercel.app) open simultaneously.
+
+---
+
+## 🛠️ Design Patterns
+
+The project employs standard design patterns to ensure clean, scalable, and maintainable code:
+
+1. **Strategy Pattern:** The mechanism for point conversion and scholarship/target threshold determination dynamically switches algorithms based on the grading scale configuration state (`activeScale: "10" | "4" | "100"`).
+
+---
+
+## 📂 Core Computational Logic Source Code
+
+Designed a decoupled, modular computation engine (`calc.ts`) utilizing deterministic algorithms to eliminate binary floating-point errors (IEEE 754) and independent data pipelines for Full-set Semester GPA aggregation and Drop-Filter Cumulative CPA processing.
+
 
 ```typescript
-// Tính điểm tổng kết học phần hệ 10 kèm xử lý an toàn dấu phẩy động
+// Standardize the rounding algorithm (compensating for IEEE 754 errors) to ensure deterministic base-10 calculations
 export function subjectScore10(subject: Subject, precision: number = 2): number | null;
 
-// Tính GPA học kỳ hệ 10 (Bao gồm cả môn trượt)
+// Apply a full-set aggregation mechanism across all registration records to calculate the semester GPA (base-10)
 export function semesterGPA10(s: Semester, ...): { gpa10: number | null; credits: number; ... };
 
-// Tính CPA tích lũy hệ 4 (Loại bỏ môn trượt, đếm kèm môn miễn chỉ)
+// Activate the drop-filter mechanism to exclude failed courses and isolate exempted course grades when calculating the cumulative GPA (base-4)
 export function cumulativeGPA4(semesters: Semester[], letterGrades: LetterGradeRange[], ...): { gpa4: number | null; credits: number; ... };
 ```
 
-## 📦 Lệnh triển khai dự án
-Chạy kiểm tra cú pháp strict-type của TypeScript và đóng gói ứng dụng:
+## 📦 Project deployment command
+Run TypeScript strict-type syntax checks and bundle the application:
 
 ```bash
-# Kiểm tra lỗi biên dịch Type và Build Production
+# Examine TypeScript strict-type errors and build the production bundle
 npm run build
-# Hoặc chạy thủ công qua bộ công cụ
+# Or run manually via the TypeScript chain:
 tsc -b && vite build
 ```
 
-## 📝 Quy chuẩn đóng góp mã nguồn (Contribution Guidelines)
-* Strict TypeScript: Luôn khai báo kiểu dữ liệu tường minh, không lạm dụng kiểu any rác.
+---
+## 📝 Contribution Guidelines
 
-
-## 📬 Liên hệ & Hỗ trợ (Contact)
-
-Nếu bạn có bất kỳ câu hỏi, góp ý hoặc phát hiện lỗ hổng logic/bảo mật nào trong bộ mã nguồn tính toán này, vui lòng liên hệ qua các kênh sau:
-
-- **Người phát triển:** Bùi Duy Anh (Freddy)
-- **Email liên hệ:** <a href="mailto:freddy.preo21@gmail.com">freddy.preo21@gmail.com</a>
-- **GitHub:** [Tại đây](https://github.com/freddyo21)
-- **LinkedIn:** [Tại đây](https://www.linkedin.com/in/freddy0605/)
-- **Số điện thoại:** <a href="tel:0984528986">0984528986</a>
-- **Lĩnh vực hoạt động:** Backend Development & Information Security (Red Team Operations)
-- **Tổ chức/Trường học:** Trường Đại học Công nghệ Thông tin, ĐHQG TP.HCM (UIT)
+* **Strict TypeScript**: Always declare data types explicitly; strictly avoid overusing the `any` type.
+* **Zod Validation**: Use Zod v4 to validate grading scale configuration data passed into the system; do not use functions or methods deprecated in older versions.
 
 ---
-*Dự án được xây dựng và phát triển với mục tiêu tối ưu hóa hiệu suất quản lý học tập cá nhân, cam kết tuân thủ các quy chuẩn clean code và thiết kế hệ thống hướng đối tượng.*
+
+## 📬 Contact & Support
+
+If you have any questions, suggestions, or discover any logic or security vulnerabilities in this codebase, please contact me via the following channels:
+
+
+
+---
+*The project is built and developed with the goal of optimizing personal learning management efficiency, while adhering to clean code standards and object-oriented system design principles.*
