@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   classify,
   cumulativeGPA10,
@@ -8,7 +8,6 @@ import {
   subjectScore10,
   toLetter,
 } from "@/lib/academic/calc";
-import type { TGradingScale } from "@/types/types";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,17 +17,11 @@ import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/Header";
 import { useI18n } from "@/i18n/use-i18n";
 import { useAcademicStore } from "@/hooks/useAcademicStore";
+import { ScaleSwitcher } from "@/components/shared/ScaleSwitcher";
 
 export default function RoadmapPage() {
   const { state, update } = useAcademicStore();
   const { t, lang } = useI18n();
-
-  const [activeScale, setActiveScale] = useState<TGradingScale>(state.activeScale ?? "10");
-
-  const handleScaleChange = (scale: TGradingScale) => {
-    setActiveScale(scale);
-    update((s) => ({ ...s, activeScale: scale }));
-  }
 
   const cumulative = useMemo(
     () =>
@@ -168,22 +161,7 @@ export default function RoadmapPage() {
         <Card className="p-5 lg:col-span-2">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Simulator</h3>
-            <div className="flex rounded-md border border-border overflow-hidden text-xs font-semibold">
-              {(["10", "4", "100"] as TGradingScale[]).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => handleScaleChange(s)}
-                  className={cn(
-                    "px-2.5 py-1 transition-colors",
-                    activeScale === s
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:bg-muted",
-                  )}
-                >
-                  /{s}
-                </button>
-              ))}
-            </div>
+            <ScaleSwitcher />
           </div>
           <div className="mt-3 grid gap-4 sm:grid-cols-2">
             <div>

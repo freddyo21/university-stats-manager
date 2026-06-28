@@ -65,11 +65,6 @@ export function ExportData() {
             document.body.appendChild(a);
             a.click();
             a.remove();
-
-            // setTimeout(() => {
-            //     URL.revokeObjectURL(url);
-            //     toast.success(t("data.exportSuccess") || "Data exported successfully");
-            // }, 100);
         } catch (err) {
             console.error("[academic-hub] Export failed:", err);
             toast.error(t("data.export.failed") || "Failed to export data");

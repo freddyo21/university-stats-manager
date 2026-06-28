@@ -24,8 +24,9 @@ export function ImportData() {
                 replace({ ...DEFAULT_STATE, ...parsed } as IAppState);
 
                 toast.success(t("data.import.success") || "Data imported successfully");
-            } catch {
+            } catch (error) {
                 toast.error(t("data.import.failed") || "Failed to import data. Please ensure the file is a valid JSON snapshot.");
+                console.error("Failed to import data:", error);
             }
         };
         reader.readAsText(file);

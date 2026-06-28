@@ -8,23 +8,5 @@
             "https://student.uit.edu.vn/sinhvien/kqhoctap"
         ],
         "isActive": true
-    },
-    {
-        "id": "hust",
-        "name": "Hanoi University of Science and Technology",
-        "acronym": "HUST",
-        "link": [
-            "https://hust.edu.vn"
-        ],
-        "isActive": true
-    },
-    {
-        "id": "hus",
-        "name": "Hanoi University of Science",
-        "acronym": "HUS",
-        "link": [
-            "https://daotao.vnu.edu.vn/ListPoint/listpoint.asp"
-        ],
-        "isActive": true
     }
 ]

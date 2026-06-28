@@ -24,7 +24,7 @@ export const DEFAULT_STATE: IAppState = {
     componentPassThreshold: 3.0,
     targetGPA: 8.0,
     totalCourseCredits: 120,
-    scholarshipGPA: 8.0,
+    eligibleForScholarshipGPA: 8.0,
     activeScale: null,
     precisionMode: 2,
     language: "en",

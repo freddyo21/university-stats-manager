@@ -11,7 +11,7 @@ export interface IAppState {
     componentPassThreshold: number;
     targetGPA: number;
     totalCourseCredits: number;
-    scholarshipGPA: number;
+    eligibleForScholarshipGPA: number;
     activeScale: TGradingScale | null;
     precisionMode: TPrecisionMode;
     language: "en" | "vi";

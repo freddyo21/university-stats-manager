@@ -30,6 +30,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useI18n } from "@/i18n/use-i18n";
 import { getScaleSuffix } from "@/utils/helpers";
 import { useAcademicStore } from "@/hooks/useAcademicStore";
+import { ScaleSwitcher } from "@/components/shared/ScaleSwitcher";
 
 const SCALE_4_FACTOR = 2.5;
 
@@ -210,7 +211,7 @@ export default function GoalsPage() {
         update((s) => ({
             ...s,
             activeScale: scale,
-            scholarshipGPA: Number(scale) * 0.8,
+            eligibleForScholarshipGPA: Number(scale) * 0.8,
         }));
     };
 
@@ -267,7 +268,7 @@ export default function GoalsPage() {
 
     const roundedTargetGPA = roundGpa(displayTargetGPARaw, precisionMode);
 
-    const roundedScholarshipGPA = roundGpa(state.scholarshipGPA, precisionMode);
+    const roundedScholarshipGPA = roundGpa(state.eligibleForScholarshipGPA, precisionMode);
 
     const goalAchieved =
         selected &&
@@ -305,22 +306,11 @@ export default function GoalsPage() {
                     </AlertDescription>
                 </Alert>
 
-                <Card className="mt-4 max-w-md p-4">
+                <Card className="mt-4 max-w-md p-4 flex items-center gap-4">
                     <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         {t("goals.selectGpa")}
                     </Label>
-                    <Select onValueChange={(v) => setActiveScale(v as TGradingScale)}>
-                        <SelectTrigger className="mt-2 w-full">
-                            <SelectValue placeholder={t("goals.selectGpa")} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectGroup>
-                                <SelectItem value="10">Hệ 10</SelectItem>
-                                <SelectItem value="4">Hệ 4</SelectItem>
-                                <SelectItem value="100">Hệ 100</SelectItem>
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
+                    <ScaleSwitcher />
                 </Card>
             </>
         );
@@ -395,7 +385,7 @@ export default function GoalsPage() {
                                         className="h-9 text-lg font-semibold"
                                     />
                                 </div>
-                                <div className="max-sm:w-full w-1/2 max-sm:mt-2">
+                                <div className="max-sm:w-full w-1/2 max-sm:mt-2 flex">
                                     <Select
                                         value={activeScale}
                                         onValueChange={(v) => setActiveScale(v as TGradingScale)}

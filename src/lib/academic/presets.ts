@@ -36,11 +36,12 @@ export const PRESETS: Record<TPresetId, IPreset> = {
     apply: (s) => ({
       ...s,
       presetId: "uit",
+      activeScale: "10",
       letterGrades: UIT_LETTERS,
       subjectPassThreshold: 5.0,
       componentPassEnabled: false,
       componentPassThreshold: 3.0,
-      scholarshipGPA: 8.0,
+      eligibleForScholarshipGPA: 8.0,
     }),
   },
   hust: {
@@ -50,11 +51,12 @@ export const PRESETS: Record<TPresetId, IPreset> = {
     apply: (s) => ({
       ...s,
       presetId: "hust",
+      activeScale: "4",
       letterGrades: HUST_LETTERS,
       subjectPassThreshold: 4.0,
       componentPassEnabled: true,
       componentPassThreshold: 3.0,
-      scholarshipGPA: 3.2,
+      eligibleForScholarshipGPA: 3.2,
     }),
   },
   custom: {

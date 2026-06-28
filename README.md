@@ -99,6 +99,7 @@ To navigate the portal's strict security policies—specifically **CORS** and **
 The project employs standard design patterns to ensure clean, scalable, and maintainable code:
 
 1. **Strategy Pattern:** The mechanism for point conversion and scholarship/target threshold determination dynamically switches algorithms based on the grading scale configuration state (`activeScale: "10" | "4" | "100"`).
+2. **Modular Utility Segregation:** Core calculations are completely decoupled into pure utility functions within `calc.ts`, ensuring zero side-effects and high testability.
 
 ---
 
