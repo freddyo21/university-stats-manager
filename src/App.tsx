@@ -2,6 +2,7 @@ import './App.css';
 import { Toaster } from './components/ui/sonner';
 import { I18nProvider } from './providers/I18nProvider';
 import { RoutesConfig } from './routes';
+import { Analytics } from "@vercel/analytics/next"
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
             // },
           }}
         />
+        <Analytics />
       </I18nProvider>
     </>
   )
