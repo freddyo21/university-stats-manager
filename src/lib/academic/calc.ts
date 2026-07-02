@@ -24,7 +24,9 @@ export function subjectScore10(subject: ISubject, precision: TPrecisionMode = 2)
   const { weights, scores } = subject;
 
   const total = weightTotal(weights);
-  if (total === 0) return null;
+
+  // SỬA TẠI ĐÂY: Trọng số chưa đủ 100% thì tuyệt đối không tính điểm môn, trả về null luôn
+  if (total !== 100) return null;
 
   const parts: { score: number | null; weight: number }[] = [
     { score: scores.process, weight: weights.process },
@@ -33,6 +35,7 @@ export function subjectScore10(subject: ISubject, precision: TPrecisionMode = 2)
     { score: scores.final, weight: weights.final },
   ];
 
+  // Nếu thành phần nào có trọng số > 0 mà chưa nhập điểm (null hoặc NaN) thì cũng trả về null
   for (const p of parts) {
     if (p.weight > 0 && (p.score === null || isNaN(p.score))) return null;
   }
@@ -45,7 +48,8 @@ export function subjectScore10(subject: ISubject, precision: TPrecisionMode = 2)
     }
   }
 
-  const rawScore = sum / total;
+  // const rawScore = sum / total;
+  const rawScore = sum / 100; // Vì total chắc chắn bằng 100 nên chia thẳng cho 100 cho clear
   return roundToPrecision(rawScore, precision);
 }
 
@@ -97,8 +101,10 @@ export function effectiveScore10(
 }
 
 export function gpa4FromScore10(score10: number, letterGrades: ILetterGradeRange[]): number {
-  const matchedRange = letterGrades.find((r) => score10 >= r.min && score10 < r.max);
-  return matchedRange ? matchedRange.gpa4 : 0.0;
+  const matchedRange = letterGrades.find((r) =>
+    score10 >= r.min && score10 < (r.max === 10 ? 10.01 : r.max)
+  );
+  return matchedRange?.gpa4 ?? 0.0;
 }
 
 export function to100(score10: number) {
@@ -107,72 +113,20 @@ export function to100(score10: number) {
 
 export function toLetter(score10: number, ranges: ILetterGradeRange[]): string {
   for (const r of ranges) {
-    if (score10 >= r.min && score10 < r.max) return r.letter;
+    if (score10 >= r.min && score10 < (r.max === 10 ? 10.01 : r.max)) return r.letter;
   }
   return "—";
 }
 
-export function semesterGPA10(
+export function calculateSemesterMetrics(
   s: ISemester,
-  subjectPass: number,
-  compEnabled: boolean,
-  compThreshold: number,
+  letterGrades: ILetterGradeRange[],
+  subjectPassThreshold: number,
+  componentPassEnabled: boolean,
+  componentPassThreshold: number,
   precisionMode: TPrecisionMode = 2,
 ): {
   gpa10: number | null;
-  credits: number;
-  passedCredits: number;
-  exemptCredits: number;
-} {
-  let totalCredits = 0;
-  let passedCredits = 0;
-  let exemptCredits = 0;
-  let weighted = 0;
-  let any = false;
-
-  for (const sub of s.subjects) {
-    const sc = effectiveScore10(
-      sub,
-      // compEnabled, 
-      // compThreshold, 
-      precisionMode
-    );
-    const passed = subjectPassed(sub, subjectPass, compEnabled, compThreshold, precisionMode);
-
-    if ((sc === null && !sub.isExempt) || sub.credits <= 0) continue;
-
-    if (sc === null && sub.isExempt) {
-      exemptCredits += sub.credits;
-      continue;
-    }
-
-    if (sc !== null) {
-      any = true;
-      weighted += sc * sub.credits;
-      totalCredits += sub.credits;
-    }
-
-    if (passed) {
-      passedCredits += sub.credits;
-    }
-  }
-
-  return {
-    gpa10: any && totalCredits > 0 ? roundGpa(weighted / totalCredits, 2) : null,
-    credits: totalCredits + exemptCredits,
-    passedCredits,
-    exemptCredits,
-  };
-}
-
-export function semesterGPA4(
-  s: ISemester,
-  letterGrades: ILetterGradeRange[],
-  subjectPass: number,
-  compEnabled: boolean,
-  compThreshold: number,
-  precisionMode: TPrecisionMode = 2,
-): {
   gpa4: number | null;
   credits: number;
   passedCredits: number;
@@ -181,7 +135,8 @@ export function semesterGPA4(
   let totalCredits = 0;
   let passedCredits = 0;
   let exemptCredits = 0;
-  let weighted = 0;
+  let weighted10 = 0;
+  let weighted4 = 0;
   let any = false;
 
   for (const sub of s.subjects) {
@@ -191,18 +146,22 @@ export function semesterGPA4(
       // compThreshold, 
       precisionMode
     );
-    const passed = subjectPassed(sub, subjectPass, compEnabled, compThreshold, precisionMode);
+    const passed = subjectPassed(sub, subjectPassThreshold, componentPassEnabled, componentPassThreshold, precisionMode);
 
+    // Bỏ qua các môn không có điểm hợp lệ mà không phải môn miễn trừ, hoặc tín chỉ <= 0
     if ((sc === null && !sub.isExempt) || sub.credits <= 0) continue;
 
+    // Xử lý riêng cho môn miễn trừ (Exempt) không có điểm
     if (sc === null && sub.isExempt) {
       exemptCredits += sub.credits;
       continue;
     }
 
+    // Nếu môn học có điểm hợp lệ, tiến hành tính toán cho cả hệ 10 và hệ 4
     if (sc !== null) {
       any = true;
-      weighted += gpa4FromScore10(sc, letterGrades) * sub.credits;
+      weighted10 += sc * sub.credits;
+      weighted4 += gpa4FromScore10(sc, letterGrades) * sub.credits;
       totalCredits += sub.credits;
     }
 
@@ -212,7 +171,8 @@ export function semesterGPA4(
   }
 
   return {
-    gpa4: any && totalCredits > 0 ? roundGpa(weighted / totalCredits, 2) : null,
+    gpa10: any && totalCredits > 0 ? roundGpa(weighted10 / totalCredits, 2) : null,
+    gpa4: any && totalCredits > 0 ? roundGpa(weighted4 / totalCredits, 2) : null,
     credits: totalCredits + exemptCredits,
     passedCredits,
     exemptCredits,
@@ -278,7 +238,7 @@ export function grossGPA4(
 
 export function grossGPA10(
   semesters: ISemester[],
-  subjectPass: number,
+  subjectPassThreshold: number,
   compEnabled: boolean,
   compThreshold: number,
   precisionMode: TPrecisionMode = 2,
@@ -306,7 +266,7 @@ export function grossGPA10(
       }
 
       const sc = effectiveScore10(sub, precisionMode);
-      const passed = subjectPassed(sub, subjectPass, compEnabled, compThreshold, precisionMode);
+      const passed = subjectPassed(sub, subjectPassThreshold, compEnabled, compThreshold, precisionMode);
 
       // Nếu môn chưa có điểm thì mới bỏ qua
       if (sc === null) continue;
@@ -332,10 +292,95 @@ export function grossGPA10(
   return res;
 }
 
+// export function calculateGrossMetrics(
+//   semesters: ISemester[],
+//   letterGrades: ILetterGradeRange[],
+//   subjectPass: number,
+//   compEnabled: boolean,
+//   compThreshold: number,
+//   precisionMode: TPrecisionMode = 2,
+// ): {
+//   gpa10: number | null;
+//   gpa4: number | null;
+
+//   // Hệ 10: Gắn liền với tiêu chí của hàm subjectPassed()
+//   credits10: number;
+//   passedCredits10: number;
+
+//   // Hệ 4: Gắn liền với tiêu chí điểm chữ (gpa4Point > 0)
+//   credits4: number;
+//   passedCredits4: number;
+
+//   exemptCredits: number;  // Tín chỉ môn miễn điểm (Dùng chung cho cả 2 hệ)
+// } {
+//   let registeredCredits = 0; // Mẫu số chung tính GPA: Tổng tín chỉ của các môn CÓ ĐIỂM
+//   let exemptCredits = 0;     // Số tín chỉ được miễn
+
+//   // Tách biệt hoàn toàn biến đếm số tín chỉ đạt của 2 hệ thống
+//   let passedCredits10 = 0;
+//   let passedCredits4 = 0;
+
+//   let weighted10 = 0;
+//   let weighted4 = 0;
+//   let any = false;
+
+//   for (const s of semesters) {
+//     for (const sub of s.subjects) {
+//       if (sub.credits <= 0) continue;
+
+//       // Trường hợp 1: Môn miễn điểm (Exempt)
+//       if (sub.isExempt) {
+//         exemptCredits += sub.credits;
+//         continue;
+//       }
+
+//       const sc = effectiveScore10(sub, precisionMode);
+//       const passed10 = subjectPassed(sub, subjectPass, compEnabled, compThreshold, precisionMode);
+
+//       // Nếu môn chưa có điểm thì bỏ qua hoàn toàn
+//       if (sc === null) continue;
+
+//       any = true;
+
+//       // Tính toán tử số cho cả 2 hệ
+//       const gpa4Point = gpa4FromScore10(sc, letterGrades);
+//       weighted10 += sc * sub.credits;
+//       weighted4 += gpa4Point * sub.credits;
+
+//       // Mẫu số tính GPA
+//       registeredCredits += sub.credits;
+
+//       // 🔒 TIÊU CHÍ HỆ 10: Đạt khi hàm subjectPassed trả về true
+//       if (passed10 === true) {
+//         passedCredits10 += sub.credits;
+//       }
+
+//       // 🔒 TIÊU CHÍ HỆ 4: Đạt khi điểm chữ quy đổi lớn hơn 0 (Khác F)
+//       if (gpa4Point > 0) {
+//         passedCredits4 += sub.credits;
+//       }
+//     }
+//   }
+
+//   return {
+//     gpa10: any && registeredCredits > 0 ? roundGpa(weighted10 / registeredCredits, 2) : null,
+//     gpa4: any && registeredCredits > 0 ? roundGpa(weighted4 / registeredCredits, 2) : null,
+
+//     // Tính tổng tín chỉ tích lũy tương ứng cho từng hệ (Môn đạt + Môn miễn)
+//     passedCredits10,
+//     credits10: passedCredits10 + exemptCredits,
+
+//     passedCredits4,
+//     credits4: passedCredits4 + exemptCredits,
+
+//     exemptCredits,
+//   };
+// }
+
 export function cumulativeGPA4(
   semesters: ISemester[],
   letterGrades: ILetterGradeRange[],
-  subjectPass: number,
+  subjectPassThreshold: number,
   compEnabled: boolean,
   compThreshold: number,
   precisionMode: TPrecisionMode = 2,
@@ -366,7 +411,7 @@ export function cumulativeGPA4(
         // compThreshold, 
         precisionMode
       );
-      const passed = subjectPassed(sub, subjectPass, compEnabled, compThreshold, precisionMode);
+      const passed = subjectPassed(sub, subjectPassThreshold, compEnabled, compThreshold, precisionMode);
 
       // Trường hợp 2: Môn bị trượt hoặc chưa có điểm -> Bỏ qua hoàn toàn khỏi CPA tích lũy
       if (sc === null || passed !== true) continue;
@@ -478,27 +523,51 @@ export function classify(gpa: number | null): Advisory {
       tone: "primary",
       advice: { en: "Enter grades to see your classification.", vi: "Nhập điểm để xem xếp loại." },
     };
-  if (gpa >= 8.5)
+
+  // Ngưỡng Xuất sắc (Excellent) -> Đạt học bổng
+  if (gpa >= 9.0)
     return {
       label: { en: "Excellent — Scholarship", vi: "Xuất sắc — Học bổng" },
       tone: "success",
-      advice: { en: "Outstanding performance. Maintain momentum to keep scholarships.", vi: "Thành tích xuất sắc. Giữ phong độ để duy trì học bổng." },
+      advice: { en: "Flawless academic record! Keep leading the cohort.", vi: "Thành tích tuyệt đối! Hãy tiếp tục duy trì vị thế dẫn đầu." },
     };
+
+  // Ngưỡng Giỏi (Very Good) -> Cơ hội học bổng cao
+  if (gpa >= 8.0)
+    return {
+      label: { en: "Very Good — Scholarship", vi: "Giỏi — Học bổng" },
+      tone: "success",
+      advice: { en: "Outstanding performance. Maintain momentum to keep scholarships.", vi: "Thành tích xuất sắc. Giữ vững phong độ để bảo vệ học bổng." },
+    };
+
+  // Ngưỡng Khá (Good) -> Tạm ổn, tiệm cận học bổng
   if (gpa >= 7.0)
     return {
       label: { en: "Good / Fair — Acceptable", vi: "Khá / Trung bình — Tạm được" },
       tone: "warning",
       advice: { en: "Solid baseline. Push a few subjects to unlock scholarship range.", vi: "Nền tảng ổn. Nên cố gắng học cải thiện thêm vài môn điểm thấp để lên ngưỡng học bổng." },
     };
+
+  // Ngưỡng Trung bình (Fair) -> Cảnh báo học tập nhẹ, nên học cải thiện
+  if (gpa >= 6.0)
+    return {
+      label: { en: "Fair — Need Improvement", vi: "Trung bình — Nên học cải thiện" },
+      tone: "warning",
+      advice: { en: "Review your low-credit subjects. Target minor grade improvements to secure a Good rating.", vi: "Điểm ở mức an toàn nhưng chưa cao. Hãy lên kế hoạch học cải thiện để kéo GPA lên mức Khá." },
+    };
+
+  // Ngưỡng Yếu (Academic Alert) -> Điểm chạm mốc trượt môn, cần tối ưu lại phương pháp
   if (gpa >= 5.0)
     return {
       label: { en: "Academic Alert — Need Improvement", vi: "Cảnh báo — Cần cải thiện" },
       tone: "warning",
       advice: { en: "Plan retakes for weak subjects and raise your component scores.", vi: "Lên kế hoạch học cải thiện cho các môn yếu." },
     };
+
+  // Ngưỡng Kém (Critical Fail) -> Buộc phải học lại để gỡ nợ
   return {
-    label: { en: "Critical Fail — Re-take required", vi: "Nguy hiểm — Phải học lại" },
+    label: { en: "Critical Fail — Re-take required", vi: "Nguy hiểm — Học lại" },
     tone: "destructive",
-    advice: { en: "Prioritize retakes immediately; reduce course load if possible.", vi: "Ưu tiên học lại ngay; cân nhắc giảm khối lượng môn." },
+    advice: { en: "Prioritize retakes immediately; restructure your timeline and reduce course load.", vi: "Diện cảnh báo đỏ! Ưu tiên đăng ký học lại ngay các môn bị tạch để giải phóng nợ môn." },
   };
 }

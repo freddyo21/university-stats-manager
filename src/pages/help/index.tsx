@@ -2,9 +2,10 @@ import { Card } from "@/components/ui/card";
 import { BookOpen, Calculator, Download, Shield, Sliders, Target } from "lucide-react";
 import { PageHeader } from "@/components/Header";
 import { useI18n } from "@/i18n/use-i18n";
+import type { ComponentType } from "react";
 
 type Section = {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
   title: { en: string; vi: string };
   body: { en: string; vi: string }[];
 };

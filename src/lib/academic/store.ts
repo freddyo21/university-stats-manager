@@ -112,26 +112,23 @@ export function mergeAcademicStateFromExtension(data: IExtensionSemester[]) {
     // Sao chép sâu danh sách học kỳ hiện tại để tránh mutate state gốc
     const updatedSemesters = currentState.semesters.map((s) => ({
       ...s,
-      id: uuidv7(), // Đảm bảo mỗi học kỳ có id mới để lưu vết thời gian merge, tránh trùng id với học kỳ cũ
+      // id: uuidv7(), // Đảm bảo mỗi học kỳ có id mới để lưu vết thời gian merge, tránh trùng id với học kỳ cũ
       subjects: [...s.subjects], // clone luôn subjects array để tránh mutate ngược
     }));
 
     data.forEach((extSem) => {
-      const semesterTargetString = extSem.semester.toString();
-
-      // 1. Tìm học kỳ cũ dựa trên số học kỳ
-      let localSem = updatedSemesters.find((s) => {
-        if (s.semesterNumber != null) return s.semesterNumber === extSem.semester;
-        const num = s.name.match(/\d+/)?.[0];
-        return num === semesterTargetString;
-      });
+      // const semesterTargetString = extSem.semester.toString();
+      const targetSemesterId = extSem.semesterId;
+      //  || String(extSem.semester);
+      let localSem = updatedSemesters.find((s) => s.name === targetSemesterId);
 
       // Nếu chưa có học kỳ này, tiến hành khởi tạo mới
       if (!localSem) {
         localSem = {
           id: uuidv7(),
-          name: `${currentState.language === "vi" ? "Học kỳ" : "Semester"} ${extSem.semester}`,
+          name: targetSemesterId || `${currentState.language === "vi" ? "Học kỳ" : "Semester"} ${extSem.semester}`,
           semesterNumber: extSem.semester,
+          semesterId: targetSemesterId,
           targetGPA: currentState.targetGPA ?? 8,
           subjects: []
         };
@@ -158,16 +155,16 @@ export function mergeAcademicStateFromExtension(data: IExtensionSemester[]) {
             name: extSub.name ?? existingSub.name,
             credits: extSub.credits ?? existingSub.credits,
             weights: {
-              process: extSub.weights?.process ?? existingSub.weights?.process,
-              midterm: extSub.weights?.midterm ?? existingSub.weights?.midterm,
-              practice: extSub.weights?.practice ?? existingSub.weights?.practice,
-              final: extSub.weights?.final ?? existingSub.weights?.final,
+              process: extSub.weights?.process ?? existingSub.weights?.process ?? null,
+              midterm: extSub.weights?.midterm ?? existingSub.weights?.midterm ?? null,
+              practice: extSub.weights?.practice ?? existingSub.weights?.practice ?? null,
+              final: extSub.weights?.final ?? existingSub.weights?.final ?? null,
             },
             scores: {
-              process: extSub.scores?.process ?? existingSub.scores?.process,
-              midterm: extSub.scores?.midterm ?? existingSub.scores?.midterm,
-              practice: extSub.scores?.practice ?? existingSub.scores?.practice,
-              final: extSub.scores?.final ?? existingSub.scores?.final,
+              process: extSub.scores?.process ?? existingSub.scores?.process ?? null,
+              midterm: extSub.scores?.midterm ?? existingSub.scores?.midterm ?? null,
+              practice: extSub.scores?.practice ?? existingSub.scores?.practice ?? null,
+              final: extSub.scores?.final ?? existingSub.scores?.final ?? null,
             },
             isExempt: extSub.isExempt ?? existingSub.isExempt
           };
@@ -186,8 +183,8 @@ export function mergeAcademicStateFromExtension(data: IExtensionSemester[]) {
       });
 
       // 4. Bổ sung ngược lại những môn tự thêm tay (Môn có trong local nhưng Extension không cào thấy)
-      const extSubCodes = new Set(extSem.subjects.map((s) => s.code));
-      const customSubjects = localSem.subjects.filter((sub) => !extSubCodes.has(sub.code));
+      const extSubCodes = new Set(extSem.subjects.map((s) => s.code.trim().toUpperCase()));
+      const customSubjects = localSem.subjects.filter((sub) => !extSubCodes.has(sub.code.trim().toUpperCase()));
 
       // Cập nhật lại danh sách môn hoàn chỉnh cho học kỳ này
       localSem.subjects = [...mergedSubjects, ...customSubjects];
@@ -195,15 +192,15 @@ export function mergeAcademicStateFromExtension(data: IExtensionSemester[]) {
 
     // Sắp xếp lại các học kỳ theo số tăng dần trích xuất từ chuỗi name
     const finalSemesters = updatedSemesters.sort((a, b) => {
-      const numA = a.semesterNumber ?? parseInt(a.name.match(/\d+/)?.[0] || "0", 10);
-      const numB = b.semesterNumber ?? parseInt(b.name.match(/\d+/)?.[0] || "0", 10);
-      return numA - numB;
+      return Number(a.semesterId) - Number(b.semesterId);
     });
 
     const mergedState: IAppState = {
       ...currentState,
       semesters: finalSemesters
     };
+
+    console.log("[academic-hub] Merging state from extension:", mergedState);
 
     persistAcademicState(mergedState);
     console.log("[academic-hub] Merged and persisted state successfully.");

@@ -219,6 +219,10 @@
         "en": "Final",
         "vi": "Cuối kỳ"
     },
+    "entry.component": {
+        "en": "Component",
+        "vi": "Thành phần"
+    },
     "entry.weightDisabled": {
         "en": "Disabled (weight 0%)",
         "vi": "Đã khóa (trọng số 0%)"

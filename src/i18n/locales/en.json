@@ -73,6 +73,7 @@
     "midterm": "Midterm",
     "practice": "Practice",
     "final": "Final",
+    "component": "Component",
     "weightDisabled": "Disabled (weight 0%)",
     "componentFail": "Component fail (Liệt)",
     "subjectFail": "Subject Failed",
