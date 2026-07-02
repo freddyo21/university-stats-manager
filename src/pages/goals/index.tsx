@@ -12,215 +12,43 @@ import {
     SelectValue
 } from "@/components/ui/select";
 import {
-    cumulativeGPA10,
-    cumulativeGPA4,
     gpa4FromScore10,
-    grossGPA10,
-    grossGPA4,
-    roundGpa,
-    semesterGPA10,
-    semesterGPA4,
     subjectPassed,
     subjectScore10,
 } from "@/lib/academic/calc";
 import type { TGradingScale, TPrecisionMode } from "@/types/types";
 import { Award, BookMarked, GraduationCap, Layers, Target, TrendingUp, TriangleAlert } from "lucide-react";
-import { useMemo, useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useI18n } from "@/i18n/use-i18n";
 import { getScaleSuffix } from "@/utils/helpers";
-import { useAcademicStore } from "@/hooks/useAcademicStore";
 import { ScaleSwitcher } from "@/components/shared/ScaleSwitcher";
-
-const SCALE_4_FACTOR = 2.5;
+import { SummaryCard } from "@/pages/goals/components/SummaryCard";
+import { useGoalsMetrics } from "./useGoalsMetrics";
 
 export default function GoalsPage() {
-    const { state, update } = useAcademicStore();
+    const {
+        state,
+        selectedId,
+        setSelectedId,
+        selectedSemester,
+        activeCount,
+        activeScale,
+        currentGpa,
+        grossCpa,
+        currentCpa,
+        goalAchieved,
+        hasScholarship,
+        metrics,
+        precisionMode,
+        roundedTargetGPA,
+        roundedScholarshipGPA,
+        formatGpa,
+        setSemesterTarget,
+        setActiveScale,
+        setPrecisionMode
+    } = useGoalsMetrics();
+
     const { t } = useI18n();
-
-    const [selectedId, setSelectedId] = useState<string>("");
-    const [prevSemesters, setPrevSemesters] = useState(state.semesters);
-
-    if (state.semesters !== prevSemesters || (!selectedId && state.semesters.length > 0)) {
-        setPrevSemesters(state.semesters);
-
-        // Nếu ID hiện tại không còn tồn tại trong danh sách kỳ mới, tự động reset về kỳ đầu tiên
-        const exists = state.semesters.some((s) => s.id === selectedId);
-        setSelectedId(exists && selectedId ? selectedId : (state.semesters[0]?.id ?? ""));
-    }
-
-    const selectedIndex = state.semesters.findIndex((s) => s.id === selectedId);
-    const selected = state.semesters[selectedIndex];
-
-    const precisionMode = state.precisionMode;
-
-    const semData = useMemo(
-        () =>
-            selected
-                ? semesterGPA10(
-                    selected,
-                    state.subjectPassThreshold,
-                    state.componentPassEnabled,
-                    state.componentPassThreshold,
-                    precisionMode
-                )
-                : { gpa10: null, credits: 0, passedCredits: 0, exemptCredits: 0 },
-        [
-            selected,
-            precisionMode,
-            state.subjectPassThreshold,
-            state.componentPassEnabled,
-            state.componentPassThreshold
-        ],
-    );
-
-    const semData4 = useMemo(
-        () =>
-            selected
-                ? semesterGPA4(
-                    selected,
-                    state.letterGrades,
-                    state.subjectPassThreshold,
-                    state.componentPassEnabled,
-                    state.componentPassThreshold,
-                    precisionMode
-                )
-                : { gpa4: null, credits: 0, passedCredits: 0, exemptCredits: 0 },
-        [
-            selected,
-            state.letterGrades,
-            precisionMode,
-            state.subjectPassThreshold,
-            state.componentPassEnabled,
-            state.componentPassThreshold
-        ],
-    );
-
-    const gross10UpTo = useMemo(() => {
-        if (selectedIndex < 0) return {
-            gpa10: null,
-            credits: 0,
-            passedCredits: 0,
-            exemptCredits: 0,
-        };
-
-        return grossGPA10(
-            state.semesters.slice(0, selectedIndex + 1),
-            state.subjectPassThreshold,
-            state.componentPassEnabled,
-            state.componentPassThreshold,
-            precisionMode,
-        )
-    }, [
-        state.semesters,
-        selectedIndex,
-        precisionMode,
-        state.subjectPassThreshold,
-        state.componentPassEnabled,
-        state.componentPassThreshold
-    ]);
-
-    const gross4UpTo = useMemo(() => {
-        if (selectedIndex < 0) return {
-            gpa4: null,
-            credits: 0,
-            passedCredits: 0,
-            exemptCredits: 0
-        };
-
-        return grossGPA4(
-            state.semesters.slice(0, selectedIndex + 1),
-            state.letterGrades,
-            precisionMode
-        );
-    }, [state.semesters, state.letterGrades, selectedIndex, precisionMode]);
-
-    const cumulative10UpTo = useMemo(() => {
-        if (selectedIndex < 0) return {
-            gpa10: null,
-            credits: 0,
-            passedCredits: 0,
-            exemptCredits: 0,
-        };
-
-        return cumulativeGPA10(
-            state.semesters.slice(0, selectedIndex + 1),
-            state.subjectPassThreshold,
-            state.componentPassEnabled,
-            state.componentPassThreshold,
-            precisionMode,
-        );
-    }, [
-        state.semesters,
-        selectedIndex,
-        precisionMode,
-        state.subjectPassThreshold,
-        state.componentPassEnabled,
-        state.componentPassThreshold
-    ]);
-
-    const cumulative4UpTo = useMemo(() => {
-        if (selectedIndex < 0) return {
-            gpa4: null,
-            credits: 0,
-            passedCredits: 0,
-            exemptCredits: 0
-        };
-
-        return cumulativeGPA4(
-            state.semesters.slice(0, selectedIndex + 1),
-            state.letterGrades,
-            state.subjectPassThreshold,
-            state.componentPassEnabled,
-            state.componentPassThreshold,
-            precisionMode,
-        );
-    }, [
-        state.semesters,
-        state.letterGrades,
-        selectedIndex,
-        precisionMode,
-        state.subjectPassThreshold,
-        state.componentPassEnabled,
-        state.componentPassThreshold
-    ]);
-
-    const active = selected
-        ? selected.subjects.filter(
-            (s) => subjectPassed(
-                s,
-                state.subjectPassThreshold,
-                state.componentPassEnabled,
-                state.componentPassThreshold,
-                precisionMode
-            ) !== null,
-        ).length
-        : 0;
-
-    const setSemesterTarget = (v: number) => {
-        if (!selected) return;
-        update((s) => ({
-            ...s,
-            semesters: s.semesters.map((x) =>
-                x.id === selected.id ? { ...x, targetGPA: Math.min(10, Math.max(0, v)) } : x,
-            ),
-        }));
-    };
-
-    const setActiveScale = (scale: TGradingScale) => {
-        update((s) => ({
-            ...s,
-            activeScale: scale,
-            eligibleForScholarshipGPA: Number(scale) * 0.8,
-        }));
-    };
-
-    const setPrecisionMode = (mode: TPrecisionMode) => {
-        update((s) => ({ ...s, precisionMode: mode }));
-    };
-
-    const formatGpa = (value: number | null) =>
-        value === null ? "—" : value.toFixed(2);
 
     if (state.semesters.length === 0) {
         return (
@@ -232,51 +60,6 @@ export default function GoalsPage() {
             </>
         );
     }
-
-    const activeScale = state.activeScale;
-
-    const displayCurrentGPA =
-        activeScale === "4"
-            ? semData4.gpa4
-            : activeScale === "100" && semData.gpa10 !== null
-                ? roundGpa(semData.gpa10 * 10, precisionMode)
-                : semData.gpa10;
-
-    const displayGrossCPA =
-        activeScale === "4"
-            ? gross4UpTo.gpa4
-            : activeScale === "100" && gross10UpTo.gpa10 !== null
-                ? roundGpa(gross10UpTo.gpa10 * 10, precisionMode)
-                : gross10UpTo.gpa10;
-
-    const displayCurrentCPA =
-        activeScale === "4"
-            ? cumulative4UpTo.gpa4
-            : activeScale === "100" && cumulative10UpTo.gpa10 !== null
-                ? roundGpa(cumulative10UpTo.gpa10 * 10, precisionMode)
-                : cumulative10UpTo.gpa10;
-
-    const displayTargetGPARaw =
-        activeScale === "4" && selected
-            ? selected.targetGPA / SCALE_4_FACTOR
-            : activeScale === "100" && selected
-                ? selected.targetGPA * 10
-                : selected?.targetGPA ?? 0;
-
-    const roundedCurrentGPA =
-        displayCurrentGPA !== null ? roundGpa(displayCurrentGPA, 2) : null;
-
-    const roundedTargetGPA = roundGpa(displayTargetGPARaw, precisionMode);
-
-    const roundedScholarshipGPA = roundGpa(state.eligibleForScholarshipGPA, precisionMode);
-
-    const goalAchieved =
-        selected &&
-        roundedCurrentGPA !== null &&
-        roundedCurrentGPA >= roundedTargetGPA;
-
-    const scholarship =
-        roundedCurrentGPA !== null && roundedCurrentGPA >= roundedScholarshipGPA;
 
     if (!activeScale) {
         return (
@@ -352,21 +135,21 @@ export default function GoalsPage() {
                 </div>
             </Card>
 
-            {selected && (
+            {selectedSemester && (
                 <>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-6 lg:grid-cols-40 items-stretch">
                         <div className="col-span-1 sm:col-span-2 lg:col-span-5 grid sm:max-lg:order-1 lg:order-0">
                             <SummaryCard
                                 icon={Layers}
                                 label={t("common.credits.DEFAULT")}
-                                value={String(semData.credits)}
+                                value={String(metrics.semesterData.credits)}
                             />
                         </div>
                         <div className="col-span-1 sm:col-span-2 lg:col-span-6 grid sm:max-lg:order-2 lg:order-0">
                             <SummaryCard
                                 icon={BookMarked}
                                 label={t("goals.activeSubjects")}
-                                value={String(active)}
+                                value={String(activeCount)}
                             />
                         </div>
                         <Card className="col-span-2 max-sm:col-span-1 sm:max-md:col-span-full md:max-lg:col-span-2 lg:col-span-11 p-4 grid sm:max-lg:order-4 lg:order-0">
@@ -380,7 +163,7 @@ export default function GoalsPage() {
                                 <div className="max-sm:w-full w-1/2">
                                     <Input type="number" inputMode="decimal"
                                         min={0} max={10} step={0.1}
-                                        value={selected.targetGPA}
+                                        value={selectedSemester.targetGPA}
                                         onChange={(e) => setSemesterTarget(Number(e.target.value) || 0)}
                                         className="h-9 text-lg font-semibold"
                                     />
@@ -405,17 +188,23 @@ export default function GoalsPage() {
                             </div>
                         </Card>
                         <div className="col-span-1 sm:max-lg:col-span-2 lg:col-span-6 grid sm:max-lg:order-3 lg:order-0">
-                            <SummaryCard icon={GraduationCap} label={t("goals.actual")} value={formatGpa(displayCurrentGPA)} />
+                            <SummaryCard
+                                icon={GraduationCap}
+                                label={t("goals.actual")}
+                                value={formatGpa(currentGpa)} />
                         </div>
                         <div className="col-span-1 sm:col-span-3 md:col-span-2 lg:col-span-6 grid sm:max-lg:order-5 lg:order-0">
-                            <SummaryCard icon={GraduationCap} label={t("goals.grossUpTo")} value={formatGpa(displayGrossCPA)} />
+                            <SummaryCard
+                                icon={GraduationCap}
+                                label={t("goals.grossUpTo")}
+                                value={formatGpa(grossCpa)} />
                         </div>
                         <div className="col-span-1 sm:col-span-3 md:col-span-2 lg:col-span-6 grid sm:max-lg:order-6 lg:order-0">
                             <SummaryCard
                                 icon={TrendingUp}
                                 label={t("goals.cumulativeUpTo")}
-                                value={formatGpa(displayCurrentCPA)}
-                                hint={`${cumulative10UpTo.credits} ${t("common.credits.DEFAULT").toLowerCase()}`}
+                                value={formatGpa(currentCpa)}
+                                hint={`${metrics.cumulative10UpTo.credits} ${t("common.credits.DEFAULT").toLowerCase()}`}
                             />
                         </div>
                     </div>
@@ -425,12 +214,12 @@ export default function GoalsPage() {
                             <div className="flex items-center gap-2 text-xs uppercase tracking-wide opacity-80"><Target className="h-4 w-4" /> {t("goals.achieved")}</div>
                             <div className="mt-2 text-3xl font-bold">{goalAchieved ? t("goals.yes") : t("goals.no")}</div>
                             <p className="mt-1 text-sm opacity-90">
-                                {formatGpa(displayCurrentGPA)} / {roundedTargetGPA.toFixed(precisionMode)} ({getScaleSuffix(activeScale, t)})
+                                {formatGpa(currentGpa)} / {roundedTargetGPA.toFixed(precisionMode)} ({getScaleSuffix(activeScale, t)})
                             </p>
                         </Card>
-                        <Card className={`p-5 ${scholarship ? "bg-success text-success-foreground" : "bg-muted"}`}>
+                        <Card className={`p-5 ${hasScholarship ? "bg-success text-success-foreground" : "bg-muted"}`}>
                             <div className="flex items-center gap-2 text-xs uppercase tracking-wide opacity-80"><Award className="h-4 w-4" /> {t("goals.scholarship")}</div>
-                            <div className="mt-2 text-3xl font-bold">{scholarship ? t("goals.yes") : t("goals.nope")}</div>
+                            <div className="mt-2 text-3xl font-bold">{hasScholarship ? t("goals.yes") : t("goals.nope")}</div>
                             <p className="mt-1 text-sm opacity-80">
                                 ≥ {roundedScholarshipGPA.toFixed(precisionMode)} required ({getScaleSuffix(activeScale, t)})
                             </p>
@@ -439,7 +228,7 @@ export default function GoalsPage() {
 
                     <Card className="mt-6 overflow-hidden p-0">
                         <div className="border-b border-border bg-muted/30 px-4 py-3">
-                            <h3 className="text-sm font-semibold">{t("common.subjects")} — {selected.name}</h3>
+                            <h3 className="text-sm font-semibold">{t("common.subjects")} — {selectedSemester.name}</h3>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full min-w-160 text-sm">
@@ -454,10 +243,15 @@ export default function GoalsPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {selected.subjects.map((sub) => {
+                                    {selectedSemester.subjects.map((sub) => {
                                         const sc10 = subjectScore10(sub, precisionMode);
                                         const passed = subjectPassed(sub, state.subjectPassThreshold, state.componentPassEnabled, state.componentPassThreshold, precisionMode);
                                         const sc4 = sc10 === null ? null : gpa4FromScore10(sc10, state.letterGrades);
+
+                                        console.log("sub", sub);
+                                        console.log("sc10", sc10);
+                                        console.log("passed", passed);
+                                        console.log("sc4", sc4);
 
                                         return (
                                             <tr key={sub.id} className="border-t border-border">
@@ -485,28 +279,5 @@ export default function GoalsPage() {
                 </>
             )}
         </>
-    );
-}
-
-function SummaryCard({
-    icon: Icon,
-    label,
-    value,
-    hint,
-}: {
-    icon: React.ComponentType<{ className?: string }>;
-    label: string;
-    value: string;
-    hint?: string;
-}) {
-    return (
-        <Card className="p-4">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                <Icon className="h-4 w-4 text-primary" />
-                {label}
-            </div>
-            <div className="mt-2 text-2xl font-semibold tracking-tight tabular-nums text-center">{value}</div>
-            {hint && <div className="text-xs text-muted-foreground text-center">{hint}</div>}
-        </Card>
     );
 }

@@ -49,10 +49,10 @@ export default function ExtensionDownloadSection() {
                 {i18n.extensionDesc[lang]}
             </p>
 
-            {/* Thẻ download file crx trực tiếp từ thư mục public */}
+            {/* Thẻ download file zip trực tiếp từ thư mục public */}
             <a
                 href="/extensions/grade-scraper.zip"
-                download="grade-scraper.crx"
+                download="grade-scraper.zip"
                 className="px-6 py-3 bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm transition-colors duration-200"
             >
                 📥 {i18n.downloadExtension[lang]}

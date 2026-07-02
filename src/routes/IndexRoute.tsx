@@ -7,6 +7,7 @@ const GoalsPage = lazy(() => import("@/pages/goals"));
 const HelpPage = lazy(() => import("@/pages/help"));
 const RoadmapPage = lazy(() => import("@/pages/roadmap"));
 const ScalePage = lazy(() => import("@/pages/scale"));
+const PrivacyPage = lazy(() => import("@/pages/privacy"));
 
 export const IndexRoutes = () => {
 
@@ -18,6 +19,7 @@ export const IndexRoutes = () => {
             <Route path="roadmap" element={<RoadmapPage />} />
             <Route path="data" element={<DataPage />} />
             <Route path="help" element={<HelpPage />} />
+            <Route path="privacy" element={<PrivacyPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     )
