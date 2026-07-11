@@ -48,6 +48,7 @@ export function Footer() {
                         <NavLink to="/" className="text-xs hover:underline transition-colors">{t("nav.entry")}</NavLink>
                         <NavLink to="/roadmap" className="text-xs hover:underline transition-colors">{t("nav.roadmap")}</NavLink>
                         <NavLink to="/goals" className="text-xs hover:underline transition-colors">{t("nav.goals")}</NavLink>
+                        <NavLink to="/privacy" className="text-xs hover:underline transition-colors">{t("nav.privacy")}</NavLink>
                     </div>
 
                     {/* Cột 3: Bản quyền / Tổ chức (Cột Phải) */}
