@@ -9,6 +9,7 @@
     "goals": "Mục tiêu kỳ",
     "roadmap": "Lộ trình 4 năm",
     "data": "Dữ liệu & Riêng tư",
+    "privacy": "Chính sách về Quyền Riêng tư",
     "help": "Hướng dẫn"
   },
   "footer": {
@@ -41,13 +42,16 @@
     "language": "Ngôn ngữ",
     "exempt": "Miễn học",
     "exemptShort": "Miễn",
+    "retake": "Học lại",
+    "improvement": "Cải thiện",
+    "normal": "Học mới",
     "status": "Trạng thái",
     "passed": "Đậu",
     "failed": "Trượt",
     "inProgress": "Đang học",
     "semester": "Học kỳ",
     "subject": "Môn học",
-    "subjects": "Các môn học",
+    "subjects": "Môn học",
     "credits": {
       "DEFAULT": "Tín chỉ",
       "passed": "Tín chỉ đã qua",
@@ -73,6 +77,7 @@
     "midterm": "Giữa kỳ",
     "practice": "Thực hành",
     "final": "Cuối kỳ",
+    "gpa10": "GPA (Hệ 10)",
     "component": "Thành phần",
     "weightDisabled": "Đã khóa (trọng số 0%)",
     "componentFail": "Liệt thành phần",
@@ -80,9 +85,24 @@
     "weightsMustTotal": "Tổng trọng số phải = 100%"
   },
   "settings": {
+    "scoreInputMode": {
+      "DEFAULT": "Chế độ nhập điểm",
+      "full": "Toàn bộ điểm thành phần và trọng số tương ứng",
+      "gpaOnly": "Chỉ GPA"
+    },
     "subjectPass": "Mốc đậu môn",
     "componentToggle": "Bật chấm liệt thành phần",
-    "componentThreshold": "Mốc đậu thành phần"
+    "componentThreshold": "Mốc đậu thành phần",
+    "gpaPrecision": {
+      "DEFAULT": "Độ chính xác GPA",
+      "number": "{number} chữ số thập phân"
+    },
+    "retakeStrategy": {
+      "DEFAULT": "Cách tính điểm học lại",
+      "highest": "Lần học có điểm cao nhất",
+      "latest": "Lần học gần đây nhất",
+      "average": "Trung bình các lần học"
+    }
   },
   "scale": {
     "title": "Thang điểm & Tham chiếu",
@@ -107,9 +127,9 @@
     },
     "targetGpa": "GPA mục tiêu (kỳ này)",
     "selectGpa": "Chọn thang điểm",
-    "actual": "Điểm trung bình học kỳ",
-    "grossUpTo": "Điểm trung bình chung",
-    "cumulativeUpTo": "Điểm trung bình chung tích lũy",
+    "actual": "GPA học kỳ",
+    "grossUpTo": "GPA toàn khóa",
+    "cumulativeUpTo": "CPA tích lũy",
     "activeSubjects": "Số môn",
     "achieved": "Đạt mục tiêu",
     "scholarship": "Có thể đạt học bổng",
@@ -118,6 +138,12 @@
     "nope": "KHÔNG",
     "help": {
       "inputTarget": "Nhập điểm mục tiêu hệ 10 vào dưới đây. Ứng dụng sẽ tự động tính điểm hệ 4 cho bạn."
+    },
+    "studyType": {
+      "new": "Học mới",
+      "retake": "Học lại",
+      "improvement": "Cải thiện",
+      "exempt": "Miễn học"
     }
   },
   "roadmap": {
@@ -133,8 +159,9 @@
     "secured": "Đã đảm bảo mục tiêu. Thoải mái đến ngày tốt nghiệp.",
     "distribution": "Phân bố điểm chữ",
     "stats": "Thống kê hiệu suất",
-    "totalSubjects": "Tổng số môn đã nhập",
+    "totalSubjects": "Số môn đã qua",
     "exemptSubjects": "Môn được miễn",
+    "inProgress": "Đang học",
     "perfect": "Điểm tuyệt đối (10/10)",
     "over9": "Môn ≥ 9.0",
     "over8": "Môn ≥ 8.0",

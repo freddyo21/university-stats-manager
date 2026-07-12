@@ -27,6 +27,10 @@
         "en": "Data & Privacy",
         "vi": "Dữ liệu & Riêng tư"
     },
+    "nav.privacy": {
+        "en": "Privacy Policy",
+        "vi": "Chính sách về Quyền Riêng tư"
+    },
     "nav.help": {
         "en": "User Manual",
         "vi": "Hướng dẫn"
@@ -95,6 +99,18 @@
         "en": "Exempt",
         "vi": "Miễn"
     },
+    "common.retake": {
+        "en": "Re-enroll (Failed)",
+        "vi": "Học lại"
+    },
+    "common.improvement": {
+        "en": "Improvement",
+        "vi": "Cải thiện"
+    },
+    "common.normal": {
+        "en": "Normal",
+        "vi": "Học mới"
+    },
     "common.status": {
         "en": "Status",
         "vi": "Trạng thái"
@@ -121,7 +137,7 @@
     },
     "common.subjects": {
         "en": "Subjects",
-        "vi": "Các môn học"
+        "vi": "Môn học"
     },
     "common.credits": {
         "en": "Credits",
@@ -219,6 +235,10 @@
         "en": "Final",
         "vi": "Cuối kỳ"
     },
+    "entry.gpa10": {
+        "en": "GPA (Scale 10)",
+        "vi": "GPA (Hệ 10)"
+    },
     "entry.component": {
         "en": "Component",
         "vi": "Thành phần"
@@ -239,17 +259,53 @@
         "en": "Weights must total 100%",
         "vi": "Tổng trọng số phải = 100%"
     },
+    "settings.scoreInputMode": {
+        "en": "Score input mode",
+        "vi": "Chế độ nhập điểm"
+    },
+    "settings.scoreInputMode.full": {
+        "en": "Full component scores and weights",
+        "vi": "Toàn bộ điểm thành phần và trọng số tương ứng"
+    },
+    "settings.scoreInputMode.gpaOnly": {
+        "en": "GPA only",
+        "vi": "Chỉ GPA"
+    },
     "settings.subjectPass": {
-        "en": "Subject passing threshold",
+        "en": "Subject pass threshold",
         "vi": "Mốc đậu môn"
     },
     "settings.componentToggle": {
-        "en": "Enable component-level pass (Liệt thành phần)",
+        "en": "Enable component-level pass",
         "vi": "Bật chấm liệt thành phần"
     },
     "settings.componentThreshold": {
         "en": "Component pass threshold",
         "vi": "Mốc đậu thành phần"
+    },
+    "settings.gpaPrecision": {
+        "en": "GPA precision",
+        "vi": "Độ chính xác GPA"
+    },
+    "settings.gpaPrecision.number": {
+        "en": "{number} decimal place(s)",
+        "vi": "{number} chữ số thập phân"
+    },
+    "settings.retakeStrategy": {
+        "en": "Retake strategy",
+        "vi": "Cách tính điểm học lại"
+    },
+    "settings.retakeStrategy.highest": {
+        "en": "Highest score",
+        "vi": "Lần học có điểm cao nhất"
+    },
+    "settings.retakeStrategy.latest": {
+        "en": "Latest attempt",
+        "vi": "Lần học gần đây nhất"
+    },
+    "settings.retakeStrategy.average": {
+        "en": "Average of attempts",
+        "vi": "Trung bình các lần học"
     },
     "scale.title": {
         "en": "Grading Scale & Reference",
@@ -325,15 +381,15 @@
     },
     "goals.actual": {
         "en": "Grade Point Average",
-        "vi": "Điểm trung bình học kỳ"
+        "vi": "GPA học kỳ"
     },
     "goals.grossUpTo": {
         "en": "Gross Point Average",
-        "vi": "Điểm trung bình chung"
+        "vi": "GPA toàn khóa"
     },
     "goals.cumulativeUpTo": {
         "en": "Cumulative Point Average",
-        "vi": "Điểm trung bình chung tích lũy"
+        "vi": "CPA tích lũy"
     },
     "goals.activeSubjects": {
         "en": "Active subjects",
@@ -344,7 +400,7 @@
         "vi": "Đạt mục tiêu"
     },
     "goals.scholarship": {
-        "en": "Scholarship Eligibility",
+        "en": "Scholarship eligibility",
         "vi": "Có thể đạt học bổng"
     },
     "goals.yes": {
@@ -362,6 +418,22 @@
     "goals.help.inputTarget": {
         "en": "Enter target GPA in scale 10 in the input below. The application will automatically calculate GPA in scale 4 for you.",
         "vi": "Nhập điểm mục tiêu hệ 10 vào dưới đây. Ứng dụng sẽ tự động tính điểm hệ 4 cho bạn."
+    },
+    "goals.studyType.new": {
+        "en": "New",
+        "vi": "Học mới"
+    },
+    "goals.studyType.retake": {
+        "en": "Retake",
+        "vi": "Học lại"
+    },
+    "goals.studyType.improvement": {
+        "en": "Improvement",
+        "vi": "Cải thiện"
+    },
+    "goals.studyType.exempt": {
+        "en": "Exempt",
+        "vi": "Miễn học"
     },
     "roadmap.title": {
         "en": "4-Year Roadmap",
@@ -412,12 +484,16 @@
         "vi": "Thống kê hiệu suất"
     },
     "roadmap.totalSubjects": {
-        "en": "Total subjects entered",
-        "vi": "Tổng số môn đã nhập"
+        "en": "Total subjects passed",
+        "vi": "Số môn đã qua"
     },
     "roadmap.exemptSubjects": {
         "en": "Exempt subjects",
         "vi": "Môn được miễn"
+    },
+    "roadmap.inProgress": {
+        "en": "In progress",
+        "vi": "Đang học"
     },
     "roadmap.perfect": {
         "en": "Perfect score (10/10)",

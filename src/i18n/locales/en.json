@@ -9,6 +9,7 @@
     "goals": "Semester Goals",
     "roadmap": "4-Year Roadmap",
     "data": "Data & Privacy",
+    "privacy": "Privacy Policy",
     "help": "User Manual"
   },
   "footer": {
@@ -41,6 +42,7 @@
     "language": "Language",
     "exempt": "Exempt",
     "exemptShort": "Exempt",
+    "retake": "Retake",
     "status": "Status",
     "passed": "Passed",
     "failed": "Failed",
@@ -73,6 +75,7 @@
     "midterm": "Midterm",
     "practice": "Practice",
     "final": "Final",
+    "gpa10": "GPA (Scale 10)",
     "component": "Component",
     "weightDisabled": "Disabled (weight 0%)",
     "componentFail": "Component fail (Liệt)",
@@ -80,9 +83,24 @@
     "weightsMustTotal": "Weights must total 100%"
   },
   "settings": {
-    "subjectPass": "Subject passing threshold",
-    "componentToggle": "Enable component-level pass (Liệt thành phần)",
-    "componentThreshold": "Component pass threshold"
+    "scoreInputMode": {
+      "DEFAULT": "Score input mode",
+      "full": "Full component scores and weights",
+      "gpaOnly": "GPA only"
+    },
+    "subjectPass": "Subject pass threshold",
+    "componentToggle": "Enable component-level pass",
+    "componentThreshold": "Component pass threshold",
+    "gpaPrecision": {
+      "DEFAULT": "GPA precision",
+      "number": "{number} decimal place(s)"
+    },
+    "retakeStrategy": {
+      "DEFAULT": "Retake strategy",
+      "highest": "Highest score",
+      "latest": "Latest attempt",
+      "average": "Average of attempts"
+    }
   },
   "scale": {
     "title": "Grading Scale & Reference",
@@ -112,12 +130,18 @@
     "cumulativeUpTo": "Cumulative Point Average",
     "activeSubjects": "Active subjects",
     "achieved": "Goal Achieved",
-    "scholarship": "Scholarship Eligibility",
+    "scholarship": "Scholarship eligibility",
     "yes": "YES",
     "no": "NO",
     "nope": "NOPE",
     "help": {
       "inputTarget": "Enter target GPA in scale 10 in the input below. The application will automatically calculate GPA in scale 4 for you."
+    },
+    "studyType": {
+      "new": "New",
+      "retake": "Retake",
+      "improvement": "Improvement",
+      "exempt": "Exempt"
     }
   },
   "roadmap": {
@@ -133,8 +157,9 @@
     "secured": "Target already secured. Coast to graduation.",
     "distribution": "Grade Distribution",
     "stats": "Performance Statistics",
-    "totalSubjects": "Total subjects entered",
+    "totalSubjects": "Total subjects with grades",
     "exemptSubjects": "Exempt subjects",
+    "inProgress": "In progress",
     "perfect": "Perfect score (10/10)",
     "over9": "Subjects ≥ 9.0",
     "over8": "Subjects ≥ 8.0",

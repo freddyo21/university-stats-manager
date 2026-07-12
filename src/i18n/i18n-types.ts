@@ -61,10 +61,10 @@ export type Join<K, P> = K extends string | number
   : "";
 
 // Định nghĩa Type an toàn cho Key dựa trên file tiếng Việt làm chuẩn gốc
-export type TxKey = Leaves<(typeof D)["vi"]>;
+export type TranslationKey = Leaves<(typeof D)["vi"]>;
 
 export interface I18nContextType {
   lang: Lang;
   setLang: (l: Lang) => void;
-  t: (key: TxKey, replaceOptions?: ReplaceOptions) => string;
+  t: (key: TranslationKey, replaceOptions?: ReplaceOptions) => string;
 }
