@@ -42,7 +42,9 @@
     "language": "Language",
     "exempt": "Exempt",
     "exemptShort": "Exempt",
-    "retake": "Retake",
+    "retake": "Re-enroll (Failed)",
+    "improvement": "Improvement",
+    "normal": "Normal",
     "status": "Status",
     "passed": "Passed",
     "failed": "Failed",
@@ -119,6 +121,7 @@
     "title": "Semester Goals",
     "desc": "Tactical per-semester targets and scholarship gating.",
     "pick": "Select semester",
+    "subjects": "Subjects",
     "precision": {
       "DEFAULT": "GPA Precision",
       "number": "{number} decimal place"
@@ -135,7 +138,7 @@
     "no": "NO",
     "nope": "NOPE",
     "help": {
-      "inputTarget": "Enter target GPA in scale 10 in the input below. The application will automatically calculate GPA in scale 4 for you."
+      "inputTarget": "Enter target GPA in scale 10 in the input below."
     },
     "studyType": {
       "new": "New",
@@ -157,10 +160,10 @@
     "secured": "Target already secured. Coast to graduation.",
     "distribution": "Grade Distribution",
     "stats": "Performance Statistics",
-    "totalSubjects": "Total subjects with grades",
+    "totalSubjects": "Total subjects passed",
     "exemptSubjects": "Exempt subjects",
     "inProgress": "In progress",
-    "perfect": "Perfect score (10/10)",
+    "perfect": "Perfect score",
     "over9": "Subjects ≥ 9.0",
     "over8": "Subjects ≥ 8.0",
     "failed": "Failed subjects (< 5.0 or Under failing threshold)"

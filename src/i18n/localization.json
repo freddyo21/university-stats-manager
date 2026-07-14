@@ -363,6 +363,10 @@
         "en": "Select semester",
         "vi": "Chọn học kỳ"
     },
+    "goals.subjects": {
+        "en": "Subjects",
+        "vi": "Các môn học"
+    },
     "goals.precision": {
         "en": "GPA Precision",
         "vi": "Độ chính xác GPA"
@@ -416,8 +420,8 @@
         "vi": "KHÔNG"
     },
     "goals.help.inputTarget": {
-        "en": "Enter target GPA in scale 10 in the input below. The application will automatically calculate GPA in scale 4 for you.",
-        "vi": "Nhập điểm mục tiêu hệ 10 vào dưới đây. Ứng dụng sẽ tự động tính điểm hệ 4 cho bạn."
+        "en": "Enter target GPA in scale 10 in the input below.",
+        "vi": "Nhập điểm mục tiêu hệ 10 vào dưới đây."
     },
     "goals.studyType.new": {
         "en": "New",
@@ -496,8 +500,8 @@
         "vi": "Đang học"
     },
     "roadmap.perfect": {
-        "en": "Perfect score (10/10)",
-        "vi": "Điểm tuyệt đối (10/10)"
+        "en": "Perfect score",
+        "vi": "Điểm tuyệt đối"
     },
     "roadmap.over9": {
         "en": "Subjects ≥ 9.0",

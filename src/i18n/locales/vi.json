@@ -121,6 +121,7 @@
     "title": "Mục tiêu học kỳ",
     "desc": "Mục tiêu chiến thuật và điều kiện học bổng theo kỳ.",
     "pick": "Chọn học kỳ",
+    "subjects": "Các môn học",
     "precision": {
       "DEFAULT": "Độ chính xác GPA",
       "number": "{number} chữ số thập phân"
@@ -137,7 +138,7 @@
     "no": "KHÔNG",
     "nope": "KHÔNG",
     "help": {
-      "inputTarget": "Nhập điểm mục tiêu hệ 10 vào dưới đây. Ứng dụng sẽ tự động tính điểm hệ 4 cho bạn."
+      "inputTarget": "Nhập điểm mục tiêu hệ 10 vào dưới đây."
     },
     "studyType": {
       "new": "Học mới",
@@ -162,7 +163,7 @@
     "totalSubjects": "Số môn đã qua",
     "exemptSubjects": "Môn được miễn",
     "inProgress": "Đang học",
-    "perfect": "Điểm tuyệt đối (10/10)",
+    "perfect": "Điểm tuyệt đối",
     "over9": "Môn ≥ 9.0",
     "over8": "Môn ≥ 8.0",
     "failed": "Môn trượt (< 5.0 hoặc bị điểm liệt)"
