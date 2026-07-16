@@ -11,18 +11,18 @@ const PRESET_CONFIGS: Record<Exclude<TPresetId, "custom">, Partial<IAppState>> =
     activeScale: "10",
     letterGrades: schoolStandardScales.uit as ILetterGradeRange[],
     subjectPassThreshold: 5.0,
-    componentPassEnabled: false,
+    componentThresholdEnabled: false,
     componentPassThreshold: 3.0,
     eligibleForScholarshipGPA: 8.0,
   },
-  hust: {
-    activeScale: "4",
-    letterGrades: schoolStandardScales.hust as ILetterGradeRange[],
-    subjectPassThreshold: 4.0,
-    componentPassEnabled: true,
-    componentPassThreshold: 3.0,
-    eligibleForScholarshipGPA: 3.2,
-  },
+  // hust: {
+  //   activeScale: "4",
+  //   letterGrades: schoolStandardScales.hust as ILetterGradeRange[],
+  //   subjectPassThreshold: 4.0,
+  //   componentPassEnabled: true,
+  //   componentPassThreshold: 3.0,
+  //   eligibleForScholarshipGPA: 3.2,
+  // },
 };
 
 // Map dữ liệu để tự động sinh ra object PRESETS hoàn chỉnh
@@ -33,12 +33,12 @@ export const PRESETS: Record<TPresetId, IPreset> = {
     description: "Scale 10, passing 5.0. Failing threshold off by default.",
     apply: (s) => ({ ...s, ...PRESET_CONFIGS.uit, presetId: "uit" }),
   },
-  hust: {
-    id: "hust",
-    label: "HUST (Hanoi)",
-    description: "Scale 10, passing 4.0. Failing threshold at 3.0.",
-    apply: (s) => ({ ...s, ...PRESET_CONFIGS.hust, presetId: "hust" }),
-  },
+  // hust: {
+  //   id: "hust",
+  //   label: "HUST (Hanoi)",
+  //   description: "Scale 10, passing 4.0. Failing threshold at 3.0.",
+  //   apply: (s) => ({ ...s, ...PRESET_CONFIGS.hust, presetId: "hust" }),
+  // },
   custom: {
     id: "custom",
     label: "Custom",
