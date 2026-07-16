@@ -2,11 +2,13 @@ import { Outlet } from "react-router-dom";
 import { useI18n } from "@/i18n/use-i18n";
 import { useEffect } from "react";
 import { mergeAcademicStateFromExtension } from "@/lib/academic/store";
+import { useAcademicStore } from "@/hooks/useAcademicStore";
 import { Header } from "@/components/layouts/Header";
 import { Footer } from "@/components/layouts/Footer";
 
 export function Layout() {
   const { t } = useI18n();
+  const { state, replace } = useAcademicStore();
 
   useEffect(() => {
     const handleExtensionMessage = (event: MessageEvent) => {
@@ -25,7 +27,7 @@ export function Layout() {
           console.log("Origin:", event.origin);
 
           if (receivedData && receivedData.data) {
-            mergeAcademicStateFromExtension(receivedData.data);
+            replace(mergeAcademicStateFromExtension(state, receivedData.data));
           }
         }
       }
@@ -33,7 +35,7 @@ export function Layout() {
 
     window.addEventListener("message", handleExtensionMessage);
     return () => window.removeEventListener("message", handleExtensionMessage);
-  }, [mergeAcademicStateFromExtension]);
+  }, [replace, state]);
 
   return (
     <div className="min-h-screen bg-background">
