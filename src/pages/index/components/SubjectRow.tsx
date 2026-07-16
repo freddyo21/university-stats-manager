@@ -1,99 +1,180 @@
+import "./SubjectRow.css";
+
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useI18n } from "@/i18n/use-i18n";
-import { gpa4FromScore10, hasComponentFail, subjectPassed, subjectScore10, to100, toLetter, weightTotal } from "@/lib/academic/calc";
 import { cn } from "@/lib/utils";
-import type { ILetterGradeRange } from "@/types/interfaces/ILetterGradeRange";
 import type { ISubject } from "@/types/interfaces/ISubject";
-import type { TPrecisionMode } from "@/types/types";
 import { AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Stat } from "./Stat";
+import { useAcademicStore } from "@/hooks/useAcademicStore";
+import type { Subject } from "@/entities/Subject";
+import { StudyStatusSelect } from "./StudyStatusSelect";
+
+const COMPONENTS_CONFIG = [
+    { key: "process", labelKey: "entry.process" },
+    { key: "midterm", labelKey: "entry.midterm" },
+    { key: "practice", labelKey: "entry.practice" },
+    { key: "final", labelKey: "entry.final" },
+] as const;
+
+const STATUS_STYLE = {
+    exempt: "rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary",
+    inProgress: "text-xs text-muted-foreground",
+    passed: "rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success",
+    failed: "rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive",
+} as const;
+
+const Sanitize = {
+    score: (v: string): number | null => {
+        const n = v === "" ? null : Number(v);
+        return n === null || isNaN(n) ? null : Math.min(10, Math.max(0, n));
+    },
+    weight: (v: string): number => {
+        const n = Number(v);
+        return isNaN(n) ? 0 : Math.min(100, Math.max(0, n));
+    }
+};
+
+const getScoreTone = (score: number | null): "muted" | "success" | "primary" | "warning" | "destructive" => {
+    if (score === null) return "muted";
+    if (score >= 8.0) return "success";
+    if (score >= 6.5) return "primary";
+    if (score >= 5.0) return "warning";
+    return "destructive";
+};
 
 export function SubjectRow({
     subject,
-    letterGrades,
-    precisionMode,
-    subjectPass,
-    componentPassEnabled,
-    componentPass,
     openSignal,
     onChange,
     onDelete,
 }: {
-    subject: ISubject;
-    letterGrades: ILetterGradeRange[];
-    precisionMode: TPrecisionMode;
-    subjectPass: number;
-    componentPassEnabled: boolean;
-    componentPass: number;
+    subject: Subject;
     openSignal: { open: boolean; tick: number } | null;
     onChange: (patch: Partial<ISubject>) => void;
     onDelete: () => void;
 }) {
+    const { state } = useAcademicStore();
     const { t } = useI18n();
     const [open, setOpen] = useState(true);
     const [prevSignal, setPrevSignal] = useState(openSignal);
 
+    // Sync signal đóng mở component từ component cha
     if (openSignal !== prevSignal) {
         setPrevSignal(openSignal);
         setOpen(openSignal !== null ? openSignal.open : true);
     }
 
-    const score = subjectScore10(subject, precisionMode);
-    const wTotal = weightTotal(subject.weights);
-    const wValid = wTotal === 100;
+    const {
+        presetId,
+        precisionMode,
+        subjectPassThreshold,
+        componentThresholdEnabled,
+        componentPassThreshold,
+        letterGrades,
+        scoreInputMode,
+    } = state;
 
-    const compFail = hasComponentFail(subject, componentPassEnabled, componentPass);
-    const passed = subjectPassed(subject, subjectPass, componentPassEnabled, componentPass, precisionMode);
-    const letterDisplay = score === null ? "—" : compFail ? "F" : toLetter(score, letterGrades);
+    // 1. Lấy điểm hệ 10 sạch từ Class Subject (Class tự xử lý gpaOnly hoặc tính từ điểm thành phần)
+    const score = subject.calculateGPA10(presetId);
 
-    const scale10Display = score === null ? "—" : compFail ? "0.0 (F)" : score.toFixed(precisionMode);
-    const scale4Display =
-        score === null
-            ? "—"
-            : compFail
-                ? "0.0"
-                : gpa4FromScore10(score, letterGrades).toFixed(1);
 
-    const scale100Display = score === null ? "—" : compFail ? "0" : String(to100(score));
+    const compFail = subject.hasComponentFail(
+        componentThresholdEnabled,
+        componentPassThreshold,
+        scoreInputMode
+    );
 
-    const setScore = (k: keyof ISubject["scores"], v: string) => {
-        const n = v === "" ? null : Number(v);
-        onChange({
-            scores: { ...subject.scores, [k]: n === null || isNaN(n) ? null : Math.min(10, Math.max(0, n)) },
-        });
-    };
+    const passed = subject.isPassed({
+        subjectPassThreshold,
+        componentThresholdEnabled,
+        componentPassThreshold,
+        scoreInputMode,
+        presetId
+    });
 
-    const setWeight = (k: keyof ISubject["weights"], v: string) => {
-        const n = Number(v);
-        onChange({ weights: { ...subject.weights, [k]: isNaN(n) ? 0 : Math.min(100, Math.max(0, n)) } });
-    };
+    // Hiển thị Điểm Chữ (Ví dụ: A+, B, F)
+    const letterDisplay = score === null
+        ? "—"
+        : compFail
+            ? "F"
+            : subject.getLetterGrade(letterGrades);
 
-    const setExempt = (v: boolean) => {
-        onChange({ isExempt: v });
-    };
+    // Hiển thị Thang điểm 10 (Ví dụ: 8.50, 0.0 (F))
+    const scale10Display = score === null
+        ? "—"
+        : compFail
+            ? "0.0 (F)"
+            : score.toFixed(precisionMode);
 
-    const components: { key: keyof ISubject["scores"]; label: string }[] = [
-        { key: "process", label: t("entry.process") },
-        { key: "midterm", label: t("entry.midterm") },
-        { key: "practice", label: t("entry.practice") },
-        { key: "final", label: t("entry.final") },
-    ];
+    const scale4Display = score === null
+        ? "—"
+        : compFail
+            ? "0.0"
+            : (subject.getGPA4(letterGrades) ?? 0).toFixed(1);
 
-    // Layout control flags
-    const bodyDisabled = subject.isExempt;
-    const showBody = open;
-    const showFooter = open && !subject.isExempt;
-    const rowFail = passed === false && !subject.isExempt;
+    const scale100Display = score === null
+        ? "—"
+        : compFail
+            ? "0"
+            : subject.getGPA100()?.toString() ?? "0";
+    const gpaInputEnabled = state.scoreInputMode === "gpaOnly";
+
+    // Bước 2: Hàm Facade trung gian để thực hiện việc trigger onChange
+    const patchSubject = useCallback(<T extends keyof ISubject>(key: T, value: ISubject[T]) => {
+        onChange({ [key]: value });
+    }, [onChange]);
+
+    // Bước 3: Các hàm xử lý sự kiện ngắn gọn, sạch sẽ
+    const setScore = useCallback((k: keyof ISubject["scores"], v: string) => {
+        patchSubject("scores", { ...subject.scores, [k]: Sanitize.score(v) });
+    }, [patchSubject, subject.scores]);
+
+    const setWeight = useCallback((k: keyof ISubject["weights"], v: string) => {
+        patchSubject("weights", { ...subject.weights, [k]: Sanitize.weight(v) });
+    }, [patchSubject, subject.weights]);
+
+    const setGpa10 = useCallback((v: string) => {
+        patchSubject("gpa10", Sanitize.score(v));
+    }, [patchSubject]);
+
+    // Sử dụng tại component:
+    const scoreTone = useMemo(() => getScoreTone(score), [score]);
+    const isExempt = subject.studyType === "exempt";
+
+    const layout = useMemo(() => ({
+        bodyDisabled: isExempt,
+        showBody: open,
+        showFooter: open && !isExempt,
+        rowFail: passed === false && !isExempt
+    }), [isExempt, open, passed]);
+
+    // Xử lý status key gọn gàng
+    const statusKey = isExempt ? "exempt" : passed === null ? "inProgress" : passed ? "passed" : "failed";
+
+    const statusClass = STATUS_STYLE[statusKey];
+    const statusLabel = t(`common.${statusKey}`);
+
+    const components = useMemo(() =>
+        COMPONENTS_CONFIG.map((config) => ({
+            key: config.key as keyof ISubject["scores"], // Hãy thêm `as const` ở file config nếu được
+            label: t(config.labelKey)
+        })), [
+        t
+    ]);
+
+    const gpaInput = useMemo(() => [
+        { key: "gpa10" as const, label: t("entry.gpa10") },
+    ], [t]);
 
     return (
         <div
             className={cn(
                 "rounded-lg border bg-card transition-colors",
-                rowFail ? "border-destructive/50 bg-destructive/5" : "border-border",
+                layout.rowFail ? "border-destructive/50 bg-destructive/5" : "border-border",
             )}
         >
             {/* ── HEADER ROW ── */}
@@ -152,18 +233,14 @@ export function SubjectRow({
                         className="h-8 w-20"
                     />
                 </div>
-                <div className="flex shrink-0 items-center gap-1.5">
-                    <Checkbox
-                        id={`exempt-${subject.id}`}
-                        checked={subject.isExempt}
-                        onCheckedChange={setExempt}
-                    />
-                    <label
-                        htmlFor={`exempt-${subject.id}`}
-                        className="cursor-pointer text-xs font-medium leading-none"
-                    >
-                        {t("common.exempt")}
-                    </label>
+                <div className="flex flex-col shrink-0 items-center gap-3">
+                    <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{t("common.status")}</span>
+                        <StudyStatusSelect 
+                            subject={subject}
+                            onChange={onChange}
+                        />
+                    </div>
                 </div>
                 <Button size="icon" variant="ghost" onClick={onDelete}
                     aria-label={`${t("common.delete")} ${t("common.subject")}`}
@@ -173,23 +250,24 @@ export function SubjectRow({
             </div>
 
             {/* ── BODY AREA ── */}
-            {showBody && (
+            {layout.showBody && (
                 <div className="border-t border-border/60 overflow-x-auto px-4 pb-3 pt-3">
                     <table className="w-full min-w-140 text-sm">
                         <thead>
                             <tr className="text-xs uppercase tracking-wide text-muted-foreground">
                                 <th className="pb-1 text-left font-medium">{t("entry.component")}</th>
-                                <th className="pb-1 text-left font-medium">{t("entry.weight")}</th>
+                                {!gpaInputEnabled && (<th className="pb-1 text-left font-medium">{t("entry.weight")}</th>)}
                                 <th className="pb-1 text-left font-medium">{t("entry.score")}</th>
                                 <th className="pb-1 text-left font-medium">{t("common.status")}</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {components.map((c) => {
+                            {!gpaInputEnabled && components.map((c) => {
                                 const s = subject.scores[c.key];
-                                const w = subject.weights[c.key];
-                                const disabled = bodyDisabled || w <= 0;
-                                const failed = !bodyDisabled && !disabled && componentPassEnabled && s !== null && s < componentPass;
+                                const w = subject.weights[c.key] ?? 0;
+                                const disabled = layout.bodyDisabled || w <= 0;
+                                const failed = !layout.bodyDisabled && !disabled && componentThresholdEnabled && s !== null && s < componentPassThreshold;
+
                                 return (
                                     <tr key={c.key} className="border-t border-border/60">
                                         <td className="py-2 pr-2 font-medium">{c.label}</td>
@@ -199,7 +277,7 @@ export function SubjectRow({
                                                 min={0}
                                                 max={100}
                                                 value={w}
-                                                disabled={bodyDisabled}
+                                                disabled={layout.bodyDisabled}
                                                 onChange={(e) => setWeight(c.key, e.target.value)}
                                                 className="h-8 w-20"
                                             />
@@ -239,27 +317,70 @@ export function SubjectRow({
                                     </tr>
                                 );
                             })}
+                            {gpaInputEnabled && gpaInput.map((c) => {
+                                const s = subject[c.key];
+                                const disabled = layout.bodyDisabled;
+                                const isExempt = subject.studyType === "exempt";
+
+                                return (
+                                    <tr key={c.key} className="border-t border-border/60">
+                                        <td className="py-2 pr-2 font-medium">{c.label}</td>
+                                        <td className="py-2 pr-2">
+                                            <Input
+                                                type="number"
+                                                min={0}
+                                                max={10}
+                                                step={0.1}
+                                                value={s ?? ""}
+                                                disabled={disabled}
+                                                placeholder={disabled ? "—" : ""}
+                                                onChange={(e) => setGpa10(e.target.value)}
+                                                className={cn(
+                                                    "h-8 w-24",
+                                                    disabled && "bg-muted/60",
+                                                )}
+                                            />
+                                        </td>
+                                        <td className="py-2" colSpan={2}>
+                                            {
+                                                isExempt ? (
+                                                    <span className={statusClass}>
+                                                        {statusLabel}
+                                                    </span>
+                                                ) : (
+                                                    <span className={statusClass}>
+                                                        {disabled ? "—" : statusLabel}
+                                                    </span>
+                                                )
+                                            }
+
+                                        </td>
+                                    </tr>
+                                )
+                            })}
                         </tbody>
                     </table>
                 </div>
             )}
 
             {/* ── FOOTER ROW ── */}
-            {showFooter && (
+            {layout.showFooter && (
                 <div className="border-t border-border/60 px-4 pb-4 pt-3">
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-                        <Stat
-                            label={t("entry.weight")}
-                            value={`${wTotal}%`}
-                            tone={wValid ? "success" : "destructive"}
-                            hint={wValid ? "= 100" : t("entry.weightsMustTotal")}
-                        />
-                        <Stat label="Scale 10" value={scale10Display} tone={score === null ? "muted" : passed ? "primary" : "destructive"} />
-                        <Stat label="Scale 4" value={scale4Display} tone="muted" />
-                        <Stat label="Scale 100" value={scale100Display} tone="muted" />
-                        <Stat label="Letter" value={letterDisplay} tone={score === null ? "muted" : passed ? "primary" : "destructive"} />
+                    <div className={cn("grid gap-3", gpaInputEnabled ? "grid-cols-4" : "grid-cols-5")}>
+                        {!gpaInputEnabled && (
+                            <Stat
+                                label={t("entry.weight")}
+                                value={`${subject.weightTotal}%`}
+                                tone={subject.isWeightValid ? "success" : "destructive"}
+                                hint={subject.isWeightValid ? "= 100" : t("entry.weightsMustTotal")}
+                            />
+                        )}
+                        <Stat label="Scale 10" value={scale10Display} tone={scoreTone} />
+                        <Stat label="Scale 4" value={scale4Display} tone={scoreTone === "muted" ? "muted" : scoreTone} />
+                        <Stat label="Scale 100" value={scale100Display} tone={scoreTone === "muted" ? "muted" : scoreTone} />
+                        <Stat label="Letter" value={letterDisplay} tone={scoreTone} />
                     </div>
-                    {rowFail && (
+                    {layout.rowFail && (
                         <div className="mt-3 flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
                             <AlertTriangle className="h-3.5 w-3.5" /> {t("entry.subjectFail")}
                         </div>

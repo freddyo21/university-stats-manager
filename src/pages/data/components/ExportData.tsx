@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useI18n } from "@/i18n/use-i18n";
 import { useAcademicStore } from "@/hooks/useAcademicStore";
-import type { TxKey } from "@/i18n/i18n-types";
+import type { TranslationKey } from "@/i18n/i18n-types";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
 
@@ -26,7 +26,7 @@ export function ExportData() {
     const { state } = useAcademicStore();
     const { t } = useI18n();
 
-    async function exportJSON(state: unknown, t: (key: TxKey) => string | undefined) {
+    async function exportJSON(state: unknown, t: (key: TranslationKey) => string | undefined) {
         const json = JSON.stringify(state, null, 2);
         const filename = `academic-hub-${new Date().toISOString().slice(0, 10)}.json`;
 

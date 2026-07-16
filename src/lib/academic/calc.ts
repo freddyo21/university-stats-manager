@@ -1,573 +1,199 @@
+import { Semester } from "@/entities/Semester";
+import { Subject } from "@/entities/Subject";
 import type { ILetterGradeRange } from "@/types/interfaces/ILetterGradeRange";
-import type { ISemester } from "@/types/interfaces/ISemester";
-import type { ISubject } from "@/types/interfaces/ISubject";
-import type { ISubjectWeights } from "@/types/interfaces/ISubjectWeights";
-import type { TPrecisionMode } from "@/types/types";
-import { roundToPrecision } from "@/utils/helpers";
+import type { TPresetId, TRetakeStrategy, TScoreInputMode } from "@/types/types";
 
-/** Component scores are entered at 1 decimal place by instructors. */
-const SUBJECT_COMPONENT_PRECISION = 1;
-
-export function roundGpa(value: number, precisionMode: TPrecisionMode): number {
-  return roundToPrecision(value, precisionMode);
-}
-
-export function clamp(n: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, n));
-}
-
-export function weightTotal(w: ISubjectWeights) {
-  return w.process + w.midterm + w.practice + w.final;
-}
-
-export function subjectScore10(subject: ISubject, precision: TPrecisionMode = 2): number | null {
-  const { weights, scores } = subject;
-
-  const total = weightTotal(weights);
-
-  // SỬA TẠI ĐÂY: Trọng số chưa đủ 100% thì tuyệt đối không tính điểm môn, trả về null luôn
-  if (total !== 100) return null;
-
-  const parts: { score: number | null; weight: number }[] = [
-    { score: scores.process, weight: weights.process },
-    { score: scores.midterm, weight: weights.midterm },
-    { score: scores.practice, weight: weights.practice },
-    { score: scores.final, weight: weights.final },
-  ];
-
-  // Nếu thành phần nào có trọng số > 0 mà chưa nhập điểm (null hoặc NaN) thì cũng trả về null
-  for (const p of parts) {
-    if (p.weight > 0 && (p.score === null || isNaN(p.score))) return null;
-  }
-
-  let sum = 0;
-  for (const p of parts) {
-    if (p.weight > 0) {
-      const roundedComponent = roundToPrecision(p.score ?? 0, SUBJECT_COMPONENT_PRECISION);
-      sum += roundedComponent * p.weight;
-    }
-  }
-
-  // const rawScore = sum / total;
-  const rawScore = sum / 100; // Vì total chắc chắn bằng 100 nên chia thẳng cho 100 cho clear
-  return roundToPrecision(rawScore, precision);
-}
-
-export function hasComponentFail(subject: ISubject, enabled: boolean, threshold: number): boolean {
-  if (!enabled) return false;
-  const keys: (keyof ISubject["weights"])[] = ["process", "midterm", "practice", "final"];
-  for (const k of keys) {
-    if (subject.weights[k] > 0) {
-      const s = subject.scores[k];
-      if (s !== null && s < threshold) return true;
-    }
-  }
-  return false;
-}
-
-export function subjectPassed(
-  subject: ISubject,
-  subjectPass: number,
-  compEnabled: boolean,
-  compThreshold: number,
-  precision: TPrecisionMode = 2,
-): boolean | null {
-  if (subject.isExempt) return true;
-
-  const sc = subjectScore10(subject, precision);
-
-  if (sc === null) return null;
-
-  if (hasComponentFail(subject, compEnabled, compThreshold)) return false;
-
-  return sc >= subjectPass;
-}
-
-export function effectiveScore10(
-  subject: ISubject,
-  // subjectPass: number,
-  // compEnabled: boolean,
-  // compThreshold: number,
-  precision: TPrecisionMode = 2,
-): number | null {
-  const sc = subjectScore10(subject, precision);
-
-  if (sc === null) return null;
-
-  // if (hasComponentFail(subject, compEnabled, compThreshold)) return 0;
-  // if (sc < subjectPass) return 0;
-
-  return sc;
-}
-
-export function gpa4FromScore10(score10: number, letterGrades: ILetterGradeRange[]): number {
-  const matchedRange = letterGrades.find((r) =>
-    score10 >= r.min && score10 < (r.max === 10 ? 10.01 : r.max)
-  );
-  return matchedRange?.gpa4 ?? 0.0;
-}
-
-export function to100(score10: number) {
-  return Math.round(score10 * 10);
-}
-
-export function toLetter(score10: number, ranges: ILetterGradeRange[]): string {
-  for (const r of ranges) {
-    if (score10 >= r.min && score10 < (r.max === 10 ? 10.01 : r.max)) return r.letter;
-  }
-  return "—";
-}
-
-export function calculateSemesterMetrics(
-  s: ISemester,
+/**
+ * Tính toán điểm Trung bình chung toàn khóa lũy tiến (Gross GPA Global).
+ * 
+ * Hàm này duyệt qua toàn bộ danh sách học kỳ, thu thập tổng điểm trọng số và tổng tín chỉ thô
+ * từ method `calculateGrossMetrics` của từng Class Semester con, sau đó thực hiện phép chia 
+ * và làm tròn cứng về 2 chữ số thập phân duy nhất một lần ở cuối để triệt tiêu sai số.
+ * Chế độ này tính tất cả mọi nỗ lực học (kể cả đạt và trượt), ngoại trừ môn Miễn học "exempt".
+ * @param semesterInstances Mảng các đối tượng Instance của Class Semester
+ * @param letterGrades Mảng cấu hình khoảng điểm quy đổi sang Hệ chữ (A+, B...)
+ * @param presetId Cấu hình quy chế trường ("uit" hoặc "Custom", mặc định là "uit")
+ * @returns Object chứa kết quả GPA toàn khóa hệ 10, hệ 4, hệ 100 và tổng số tín chỉ tính Gross
+ */
+export function calculateGlobalGross({
+  semesterInstances,
+  letterGrades,
+  presetId = "uit",
+  retakeStrategy = "highest"
+}: {
+  semesterInstances: Semester[],
   letterGrades: ILetterGradeRange[],
-  subjectPassThreshold: number,
-  componentPassEnabled: boolean,
-  componentPassThreshold: number,
-  precisionMode: TPrecisionMode = 2,
-): {
-  gpa10: number | null;
-  gpa4: number | null;
-  credits: number;
-  passedCredits: number;
-  exemptCredits: number;
-} {
-  let totalCredits = 0;
-  let passedCredits = 0;
-  let exemptCredits = 0;
-  let weighted10 = 0;
-  let weighted4 = 0;
-  let any = false;
+  presetId: TPresetId,
+  retakeStrategy: TRetakeStrategy
+}) {
+  // Mảng chứa danh sách môn học cuối cùng sau khi đã xử lý lặp môn
+  let effectiveSubjects: Subject[] = [];
 
-  for (const sub of s.subjects) {
-    const sc = effectiveScore10(
-      sub,
-      // compEnabled, 
-      // compThreshold, 
-      precisionMode
-    );
-    const passed = subjectPassed(sub, subjectPassThreshold, componentPassEnabled, componentPassThreshold, precisionMode);
+  // Thu thập TẤT CẢ các môn học từ TẤT CẢ các học kỳ đã cào về
+  const allGlobalSubjects = semesterInstances.flatMap((sem) => sem.subjects);
 
-    // Bỏ qua các môn không có điểm hợp lệ mà không phải môn miễn trừ, hoặc tín chỉ <= 0
-    if ((sc === null && !sub.isExempt) || sub.credits <= 0) continue;
+  // 🚀 BƯỚC 1: GOM NHÓM TẤT CẢ CÁC MÔN THEO MÃ MÔN TOÀN CỤC (Không bỏ sót môn nào)
+  const globalSubjectGroups = new Map<string, Subject[]>();
+  for (const sub of allGlobalSubjects) {
+    let group = globalSubjectGroups.get(sub.code);
+    if (!group) {
+      group = [];
+      globalSubjectGroups.set(sub.code, group);
+    }
+    group.push(sub);
+  }
 
-    // Xử lý riêng cho môn miễn trừ (Exempt) không có điểm
-    if (sc === null && sub.isExempt) {
-      exemptCredits += sub.credits;
+  // 🚀 BƯỚC 2: ÁP DỤNG CHIẾN THUẬT TRÊN TỪNG NHÓM MÔN HỌC
+  for (const [_, allAttempts] of globalSubjectGroups.entries()) {
+    // TH 1: Môn chỉ học đúng 1 lần duy nhất -> Ăn thẳng vào danh sách
+    if (allAttempts.length === 1) {
+      effectiveSubjects.push(allAttempts[0]);
       continue;
     }
 
-    // Nếu môn học có điểm hợp lệ, tiến hành tính toán cho cả hệ 10 và hệ 4
-    if (sc !== null) {
-      any = true;
-      weighted10 += sc * sub.credits;
-      weighted4 += gpa4FromScore10(sc, letterGrades) * sub.credits;
-      totalCredits += sub.credits;
+    // TH 2: User ép TẤT CẢ các lượt học của mã môn này thành "normal" (Muốn tính song song như 2 môn khác nhau)
+    const isAllNormal = allAttempts.every((s) => s.studyType === "normal");
+    if (isAllNormal) {
+      effectiveSubjects.push(...allAttempts);
+      continue;
     }
 
-    if (passed) {
-      passedCredits += sub.credits;
+    switch (retakeStrategy) {
+      case "highest": {
+        // Giữ lại lượt học có điểm hệ 10 cao nhất
+        // Tối ưu hóa: Cache điểm số ngay trong lượt duyệt đầu tiên để tránh gọi lại hàm ở bước sau
+        let maxAttempt = allAttempts[0];
+        let maxScore = maxAttempt.calculateGPA10(presetId);
+
+        for (let i = 1; i < allAttempts.length; i++) {
+          const currentScore = allAttempts[i].calculateGPA10(presetId);
+          if (currentScore !== null && (maxScore === null || currentScore > maxScore)) {
+            maxAttempt = allAttempts[i];
+            maxScore = currentScore;
+          }
+        }
+
+        effectiveSubjects.push(maxAttempt);
+        break;
+      }
+
+      case "latest": {
+        // Lấy lượt học cuối cùng (Lượt push vào sau cùng trong mảng gốc)
+        effectiveSubjects.push(allAttempts[allAttempts.length - 1]);
+        break;
+      }
+
+      default:
+        // Nếu chiến thuật không hợp lệ, mặc định giữ lượt học cuối cùng
+        effectiveSubjects.push(allAttempts[allAttempts.length - 1]);
+        break;
     }
+  }
+
+  console.log("Effective Subjects for Global Gross Calculation:", effectiveSubjects);
+
+  let totalCredits = 0;
+  let totalWeighted10 = 0;
+  let totalWeighted4 = 0;
+  let totalWeighted100 = 0;
+
+  // 🚀 BƯỚC 3: TÍNH TOÁN TRÊN DANH SÁCH EFFECTIVE SUBJECTS ĐÃ LỌC SẠCH KHÔNG TRÙNG LẶP
+  for (const sub of effectiveSubjects) {
+    // Gọi cục 2 của Class Semester
+    // const metrics = sem.calculateGrossMetrics(letterGrades, presetId);
+
+    const metrics = sub.getSubjectMetrics(letterGrades, presetId);
+    if (!metrics) continue;
+
+    totalWeighted10 += metrics.weighted10;
+    totalWeighted4 += metrics.weighted4;
+    totalWeighted100 += metrics.weighted100;
+    totalCredits += metrics.credits;
+
+    // totalWeighted10 += metrics.weighted10;
+    // totalWeighted4 += metrics.weighted4;
+    // totalWeighted100 += metrics.weighted100;
+    // totalCredits += metrics.creditsCount;
   }
 
   return {
-    gpa10: any && totalCredits > 0 ? roundGpa(weighted10 / totalCredits, 2) : null,
-    gpa4: any && totalCredits > 0 ? roundGpa(weighted4 / totalCredits, 2) : null,
-    credits: totalCredits + exemptCredits,
-    passedCredits,
-    exemptCredits,
+    gpa10: totalCredits > 0 ? Math.round((totalWeighted10 / totalCredits) * 100) / 100 : null,
+    gpa4: totalCredits > 0 ? Math.round((totalWeighted4 / totalCredits) * 100) / 100 : null,
+    gpa100: totalCredits > 0 ? Math.round((totalWeighted100 / totalCredits) * 100) / 100 : null,
+    credits: totalCredits
   };
 }
 
-export function grossGPA4(
-  semesters: ISemester[],
-  letterGrades: ILetterGradeRange[],
-  precisionMode: TPrecisionMode = 2,
-): {
-  gpa4: number | null;
-  credits: number;        // Tổng tín chỉ đã đăng ký học (gồm cả đạt + trượt + miễn)
-  passedCredits: number;  // Tín chỉ của các môn thực sự ĐẠT (không tính môn trượt)
-  exemptCredits: number;  // Tín chỉ môn miễn điểm
-} {
-  let registeredCredits = 0; // Mẫu số tính GPA: Tổng tín chỉ của tất cả các môn CÓ ĐIỂM (Đạt + Trượt)
-  let passedCredits = 0;     // Số tín chỉ thực sự vượt qua (dùng để thống kê)
-  let exemptCredits = 0;     // Số tín chỉ được miễn
-  let weighted = 0;
-  let any = false;
-
-  for (const s of semesters) {
-    for (const sub of s.subjects) {
-      if (sub.credits <= 0) continue;
-
-      // Trường hợp 1: Môn miễn điểm (Không tính vào trung bình hệ 4 nhưng tính vào tổng tín tích lũy)
-      if (sub.isExempt) {
-        exemptCredits += sub.credits;
-        passedCredits += sub.credits; // Môn miễn vẫn được tính là đã đạt tín chỉ
-        continue;
-      }
-
-      const sc = effectiveScore10(sub, precisionMode);
-
-      // Nếu môn chưa có điểm (null) hoặc hoãn thi thì mới bỏ qua hoàn toàn
-      if (sc === null) continue;
-
-      any = true;
-      const gpa4Point = gpa4FromScore10(sc, letterGrades); // Môn trượt (F) sẽ quy đổi ra 0
-
-      weighted += gpa4Point * sub.credits;
-      registeredCredits += sub.credits; // 💡 Môn TRƯỢT vẫn phải cộng tín chỉ vào mẫu số
-
-      // Kiểm tra xem môn này có đạt hay không (Giả định gpa4 > 0 tức là từ điểm D trở lên là Đạt)
-      if (gpa4Point > 0) {
-        passedCredits += sub.credits;
-      }
-    }
-  }
-
-  const res = {
-    // Điểm TBC hệ 4 chia cho tổng số tín chỉ đã ĐĂNG KÝ (có điểm)
-    gpa4: any && registeredCredits > 0 ? roundGpa(weighted / registeredCredits, 2) : null,
-    // Tổng số tín chỉ tích lũy thực tế mà sinh viên nhận được (Môn đạt + Môn miễn)
-    credits: passedCredits + exemptCredits,
-    passedCredits,
-    exemptCredits,
-  };
-
-  return res;
-}
-
-export function grossGPA10(
-  semesters: ISemester[],
-  subjectPassThreshold: number,
-  compEnabled: boolean,
-  compThreshold: number,
-  precisionMode: TPrecisionMode = 2,
-): {
-  gpa10: number | null;
-  credits: number;
-  passedCredits: number;
-  exemptCredits: number;
-} {
-  let registeredCredits = 0; // Mẫu số tính GPA10: Tổng tín chỉ của các môn CÓ ĐIỂM (Đạt + Trượt)
-  let passedCredits = 0;     // Số tín chỉ thực sự vượt qua
-  let exemptCredits = 0;     // Số tín chỉ được miễn
-  let weighted = 0;
-  let any = false;
-
-  for (const s of semesters) {
-    for (const sub of s.subjects) {
-      if (sub.credits <= 0) continue;
-
-      // Trường hợp 1: Môn miễn điểm
-      if (sub.isExempt) {
-        exemptCredits += sub.credits;
-        passedCredits += sub.credits;
-        continue;
-      }
-
-      const sc = effectiveScore10(sub, precisionMode);
-      const passed = subjectPassed(sub, subjectPassThreshold, compEnabled, compThreshold, precisionMode);
-
-      // Nếu môn chưa có điểm thì mới bỏ qua
-      if (sc === null) continue;
-
-      any = true;
-      weighted += sc * sub.credits;     // 💡 Điểm rớt (ví dụ 2.0 hoặc 3.0) vẫn nhân vào tử số để kéo điểm xuống
-      registeredCredits += sub.credits; // 💡 Môn rớt vẫn cộng vào mẫu số
-
-      if (passed === true) {
-        passedCredits += sub.credits;
-      }
-    }
-  }
-
-  const res = {
-    // Điểm TBC hệ 10 chia cho tổng số tín chỉ đã ĐĂNG KÝ (có điểm)
-    gpa10: any && registeredCredits > 0 ? roundGpa(weighted / registeredCredits, 2) : null,
-    credits: passedCredits + exemptCredits,
-    passedCredits,
-    exemptCredits,
-  };
-
-  return res;
-}
-
-// export function calculateGrossMetrics(
-//   semesters: ISemester[],
-//   letterGrades: ILetterGradeRange[],
-//   subjectPass: number,
-//   compEnabled: boolean,
-//   compThreshold: number,
-//   precisionMode: TPrecisionMode = 2,
-// ): {
-//   gpa10: number | null;
-//   gpa4: number | null;
-
-//   // Hệ 10: Gắn liền với tiêu chí của hàm subjectPassed()
-//   credits10: number;
-//   passedCredits10: number;
-
-//   // Hệ 4: Gắn liền với tiêu chí điểm chữ (gpa4Point > 0)
-//   credits4: number;
-//   passedCredits4: number;
-
-//   exemptCredits: number;  // Tín chỉ môn miễn điểm (Dùng chung cho cả 2 hệ)
-// } {
-//   let registeredCredits = 0; // Mẫu số chung tính GPA: Tổng tín chỉ của các môn CÓ ĐIỂM
-//   let exemptCredits = 0;     // Số tín chỉ được miễn
-
-//   // Tách biệt hoàn toàn biến đếm số tín chỉ đạt của 2 hệ thống
-//   let passedCredits10 = 0;
-//   let passedCredits4 = 0;
-
-//   let weighted10 = 0;
-//   let weighted4 = 0;
-//   let any = false;
-
-//   for (const s of semesters) {
-//     for (const sub of s.subjects) {
-//       if (sub.credits <= 0) continue;
-
-//       // Trường hợp 1: Môn miễn điểm (Exempt)
-//       if (sub.isExempt) {
-//         exemptCredits += sub.credits;
-//         continue;
-//       }
-
-//       const sc = effectiveScore10(sub, precisionMode);
-//       const passed10 = subjectPassed(sub, subjectPass, compEnabled, compThreshold, precisionMode);
-
-//       // Nếu môn chưa có điểm thì bỏ qua hoàn toàn
-//       if (sc === null) continue;
-
-//       any = true;
-
-//       // Tính toán tử số cho cả 2 hệ
-//       const gpa4Point = gpa4FromScore10(sc, letterGrades);
-//       weighted10 += sc * sub.credits;
-//       weighted4 += gpa4Point * sub.credits;
-
-//       // Mẫu số tính GPA
-//       registeredCredits += sub.credits;
-
-//       // 🔒 TIÊU CHÍ HỆ 10: Đạt khi hàm subjectPassed trả về true
-//       if (passed10 === true) {
-//         passedCredits10 += sub.credits;
-//       }
-
-//       // 🔒 TIÊU CHÍ HỆ 4: Đạt khi điểm chữ quy đổi lớn hơn 0 (Khác F)
-//       if (gpa4Point > 0) {
-//         passedCredits4 += sub.credits;
-//       }
-//     }
-//   }
-
-//   return {
-//     gpa10: any && registeredCredits > 0 ? roundGpa(weighted10 / registeredCredits, 2) : null,
-//     gpa4: any && registeredCredits > 0 ? roundGpa(weighted4 / registeredCredits, 2) : null,
-
-//     // Tính tổng tín chỉ tích lũy tương ứng cho từng hệ (Môn đạt + Môn miễn)
-//     passedCredits10,
-//     credits10: passedCredits10 + exemptCredits,
-
-//     passedCredits4,
-//     credits4: passedCredits4 + exemptCredits,
-
-//     exemptCredits,
-//   };
-// }
-
-export function cumulativeGPA4(
-  semesters: ISemester[],
+/**
+ * 🏆 Tính toán điểm Tích lũy tốt nghiệp toàn khóa (Cumulative CPA Global).
+ * 
+ * Hàm này gom dữ liệu thô từ method `calculateCumulativeMetrics` của các Class Semester con.
+ * Áp dụng nghiêm ngặt quy chế đào tạo đại học:
+ * - Chặn đứng và loại bỏ hoàn toàn các môn mang trạng thái Trả nợ "retake" để mẫu số tín chỉ không bị phình ảo.
+ * - Chỉ tính điểm của những môn thực sự ĐẠT (Passed).
+ * - Tách biệt kho tín chỉ Miễn học "exempt" để cộng dồn vào tổng số tín chỉ tích lũy xét tốt nghiệp cuối cùng.
+ * 
+ * Phép chia trung bình và làm tròn về 2 chữ số thập phân được thực hiện một lần duy nhất ở cuối quy trình.
+ * @param semesterInstances Mảng các đối tượng Instance của Class Semester
+ * @param letterGrades Mảng cấu hình khoảng điểm quy đổi sang Hệ chữ
+ * @param subjectPassThreshold Điểm sàn để tính là qua môn (Ví dụ: 5.0)
+ * @param componentPassEnabled Bật/Tắt tính năng xét điểm liệt thành phần
+ * @param componentPassThreshold Thang điểm liệt thành phần (Ví dụ: 3.0 hoặc 4.0)
+ * @param scoreInputMode Chế độ nhập điểm ("full" hoặc "gpaOnly")
+ * @param presetId Cấu hình quy chế trường ("uit" hoặc "Custom", mặc định là "uit")
+ * @returns Object chứa kết quả CPA toàn khóa hệ 10, hệ 4, hệ 100, tổng tín chỉ thực tế đạt và tín chỉ miễn học
+ */
+export function calculateGlobalCumulative({
+  semesterInstances,
+  letterGrades,
+  subjectPassThreshold,
+  componentThresholdEnabled,
+  componentPassThreshold,
+  scoreInputMode,
+  presetId
+}: {
+  semesterInstances: Semester[],
   letterGrades: ILetterGradeRange[],
   subjectPassThreshold: number,
-  compEnabled: boolean,
-  compThreshold: number,
-  precisionMode: TPrecisionMode = 2,
-): {
-  gpa4: number | null;
-  credits: number;
-  passedCredits: number;
-  exemptCredits: number;
-} {
-  let passedCredits = 0;   // Tín chỉ của các môn ĐÃ ĐẠT và CÓ ĐIỂM (Dùng làm mẫu số tính GPA)
-  let exemptCredits = 0;   // Tín chỉ của các môn ĐẠT dưới dạng MIỄN ĐIỂM
-  let weighted = 0;
-  let any = false;
+  componentThresholdEnabled: boolean,
+  componentPassThreshold: number,
+  scoreInputMode: TScoreInputMode,
+  presetId: TPresetId
+}) {
+  let totalCredits = 0;
+  let totalExemptCredits = 0;
+  let totalWeighted10 = 0;
+  let totalWeighted4 = 0;
+  let totalWeighted100 = 0;
 
-  for (const s of semesters) {
-    for (const sub of s.subjects) {
-      if (sub.credits <= 0) continue;
+  for (const sem of semesterInstances) {
+    // Gọi cục 3 của Class Semester
+    const metrics = sem.calculateCumulativeMetrics(
+      letterGrades,
+      subjectPassThreshold,
+      componentThresholdEnabled,
+      componentPassThreshold,
+      scoreInputMode,
+      presetId
+    );
 
-      // Trường hợp 1: Môn miễn điểm (Không tính vào điểm hệ 4 nhưng tính vào tổng số tín tích lũy)
-      if (sub.isExempt) {
-        exemptCredits += sub.credits;
-        continue;
-      }
-
-      const sc = effectiveScore10(
-        sub,
-        // compEnabled, 
-        // compThreshold, 
-        precisionMode
-      );
-      const passed = subjectPassed(sub, subjectPassThreshold, compEnabled, compThreshold, precisionMode);
-
-      // Trường hợp 2: Môn bị trượt hoặc chưa có điểm -> Bỏ qua hoàn toàn khỏi CPA tích lũy
-      if (sc === null || passed !== true) continue;
-
-      // Trường hợp 3: Môn có điểm và đã đạt chuẩn (Pass)
-      any = true;
-      weighted += gpa4FromScore10(sc, letterGrades) * sub.credits;
-      passedCredits += sub.credits; // Mẫu số tích lũy chỉ tăng khi môn đó thực sự ĐẬU
-    }
+    totalWeighted10 += metrics.weighted10;
+    totalWeighted4 += metrics.weighted4;
+    totalWeighted100 += metrics.weighted100;
+    totalCredits += metrics.creditsCount;
+    totalExemptCredits += metrics.exemptCreditsCount;
   }
 
-  const res = {
-    // Điểm tích lũy hệ 4 chỉ chia cho tổng số tín chỉ của các môn đã đạt có điểm thực tế
-    gpa4: any && passedCredits > 0 ? roundGpa(weighted / passedCredits, 2) : null,
-    // Tổng số tín chỉ tích lũy hiển thị = Tín chỉ môn có điểm đạt + Tín chỉ môn miễn
-    credits: passedCredits + exemptCredits,
-    passedCredits,
-    exemptCredits,
-  };
+  const finalCredits = totalCredits + totalExemptCredits;
 
-  console.log(res);
-
-  return res;
-}
-
-export function cumulativeGPA10(
-  semesters: ISemester[],
-  subjectPass: number,
-  compEnabled: boolean,
-  compThreshold: number,
-  precisionMode: TPrecisionMode = 2,
-): {
-  gpa10: number | null;
-  credits: number;
-  passedCredits: number;
-  exemptCredits: number;
-} {
-  let passedCredits = 0;   // Tín chỉ của các môn ĐÃ ĐẠT và CÓ ĐIỂM (Dùng làm mẫu số tính GPA)
-  let exemptCredits = 0;   // Tín chỉ của các môn ĐẠT dưới dạng MIỄN ĐIỂM
-  let weighted = 0;
-  let any = false;
-
-  for (const s of semesters) {
-    for (const sub of s.subjects) {
-      if (sub.credits <= 0) continue;
-
-      // Trường hợp 1: Môn miễn điểm (Không tính vào điểm hệ 4 nhưng tính vào tổng số tín tích lũy)
-      if (sub.isExempt) {
-        exemptCredits += sub.credits;
-        continue;
-      }
-
-      const sc = effectiveScore10(
-        sub,
-        // compEnabled, 
-        // compThreshold, 
-        precisionMode
-      );
-      const passed = subjectPassed(sub, subjectPass, compEnabled, compThreshold, precisionMode);
-
-      // Trường hợp 2: Môn bị trượt hoặc chưa có điểm -> Bỏ qua hoàn toàn khỏi CPA tích lũy
-      if (sc === null || passed !== true) continue;
-
-      // Trường hợp 3: Môn có điểm và đã đạt chuẩn (Pass)
-      any = true;
-      weighted += sc * sub.credits;
-      passedCredits += sub.credits; // Mẫu số tích lũy chỉ tăng khi môn đó thực sự ĐẬU
-    }
-  }
-
-  const res = {
-    gpa10: any && passedCredits > 0 ? roundGpa(weighted / passedCredits, 2) : null,
-    credits: passedCredits + exemptCredits,
-    passedCredits,
-    exemptCredits,
-  };
-
-  return res;
-}
-
-export function passedCredits(
-  semesters: ISemester[],
-  subjectPass: number,
-  compEnabled: boolean,
-  compThreshold: number,
-  precision: TPrecisionMode = 2,
-): number {
-  let credits = 0;
-  for (const s of semesters) {
-    for (const sub of s.subjects) {
-      if (subjectPassed(sub, subjectPass, compEnabled, compThreshold, precision) === true) {
-        credits += sub.credits;
-      }
-    }
-  }
-  return credits;
-}
-
-export type Advisory = {
-  label: { en: string; vi: string };
-  tone: "success" | "primary" | "warning" | "destructive";
-  advice: { en: string; vi: string };
-};
-
-export function classify(gpa: number | null): Advisory {
-  if (gpa === null)
-    return {
-      label: { en: "—", vi: "—" },
-      tone: "primary",
-      advice: { en: "Enter grades to see your classification.", vi: "Nhập điểm để xem xếp loại." },
-    };
-
-  // Ngưỡng Xuất sắc (Excellent) -> Đạt học bổng
-  if (gpa >= 9.0)
-    return {
-      label: { en: "Excellent — Scholarship", vi: "Xuất sắc — Học bổng" },
-      tone: "success",
-      advice: { en: "Flawless academic record! Keep leading the cohort.", vi: "Thành tích tuyệt đối! Hãy tiếp tục duy trì vị thế dẫn đầu." },
-    };
-
-  // Ngưỡng Giỏi (Very Good) -> Cơ hội học bổng cao
-  if (gpa >= 8.0)
-    return {
-      label: { en: "Very Good — Scholarship", vi: "Giỏi — Học bổng" },
-      tone: "success",
-      advice: { en: "Outstanding performance. Maintain momentum to keep scholarships.", vi: "Thành tích xuất sắc. Giữ vững phong độ để bảo vệ học bổng." },
-    };
-
-  // Ngưỡng Khá (Good) -> Tạm ổn, tiệm cận học bổng
-  if (gpa >= 7.0)
-    return {
-      label: { en: "Good / Fair — Acceptable", vi: "Khá / Trung bình — Tạm được" },
-      tone: "warning",
-      advice: { en: "Solid baseline. Push a few subjects to unlock scholarship range.", vi: "Nền tảng ổn. Nên cố gắng học cải thiện thêm vài môn điểm thấp để lên ngưỡng học bổng." },
-    };
-
-  // Ngưỡng Trung bình (Fair) -> Cảnh báo học tập nhẹ, nên học cải thiện
-  if (gpa >= 6.0)
-    return {
-      label: { en: "Fair — Need Improvement", vi: "Trung bình — Nên học cải thiện" },
-      tone: "warning",
-      advice: { en: "Review your low-credit subjects. Target minor grade improvements to secure a Good rating.", vi: "Điểm ở mức an toàn nhưng chưa cao. Hãy lên kế hoạch học cải thiện để kéo GPA lên mức Khá." },
-    };
-
-  // Ngưỡng Yếu (Academic Alert) -> Điểm chạm mốc trượt môn, cần tối ưu lại phương pháp
-  if (gpa >= 5.0)
-    return {
-      label: { en: "Academic Alert — Need Improvement", vi: "Cảnh báo — Cần cải thiện" },
-      tone: "warning",
-      advice: { en: "Plan retakes for weak subjects and raise your component scores.", vi: "Lên kế hoạch học cải thiện cho các môn yếu." },
-    };
-
-  // Ngưỡng Kém (Critical Fail) -> Buộc phải học lại để gỡ nợ
   return {
-    label: { en: "Critical Fail — Re-take required", vi: "Nguy hiểm — Học lại" },
-    tone: "destructive",
-    advice: { en: "Prioritize retakes immediately; restructure your timeline and reduce course load.", vi: "Diện cảnh báo đỏ! Ưu tiên đăng ký học lại ngay các môn bị tạch để giải phóng nợ môn." },
+    cpa10: totalCredits > 0 ? Math.round((totalWeighted10 / totalCredits) * 100) / 100 : null,
+    cpa4: totalCredits > 0 ? Math.round((totalWeighted4 / totalCredits) * 100) / 100 : null,
+    cpa100: totalCredits > 0 ? Math.round((totalWeighted100 / totalCredits) * 100) / 100 : null,
+    credits: finalCredits,
+    passedCredits: totalCredits,
+    exemptCredits: totalExemptCredits
   };
 }
+
+// End new functions

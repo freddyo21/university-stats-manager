@@ -2,24 +2,22 @@ import { useState } from "react";
 import { Plus, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { uuidv7 } from "@/utils/uuid";
 import { PageHeader } from "@/components/Header";
 import { useAcademicStore } from "@/hooks/useAcademicStore";
 import { useI18n } from "@/i18n/use-i18n";
-import type { ISemester } from "@/types/interfaces/ISemester";
 import { SemesterCard } from "@/pages/index/components/SemesterCard";
-import { newSubject } from "@/utils/index-helpers";
 import { ConfigPanel } from "@/pages/index/components/ConfigPanel";
+import { Semester } from "@/entities/Semester";
 
-function newSemester(index: number, targetGPA: number): ISemester {
-    return {
-        id: uuidv7(),
-        name: `Semester ${index + 1}`,
-        semesterNumber: index + 1,
-        targetGPA,
-        subjects: [newSubject()]
-    };
-}
+// function newSemester(index: number, targetGPA: number): ISemester {
+//     return {
+//         id: uuidv7(),
+//         name: `Semester ${index + 1}`,
+//         semesterNumber: index + 1,
+//         targetGPA,
+//         subjects: [newSubject()]
+//     };
+// }
 
 export default function IndexPage() {
     const { state, update } = useAcademicStore();
@@ -31,7 +29,8 @@ export default function IndexPage() {
             ...s,
             semesters: [
                 ...s.semesters,
-                newSemester(s.semesters.length, s.targetGPA)
+                // Tự động tăng số thứ tự dựa trên độ dài mảng hiện tại
+                new Semester({ currentLength: s.semesters.length })
             ]
         }));
 

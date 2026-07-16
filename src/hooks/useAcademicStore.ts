@@ -2,8 +2,8 @@ import { useCallback, useEffect, useSyncExternalStore } from "react";
 import {
     loadAcademicState,
     persistAcademicState,
-    removeLegacyAcademicState,
     clearAcademicState,
+    normalizeAcademicState,
 } from "../lib/academic/store";
 import { DEFAULT_STATE } from "@/utils/constants";
 import type { IAppState } from "@/types/interfaces/IAppState";
@@ -29,14 +29,17 @@ const getServerHydratedSnapshot = () => false;
 // Chỉ thực sự load 1 lần cho toàn app, bất kể bao nhiêu component gọi hook này
 function ensureHydrated() {
     if (hydrated || typeof window === "undefined") return;
-    const { state, migratedFromLegacy } = loadAcademicState();
-    memory = state;
+    const {
+        state,
+        // migratedFromLegacy
+    } = loadAcademicState();
+    memory = normalizeAcademicState(state);
     hydrated = true;
 
-    if (migratedFromLegacy) {
-        persistAcademicState(memory); // hoàn tất migrate: ghi ngay sang key mới
-        removeLegacyAcademicState(); // và dọn key cũ luôn, không chờ tới update() đầu tiên
-    }
+    // if (migratedFromLegacy) {
+    // persistAcademicState(memory); / / hoàn tất migrate: ghi ngay sang key mới
+    // removeLegacyAcademicState(); // và dọn key cũ luôn, không chờ tới update() đầu tiên
+    // }
     emit();
 }
 
@@ -81,19 +84,19 @@ export function useAcademicStore() {
 
     // ⚠️ `updater` PHẢI trả về object MỚI (immutable update), không mutate `s` trực tiếp.
     const update = useCallback((updater: (s: IAppState) => IAppState) => {
-        memory = updater(memory);
+        memory = normalizeAcademicState(updater(memory));
         schedulePersist(memory);
         emit();
     }, []);
 
     const replace = useCallback((next: IAppState) => {
-        memory = next;
+        memory = normalizeAcademicState(next);
         schedulePersist(memory);
         emit();
     }, []);
 
     const reset = useCallback(() => {
-        memory = DEFAULT_STATE;
+        memory = normalizeAcademicState(DEFAULT_STATE);
         if (persistTimer) {
             clearTimeout(persistTimer);
             persistTimer = null;

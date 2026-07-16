@@ -1,3 +1,5 @@
+import { Semester } from "@/entities/Semester";
+import { Subject } from "@/entities/Subject";
 import type { IAppState } from "@/types/interfaces/IAppState";
 import type { IExtensionSemester } from "@/types/interfaces/IExtensionSemester";
 import type { ISemester } from "@/types/interfaces/ISemester";
@@ -5,73 +7,101 @@ import type { ISubject } from "@/types/interfaces/ISubject";
 import { DEFAULT_STATE } from "@/utils/constants";
 import { uuidv7 } from "@/utils/uuid";
 
-export const STORAGE_KEY = "academic-hub-v2";
-export const LEGACY_STORAGE_KEY = "academic-hub-v1";
+export const STORAGE_KEY = "academic-hub-v1";
 
 const VALID_SCALES = ["10", "4", "100"] as const;
 type Scale = (typeof VALID_SCALES)[number];
+
 function isValidScale(v: unknown): v is Scale {
   return typeof v === "string" && (VALID_SCALES as readonly string[]).includes(v);
 }
 
+const VALID_RETAKE_STRATEGIES = ["highest", "latest", "average"] as const;
+type RetakeStrategy = (typeof VALID_RETAKE_STRATEGIES)[number];
+
+function isValidRetakeStrategy(v: unknown): v is RetakeStrategy {
+  return typeof v === "string" && (VALID_RETAKE_STRATEGIES as readonly string[]).includes(v as RetakeStrategy);
+}
+
+function normalizeSubject(subject: Partial<ISubject> | Subject): Subject {
+  return subject instanceof Subject
+    ? subject
+    : new Subject({
+      id: subject.id,
+      code: subject.code,
+      name: subject.name,
+      credits: subject.credits,
+      weights: subject.weights,
+      scores: subject.scores,
+      studyType: subject.studyType,
+      gpa10: subject.gpa10
+    });
+}
+
+function normalizeSemester(semester: Partial<ISemester> | Semester, index: number): Semester {
+  return semester instanceof Semester
+    ? semester
+    : new Semester({
+      id: semester.id,
+      // name: semester.name,
+      currentLength: index,
+      semesterNumber: typeof semester.semesterNumber === "number" ? semester.semesterNumber : 0,
+      targetGPA: typeof semester.targetGPA === "number" ? semester.targetGPA : DEFAULT_STATE.targetGPA,
+      semesterId: semester.semesterId,
+      subjects: (semester.subjects ?? []).map((subject) => normalizeSubject(subject)),
+    });
+}
+
+export function normalizeAcademicState(state: IAppState): IAppState {
+  return {
+    ...state,
+    semesters: (state.semesters ?? []).map((semester, index) => normalizeSemester(semester, index)),
+  };
+}
+
 function migrate(parsed: unknown): IAppState {
-  // shallow merge; nested defaults handled explicitly below
   const next: IAppState = { ...DEFAULT_STATE, ...(parsed as Partial<IAppState>) };
 
   if (next.precisionMode !== 1 && next.precisionMode !== 2) {
     next.precisionMode = DEFAULT_STATE.precisionMode;
   }
 
-  // legacy field "gradingScale" -> "activeScale"; validate dù giá trị đã có sẵn
   const legacyScale = (parsed as { gradingScale?: unknown })?.gradingScale;
   if (!isValidScale(next.activeScale)) {
     next.activeScale = isValidScale(legacyScale) ? legacyScale : null;
   }
 
-  // migrate: ensure subject.code & semester.targetGPA exist
-  next.semesters = (next.semesters ?? []).map((sem: ISemester) => ({
-    id: sem.id,
-    name: sem.name,
-    semesterNumber: typeof sem.semesterNumber === "number" ? sem.semesterNumber : 0,
-    targetGPA: typeof sem.targetGPA === "number" ? sem.targetGPA : DEFAULT_STATE.targetGPA,
-    subjects: (sem.subjects ?? []).map((sub: ISubject) => ({
-      id: sub.id,
-      code: sub.code ?? "",
-      name: sub.name ?? "",
-      credits: sub.credits ?? 0,
-      weights: sub.weights ?? { process: 10, midterm: 20, practice: 20, final: 50 },
-      scores: sub.scores ?? { process: null, midterm: null, practice: null, final: null },
-      isExempt: sub.isExempt ?? false,
-    })),
-  }));
+  if (!isValidRetakeStrategy(next.retakeStrategy)) {
+    next.retakeStrategy = DEFAULT_STATE.retakeStrategy;
+  }
 
-  return next;
+  return normalizeAcademicState(next);
 }
 
 export interface LoadResult {
   state: IAppState;
-  /** true nếu dữ liệu được đọc từ key cũ (cần ghi lại sang key mới + xoá key cũ) */
-  migratedFromLegacy: boolean;
+  // migratedFromLegacy?: boolean;
 }
 
 export function loadAcademicState(): LoadResult {
   if (typeof window === "undefined") {
-    return { state: DEFAULT_STATE, migratedFromLegacy: false };
+    return { state: DEFAULT_STATE };
   }
+
   try {
     const currentRaw = localStorage.getItem(STORAGE_KEY);
-    const legacyRaw = currentRaw ? null : localStorage.getItem(LEGACY_STORAGE_KEY);
-    const raw = currentRaw ?? legacyRaw;
-    if (!raw) return { state: DEFAULT_STATE, migratedFromLegacy: false };
+    if (!currentRaw) {
+      return { state: DEFAULT_STATE };
+    }
 
-    const parsed = JSON.parse(raw);
+    const parsed = JSON.parse(currentRaw);
     return {
       state: migrate(parsed),
-      migratedFromLegacy: !currentRaw && !!legacyRaw,
+      // migratedFromLegacy: (parsed as { gradingScale?: unknown })?.gradingScale !== undefined,
     };
   } catch (err) {
     console.error("[academic-hub] Failed to load/migrate stored state:", err);
-    return { state: DEFAULT_STATE, migratedFromLegacy: false };
+    return { state: DEFAULT_STATE };
   }
 }
 
@@ -84,127 +114,129 @@ export function persistAcademicState(state: IAppState) {
   }
 }
 
-export function removeLegacyAcademicState() {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.removeItem(LEGACY_STORAGE_KEY);
-  } catch (err) {
-    console.error("[academic-hub] Failed to remove legacy state:", err);
-  }
-}
-
 export function clearAcademicState() {
   if (typeof window === "undefined") return;
   try {
     localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(LEGACY_STORAGE_KEY);
   } catch (err) {
     console.error("[academic-hub] Failed to clear state:", err);
   }
 }
 
-export function mergeAcademicStateFromExtension(data: IExtensionSemester[]) {
-  if (typeof window === "undefined") return;
+/**
+ * 🔄 Trộn (Merge) dữ liệu cào từ Extension trường vào Local State hiện tại
+ */
+export function mergeAcademicStateFromExtension(currentState: IAppState, data: IExtensionSemester[]) {
+  const normalizedCurrentState = normalizeAcademicState(currentState);
 
-  try {
-    const { state: currentState } = loadAcademicState();
+  // 🚀 BƯỚC 1: Clone an toàn và đúc lại toàn bộ Instance Class để bảo toàn method toán học
+  const updatedSemesters: Semester[] = normalizedCurrentState.semesters.map((sem) => {
+    return new Semester({
+      id: sem.id,
+      // name: sem.name,
+      semesterNumber: sem.semesterNumber,
+      targetGPA: sem.targetGPA,
+      semesterId: sem.semesterId,
+      subjects: sem.subjects
+    });
+  });
 
-    // Sao chép sâu danh sách học kỳ hiện tại để tránh mutate state gốc
-    const updatedSemesters = currentState.semesters.map((s) => ({
-      ...s,
-      // id: uuidv7(), // Đảm bảo mỗi học kỳ có id mới để lưu vết thời gian merge, tránh trùng id với học kỳ cũ
-      subjects: [...s.subjects], // clone luôn subjects array để tránh mutate ngược
-    }));
+  data.forEach((extSem) => {
+    const targetSemesterId = extSem.semesterId?.trim() || "";
 
-    data.forEach((extSem) => {
-      // const semesterTargetString = extSem.semester.toString();
-      const targetSemesterId = extSem.semesterId;
-      //  || String(extSem.semester);
-      let localSem = updatedSemesters.find((s) => s.name === targetSemesterId);
+    // 🔥 SỬA BẪY CHÍ MẠNG: Phải đối chiếu bằng thuộc tính chuẩn semesterId của trường, không so với .name
+    let targetIdx = updatedSemesters.findIndex((s) => s.semesterId === targetSemesterId);
+    let localSem = targetIdx !== -1 ? updatedSemesters[targetIdx] : null;
 
-      // Nếu chưa có học kỳ này, tiến hành khởi tạo mới
-      if (!localSem) {
-        localSem = {
+    // Tạo danh sách môn trộn mới tinh
+    let finalSubjectsList: Subject[] = [];
+
+    if (!localSem) {
+      // Kịch bản A: Chưa có học kỳ này -> Tạo mới Instance Class Semester
+      localSem = new Semester({
+        id: uuidv7(),
+        // name: `Học kỳ ${extSem.semester}`,
+        semesterNumber: extSem.semester,
+        targetGPA: normalizedCurrentState.targetGPA ?? 8,
+        semesterId: targetSemesterId,
+        subjects: []
+      });
+      updatedSemesters.push(localSem);
+      targetIdx = updatedSemesters.length - 1;
+    }
+
+    // Bản đồ tra cứu nhanh môn học local dựa trên canonicalCode
+    const localSubjectMap = new Map<string, Subject>();
+    localSem.subjects.forEach((sub) => {
+      localSubjectMap.set(sub.canonicalCode, sub);
+    });
+
+    // Trộn từng môn cào được từ Extension
+    const mergedSubjects: Subject[] = extSem.subjects.map((extSub) => {
+      const extCanonicalCode = extSub.code.trim().toUpperCase();
+      const existingSub = localSubjectMap.get(extCanonicalCode);
+
+      if (existingSub) {
+        // Kịch bản B.1: Môn đã có -> Bảo lưu ID cục bộ của Web App, đè điểm số mới lên
+        return new Subject({
+          id: existingSub.id,
+          code: extSub.code ?? existingSub.code,
+          name: extSub.name ?? existingSub.name,
+          credits: extSub.credits ?? existingSub.credits,
+          weights: {
+            process: extSub.weights?.process ?? existingSub.weights?.process ?? null,
+            midterm: extSub.weights?.midterm ?? existingSub.weights?.midterm ?? null,
+            practice: extSub.weights?.practice ?? existingSub.weights?.practice ?? null,
+            final: extSub.weights?.final ?? existingSub.weights?.final ?? null,
+          },
+          scores: {
+            process: extSub.scores?.process ?? existingSub.scores?.process ?? null,
+            midterm: extSub.scores?.midterm ?? existingSub.scores?.midterm ?? null,
+            practice: extSub.scores?.practice ?? existingSub.scores?.practice ?? null,
+            final: extSub.scores?.final ?? existingSub.scores?.final ?? null,
+          },
+          studyType: extSub.studyType ?? existingSub.studyType,
+          gpa10: extSub.gpa10 ?? existingSub.gpa10,
+        });
+      } else {
+        // Kịch bản B.2: Môn mới hoàn toàn -> Cấp UUIDv7 và bọc Class
+        return new Subject({
           id: uuidv7(),
-          name: targetSemesterId || `${currentState.language === "vi" ? "Học kỳ" : "Semester"} ${extSem.semester}`,
-          semesterNumber: extSem.semester,
-          semesterId: targetSemesterId,
-          targetGPA: currentState.targetGPA ?? 8,
-          subjects: []
-        };
-        updatedSemesters.push(localSem);
-      } else if (localSem.semesterNumber == null) {
-        // Backfill cho data cũ chưa có field, để lần sort sau dùng được luôn
-        localSem.semesterNumber = extSem.semester;
+          code: extSub.code ?? "",
+          name: extSub.name ?? "",
+          credits: extSub.credits ?? 0,
+          weights: extSub.weights ?? null,
+          scores: extSub.scores ?? { process: null, midterm: null, practice: null, final: null },
+          studyType: extSub.studyType ?? "normal",
+          gpa10: extSub.gpa10 ?? null,
+        });
       }
-
-      // 2. Tạo Map để tra cứu môn học cũ nhanh nhằm tối ưu hiệu năng O(N)
-      const localSubjectMap = new Map<string, ISubject>();
-      localSem.subjects.forEach((sub) => {
-        localSubjectMap.set(sub.code, sub);
-      });
-
-      // 3. Tiến hành merge từng môn từ Extension vào
-      const mergedSubjects = extSem.subjects.map((extSub) => {
-        const existingSub = localSubjectMap.get(extSub.code);
-
-        if (existingSub) {
-          // Kịch bản A: Môn đã có sẵn -> Chỉ đè điểm và trọng số, GIỮ NGUYÊN ID cũ của Web App
-          return {
-            ...existingSub,
-            name: extSub.name ?? existingSub.name,
-            credits: extSub.credits ?? existingSub.credits,
-            weights: {
-              process: extSub.weights?.process ?? existingSub.weights?.process ?? null,
-              midterm: extSub.weights?.midterm ?? existingSub.weights?.midterm ?? null,
-              practice: extSub.weights?.practice ?? existingSub.weights?.practice ?? null,
-              final: extSub.weights?.final ?? existingSub.weights?.final ?? null,
-            },
-            scores: {
-              process: extSub.scores?.process ?? existingSub.scores?.process ?? null,
-              midterm: extSub.scores?.midterm ?? existingSub.scores?.midterm ?? null,
-              practice: extSub.scores?.practice ?? existingSub.scores?.practice ?? null,
-              final: extSub.scores?.final ?? existingSub.scores?.final ?? null,
-            },
-            isExempt: extSub.isExempt ?? existingSub.isExempt
-          };
-        } else {
-          // Kịch bản B: Môn mới tinh từ hệ thống trường -> Tạo mới và sinh UUID tại đây
-          return {
-            id: uuidv7(),
-            code: extSub.code ?? "",
-            name: extSub.name ?? "",
-            credits: extSub.credits ?? 0,
-            weights: extSub.weights ?? { process: 10, midterm: 20, practice: 20, final: 50 },
-            scores: extSub.scores ?? { process: null, midterm: null, practice: null, final: null },
-            isExempt: extSub.isExempt ?? false
-          };
-        }
-      });
-
-      // 4. Bổ sung ngược lại những môn tự thêm tay (Môn có trong local nhưng Extension không cào thấy)
-      const extSubCodes = new Set(extSem.subjects.map((s) => s.code.trim().toUpperCase()));
-      const customSubjects = localSem.subjects.filter((sub) => !extSubCodes.has(sub.code.trim().toUpperCase()));
-
-      // Cập nhật lại danh sách môn hoàn chỉnh cho học kỳ này
-      localSem.subjects = [...mergedSubjects, ...customSubjects];
     });
 
-    // Sắp xếp lại các học kỳ theo số tăng dần trích xuất từ chuỗi name
-    const finalSemesters = updatedSemesters.sort((a, b) => {
-      return Number(a.semesterId) - Number(b.semesterId);
+    // 🚀 BƯỚC BÙ MÔN TỰ THÊM TAY: Giữ lại những môn sinh viên tự tạo trên UI mà Extension không quét thấy
+    const extSubCodes = new Set(extSem.subjects.map((s) => s.code.trim().toUpperCase()));
+    const customSubjects = localSem.subjects.filter((sub) => !extSubCodes.has(sub.canonicalCode));
+
+    finalSubjectsList = [...mergedSubjects, ...customSubjects];
+
+    // 🚀 BƯỚC ĐÈ INSTANCE: Ghi đè thực thể học kỳ đã được trộn trọn vẹn danh sách môn vào mảng tổng
+    updatedSemesters[targetIdx] = new Semester({
+      id: localSem.id,
+      // name: localSem.name,
+      semesterNumber: extSem.semester ?? localSem.semesterNumber, // Đồng bộ/Backfill số học kỳ
+      targetGPA: localSem.targetGPA,
+      semesterId: localSem.semesterId,
+      subjects: finalSubjectsList
     });
+  });
 
-    const mergedState: IAppState = {
-      ...currentState,
-      semesters: finalSemesters
-    };
+  // Sắp xếp các học kỳ tịnh tiến tăng dần dựa trên mã học kỳ của trường (Ví dụ: 20241, 20242...)
+  const finalSemesters = updatedSemesters.sort((a, b) => {
+    return Number(a.semesterId || 0) - Number(b.semesterId || 0);
+  });
 
-    console.log("[academic-hub] Merging state from extension:", mergedState);
-
-    persistAcademicState(mergedState);
-    console.log("[academic-hub] Merged and persisted state successfully.");
-  } catch (err) {
-    console.error("[academic-hub] Failed to merge state from extension:", err);
-  }
+  return normalizeAcademicState({
+    ...normalizedCurrentState,
+    semesters: finalSemesters
+  });
 }

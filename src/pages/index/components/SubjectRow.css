@@ -1,0 +1,9 @@
+select.select > option {
+    background-color: white;
+    border: none;
+    color: black;
+}
+
+select.select > option:hover {
+    color: red;
+}

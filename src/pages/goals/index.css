@@ -1,0 +1,30 @@
+/* 🚀 ĐÁNH THẲNG VÀO NỀN TOOLTIP */
+.tooltip#study_status_tooltip {
+    /* Ép biến màu nền mặc định của tooltip về dạng trong suốt hoàn toàn 
+       để loại bỏ cái hộp xám đục mặc định của thư viện */
+    --tt-bg: rgba(2, 6, 23, 0.8) !important;
+}
+
+/* 🎯 ĐÁNH VÀO BOX CONTENT HIỂN THỊ (Nơi chứa cái list của ông) */
+.tooltip#study_status_tooltip .tooltip-content,
+.tooltip#study_status_tooltip::after {
+    background-color: rgba(2, 6, 23, 0.8) !important;
+    
+    /* Hiệu ứng kính mờ đỉnh cao */
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    
+    /* Viền mảnh tinh tế tách biệt khỏi nền sau */
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+    padding: 8px !important;
+    min-width: 140px !important;
+    
+    /* Bóng đổ tạo chiều sâu siêu thực */
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* 🎨 SỬA LẠI MÀU MŨI TÊN (ARROW) CHO KHỚP MÀU NỀN MỚI */
+.tooltip#study_status_tooltip::before {
+    border-top-color: rgba(2, 6, 23, 0.75) !important;
+}

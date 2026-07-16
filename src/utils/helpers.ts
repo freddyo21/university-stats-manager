@@ -1,23 +1,23 @@
-import type { TxKey } from "@/i18n/i18n-types";
+import type { TranslationKey } from "@/i18n/i18n-types";
 import type { TGradingScale, TPresetId } from "@/types/types";
 
-export function clampNum(v: string, min: number, max: number) {
+export const clampNum = (v: string, min: number, max: number) => {
     const n = Number(v);
     if (isNaN(n)) return min;
     return Math.min(max, Math.max(min, n));
-}
+};
 
-export function getScaleSuffix(scale: TGradingScale, t: (key: TxKey) => string): string {
+export const getScaleSuffix = (scale: TGradingScale, t: (key: TranslationKey) => string): string => {
     if (scale === "4") return t("scale.gpa4");
     if (scale === "100") return t("scale.gpa100");
     return t("scale.gpa10");
-}
+};
 
-export function isPresetId(value: any): value is TPresetId {
-    return ["hust", "uit", "custom"].includes(value);
-}
+export const isPresetId = (value: any): value is TPresetId => {
+    return ["uit", "custom"].includes(value);
+};
 
-export function roundToPrecision(value: number, precision: number): number {
+export const roundToPrecision = (value: number, precision: number): number => {
     const factor = Math.pow(10, precision);
     return Math.round((value + Number.EPSILON) * factor) / factor;
-}
+};

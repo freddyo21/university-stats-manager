@@ -1,6 +1,6 @@
 import { I18nContext } from "@/contexts/I18nContext";
 import { D } from "@/i18n/dict";
-import type { Lang, ReplaceOptions, TxKey } from "@/i18n/i18n-types";
+import type { Lang, ReplaceOptions, TranslationKey } from "@/i18n/i18n-types";
 import { LANG_KEY } from "@/utils/constants";
 import { useCallback, useState, type ReactNode } from "react";
 
@@ -26,7 +26,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
         } catch { }
     }, []);
 
-    const t = useCallback((key: TxKey, replaceOptions?: ReplaceOptions) => {
+    const t = useCallback((key: TranslationKey, replaceOptions?: ReplaceOptions) => {
         try {
             // 1. Tìm bản dịch dựa trên ngôn ngữ hiện tại
             const currentDict = D[lang];

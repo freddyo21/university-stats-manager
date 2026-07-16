@@ -1,18 +1,26 @@
 import { useAcademicStore } from "@/hooks/useAcademicStore";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { calculateAcademicMetrics } from "./helper";
-import { roundGpa, subjectPassed } from "@/lib/academic/calc";
-import type { TGradingScale, TPrecisionMode } from "@/types/types";
+import type { TPrecisionMode } from "@/types/types";
+import { roundToPrecision } from "@/utils/helpers";
+import { Semester } from "@/entities/Semester";
 
-const SCALE_4_FACTOR = 2.5;
 const FORMAT_DASH = "—";
+// const SCALE_4_FACTOR = 2.5; // Hệ số chuyển đổi từ GPA 10 sang GPA 4 (10 / 4 = 2.5)
 
 export function useGoalsMetrics() {
     const { state, update } = useAcademicStore();
-
     const [selectedId, setSelectedId] = useState<string>("");
 
-    // 1. Sync semester ID with useEffect (avoid render-time state updates)
+    // const {
+    //     subjectPassThreshold,
+    //     componentThresholdEnabled,
+    //     componentPassThreshold,
+    //     scoreInputMode,
+    //     presetId
+    // } = state;
+
+    // 1. Đồng bộ hóa ID học kỳ được chọn (Né lỗi render-time state updates)
     useEffect(() => {
         if (state.semesters.length === 0) {
             setSelectedId("");
@@ -30,135 +38,128 @@ export function useGoalsMetrics() {
         [state.semesters, selectedId]
     );
 
-    const selectedSemester = state.semesters[selectedIndex];
+    // selectedSemester lúc này đảm bảo là Instance của Class Semester
+    const selectedSemester = useMemo(() => {
+        return state.semesters[selectedIndex];
+    }, [state.semesters, selectedIndex]);
 
-    // 2. Memoize metrics calculation with optimized dependencies
+    // 2. Tính toán các chỉ số tịnh tiến (UpTo) với Dependency Array tối giản
     const metrics = useMemo(() => {
-        if (selectedIndex < 0) {
-            return calculateAcademicMetrics(undefined, [], state, state.precisionMode);
+        if (selectedIndex < 0 || !selectedSemester) {
+            return calculateAcademicMetrics(undefined, [], state);
         }
         const sliced = state.semesters.slice(0, selectedIndex + 1);
-        return calculateAcademicMetrics(selectedSemester, sliced, state, state.precisionMode);
+        return calculateAcademicMetrics(selectedSemester, sliced, state);
+    }, [selectedIndex, selectedSemester, state]);
+
+    const { semesterData, cumulativeUpTo, grossUpTo } = metrics;
+
+    // 3. Đếm tổng số môn trong học kỳ hiện tại bằng Method nội tại của Class Subject
+    const subjectCount = useMemo(() => {
+        if (!selectedSemester) return 0;
+
+        // return selectedSemester.subjects.filter((sub) => {
+        //     // Gọi method nội tại của Class môn học để kiểm tra trạng thái qua môn
+        //     return sub.isPassed({
+        //         subjectPassThreshold,
+        //         componentThresholdEnabled,
+        //         componentPassThreshold,
+        //         scoreInputMode,
+        //         presetId
+        //     });
+        // }).length;
+        return selectedSemester.subjects.reduce((count) => {
+            return count + 1;
+        }, 0);
     }, [
-        selectedIndex,
         selectedSemester,
-        state.precisionMode,
         state.subjectPassThreshold,
-        state.componentPassEnabled,
+        state.componentThresholdEnabled,
         state.componentPassThreshold,
-        state.letterGrades,
-        state.semesters,
+        state.presetId
     ]);
 
-    const { semesterData, gross10UpTo, gross4UpTo, cumulative10UpTo, cumulative4UpTo } = metrics;
-
-    // 3. Memoize active count calculation
-    const activeCount = useMemo(
-        () =>
-            selectedSemester
-                ? selectedSemester.subjects.filter(
-                    (s) =>
-                        subjectPassed(
-                            s,
-                            state.subjectPassThreshold,
-                            state.componentPassEnabled,
-                            state.componentPassThreshold,
-                            state.precisionMode
-                        ) !== null
-                ).length
-                : 0,
-        [
-            selectedSemester,
-            state.subjectPassThreshold,
-            state.componentPassEnabled,
-            state.componentPassThreshold,
-            state.precisionMode
-        ]
-    );
-
-    // 4. Memoize display GPA calculations
+    // 4. Tính toán hiển thị điểm số theo cấu hình Thang điểm (Active Scale)
     const displayGpaValues = useMemo(() => {
-        const getDisplayGpa = (gpa4: number | null, gpa10: number | null): number | null => {
-            if (state.activeScale === "4") {
-                return gpa4;
-            } else if (state.activeScale === "100" && gpa10 !== null) {
-                return roundGpa(gpa10 * 10, state.precisionMode);
-            } else {
-                return gpa10;
-            }
+        const getDisplayGpa = (gpa4: number | null, gpa10: number | null, gpa100: number | null): number | null => {
+            if (state.activeScale === "4") return gpa4;
+            if (state.activeScale === "100") return gpa100;
+            return gpa10;
         };
 
-        const displayTargetGPARaw = selectedSemester
-            ? state.activeScale === "4"
-                ? selectedSemester.targetGPA / SCALE_4_FACTOR
-                : state.activeScale === "100"
-                    ? selectedSemester.targetGPA * 10
-                    : selectedSemester.targetGPA
-            : 0;
+        // const displayTargetGPARaw = selectedSemester
+        //     ? state.activeScale === "4"
+        //         ? roundToPrecision(selectedSemester.targetGPA / SCALE_4_FACTOR, 2) // Giữ nguyên chia thô hệ số 2.5 nhưng bọc cứng làm tròn 2 chữ số
+        //         : state.activeScale === "100"
+        //             ? selectedSemester.targetGPA * 10
+        //             : selectedSemester.targetGPA
+        //     : 0;
+        console.log("Selected Semester:", selectedSemester);
+        const displayTargetGPARaw = selectedSemester?.targetGPA;
 
         return {
-            currentGpa: getDisplayGpa(semesterData.gpa4, semesterData.gpa10),
-            grossCpa: getDisplayGpa(gross4UpTo.gpa4, gross10UpTo.gpa10),
-            currentCpa: getDisplayGpa(cumulative4UpTo.gpa4, cumulative10UpTo.gpa10),
+            currentGpa: getDisplayGpa(semesterData.gpa4, semesterData.gpa10, semesterData.gpa100),
+            grossCpa: getDisplayGpa(grossUpTo.gpa4, grossUpTo.gpa10, grossUpTo.gpa100),
+            currentCpa: getDisplayGpa(cumulativeUpTo.gpa4, cumulativeUpTo.gpa10, cumulativeUpTo.gpa100),
             displayTargetGPARaw,
         };
-    }, [
-        semesterData,
-        gross10UpTo,
-        gross4UpTo,
-        cumulative10UpTo,
-        cumulative4UpTo,
-        state.activeScale,
-        state.precisionMode,
-        selectedSemester
-    ]);
+    }, [semesterData, grossUpTo, cumulativeUpTo, state.activeScale, selectedSemester]);
 
-    // 5. Memoize rounded GPA values
+    // 5. Làm tròn các hệ điểm phục vụ logic so sánh hiển thị trên UI
     const roundedGpaValues = useMemo(() => {
-        const roundedCurrentGPA = displayGpaValues.currentGpa !== null ? roundGpa(displayGpaValues.currentGpa, 2) : null;
-        const roundedTargetGPA = roundGpa(displayGpaValues.displayTargetGPARaw, state.precisionMode);
-        const roundedScholarshipGPA = roundGpa(state.eligibleForScholarshipGPA, state.precisionMode);
+        const roundedCurrentGPA = displayGpaValues.currentGpa !== null ? roundToPrecision(displayGpaValues.currentGpa, 2) : null;
+        const roundedTargetGPA = roundToPrecision(displayGpaValues.displayTargetGPARaw, 2);
+        const roundedScholarshipGPA = roundToPrecision(state.eligibleForScholarshipGPA, 2);
 
         return { roundedCurrentGPA, roundedTargetGPA, roundedScholarshipGPA };
-    }, [displayGpaValues, state.precisionMode, state.eligibleForScholarshipGPA]);
+    }, [displayGpaValues, state.eligibleForScholarshipGPA]);
 
-    // 6. Memoize status flags
+    // 6. Các cờ trạng thái kiểm tra mục tiêu học tập
     const statusFlags = useMemo(
         () => ({
             goalAchieved: Boolean(
-                selectedSemester
-                && roundedGpaValues.roundedCurrentGPA !== null
-                && roundedGpaValues.roundedCurrentGPA >= roundedGpaValues.roundedTargetGPA
+                selectedSemester &&
+                roundedGpaValues.roundedCurrentGPA !== null &&
+                roundedGpaValues.roundedCurrentGPA >= roundedGpaValues.roundedTargetGPA
             ),
-            hasScholarship: roundedGpaValues.roundedCurrentGPA !== null
-                && roundedGpaValues.roundedCurrentGPA >= roundedGpaValues.roundedScholarshipGPA,
+            hasScholarship: Boolean(
+                roundedGpaValues.roundedCurrentGPA !== null &&
+                roundedGpaValues.roundedCurrentGPA >= roundedGpaValues.roundedScholarshipGPA
+            ),
         }),
         [selectedSemester, roundedGpaValues]
     );
 
-    // 7. Memoize action callbacks
+    // 7. CẬP NHẬT MỤC TIÊU: Đúc lại Instance Class sạch sẽ, triệt tiêu bug mất method OOP
     const setSemesterTarget = useCallback(
         (v: number) => {
             if (!selectedSemester) return;
-            update((s) => ({
-                ...s,
-                semesters: s.semesters.map((x) =>
-                    x.id === selectedSemester.id ? { ...x, targetGPA: Math.min(10, Math.max(0, v)) } : x
-                ),
-            }));
-        },
-        [selectedSemester, update]
-    );
 
-    const setActiveScale = useCallback(
-        (scale: TGradingScale) => {
+            // Nếu đang ở thang 4, user gõ 3.2 thì phải nhân ngược với 2.5 để trả về số 8.0 lưu vào DB hệ 10
+            // const targetInScale10 = state.activeScale === "4"
+            //     ? v * SCALE_4_FACTOR
+            //     : state.activeScale === "100"
+            //         ? v / 10
+            //         : v;
+
             update((s) => ({
                 ...s,
-                activeScale: scale,
-                eligibleForScholarshipGPA: Number(scale) * 0.8,
+                semesters: s.semesters.map((x) => {
+                    if (x.id !== selectedSemester.id) return x;
+
+                    return new Semester({
+                        id: x.id,
+                        // name: x.name,
+                        semesterNumber: x.semesterNumber,
+                        // targetGPA: Math.min(10, Math.max(0, roundToPrecision(targetInScale10, 2))), // Lưu số hệ 10 sạch đã làm tròn
+                        targetGPA: v,
+                        subjects: x.subjects,
+                        semesterId: x.semesterId
+                    });
+                }),
             }));
         },
-        [update]
+        [selectedSemester, state.activeScale, update] // Thêm state.activeScale vào dep để tính toán chính xác hướng quy đổi ngược
     );
 
     const setPrecisionMode = useCallback(
@@ -168,50 +169,40 @@ export function useGoalsMetrics() {
         [update]
     );
 
-    // 8. Memoize formatter function
     const formatGpa = useCallback(
-        (value: number | null) => (value === null ? FORMAT_DASH : value.toFixed(2)),
+        (value: number | null) => (value === null ? FORMAT_DASH : roundToPrecision(value, 2).toString()),
         []
     );
 
-    // 9. Memoize return object to prevent reference churn in consumers
+    // 8. Trả về Object tổng hợp, chống tình trạng reference churn
     return useMemo(
         () => ({
-            // States & Metadata
             state,
             selectedId,
             setSelectedId,
             selectedSemester,
             selectedIndex,
-            activeCount,
+            subjectCount,
             activeScale: state.activeScale,
 
-            // Calculated Display Values
             currentGpa: displayGpaValues.currentGpa,
             grossCpa: displayGpaValues.grossCpa,
             currentCpa: displayGpaValues.currentCpa,
             targetGpa: displayGpaValues.displayTargetGPARaw,
             scholarshipThreshold: roundedGpaValues.roundedScholarshipGPA,
 
-            // Rounded Values
             roundedCurrentGPA: roundedGpaValues.roundedCurrentGPA,
             roundedTargetGPA: roundedGpaValues.roundedTargetGPA,
             roundedScholarshipGPA: roundedGpaValues.roundedScholarshipGPA,
 
-            // Status Flags
             goalAchieved: statusFlags.goalAchieved,
             hasScholarship: statusFlags.hasScholarship,
             precisionMode: state.precisionMode,
 
-            // Metrics
             metrics,
-
-            // Formatters
             formatGpa,
 
-            // Actions
             setSemesterTarget,
-            setActiveScale,
             setPrecisionMode,
         }),
         [
@@ -219,14 +210,13 @@ export function useGoalsMetrics() {
             selectedId,
             selectedSemester,
             selectedIndex,
-            activeCount,
+            subjectCount,
             displayGpaValues,
             roundedGpaValues,
             statusFlags,
             metrics,
             formatGpa,
             setSemesterTarget,
-            setActiveScale,
             setPrecisionMode,
         ]
     );

@@ -1,20 +1,15 @@
 import { useAcademicStore } from "@/hooks/useAcademicStore";
+import { useActiveScale } from "@/hooks/useActiveScale";
 import { cn } from "@/lib/utils";
 import type { TGradingScale } from "@/types/types";
-import { useState } from "react";
 
 export function ScaleSwitcher() {
-    const { state, update } = useAcademicStore();
-    const [activeScale, setActiveScale] = useState<TGradingScale>(state.activeScale ?? "10");
+    const { state, hydrated } = useAcademicStore();
+    const activeScale = state.activeScale ?? "10";
 
-    const handleScaleChange = (scale: TGradingScale) => {
-        setActiveScale(scale);
-        update((s) => ({
-            ...s,
-            activeScale: scale,
-            eligibleForScholarshipGPA: Number((+scale * 0.8).toFixed(1)),
-        }));
-    }
+    const { setActiveScale } = useActiveScale();
+
+    if (!hydrated) return null;
 
     return (
         <>
@@ -22,7 +17,7 @@ export function ScaleSwitcher() {
                 {(["10", "4", "100"] as TGradingScale[]).map((s) => (
                     <button
                         key={s}
-                        onClick={() => handleScaleChange(s)}
+                        onClick={() => setActiveScale(s)}
                         className={cn(
                             "px-2.5 py-1 transition-colors cursor-pointer",
                             activeScale === s
