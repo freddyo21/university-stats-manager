@@ -51,7 +51,7 @@ export default function ExtensionDownloadSection() {
 
             {/* Thẻ download file zip trực tiếp từ thư mục public */}
             <a
-                href="/extensions/grade-scraper.zip"
+                href="/extension/grade-scraper.zip"
                 download="grade-scraper.zip"
                 className="px-6 py-3 bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm transition-colors duration-200"
             >
