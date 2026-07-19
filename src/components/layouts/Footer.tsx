@@ -1,5 +1,6 @@
 import { useI18n } from "@/i18n/use-i18n";
 import { NavLink } from "react-router-dom";
+import packageJson from "../../../package.json";
 
 export function Footer() {
     const { t } = useI18n();
@@ -60,7 +61,7 @@ export function Footer() {
                         </p>
                         <div className="mt-2 text-xs text-muted-foreground border-t border-border pt-2">
                             <p>© {new Date().getFullYear()} Study Stats Suite.</p>
-                            <p className="text-[10px] opacity-75">{t("common.slogan")}</p>
+                            <p className="text-sm opacity-75">v{packageJson.version}</p>
                         </div>
                     </div>
                 </div>
