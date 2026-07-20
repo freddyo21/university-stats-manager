@@ -419,9 +419,9 @@
         "en": "NOPE",
         "vi": "KHÔNG"
     },
-    "goals.help.inputTarget": {
-        "en": "Enter target GPA in scale 10 in the input below.",
-        "vi": "Nhập điểm mục tiêu hệ 10 vào dưới đây."
+    "goals.help.inputTarget.scale": {
+        "en": "Enter target GPA in {scale} in the input below.",
+        "vi": "Nhập điểm mục tiêu {scale} vào dưới đây."
     },
     "goals.studyType.new": {
         "en": "New",

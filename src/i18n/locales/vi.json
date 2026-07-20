@@ -137,14 +137,16 @@
     "yes": "CÓ",
     "no": "KHÔNG",
     "nope": "KHÔNG",
-    "help": {
-      "inputTarget": "Nhập điểm mục tiêu hệ 10 vào dưới đây."
-    },
     "studyType": {
       "new": "Học mới",
       "retake": "Học lại",
       "improvement": "Cải thiện",
       "exempt": "Miễn học"
+    },
+    "help": {
+      "inputTarget": {
+        "scale": "Nhập điểm mục tiêu {scale} vào dưới đây."
+      }
     }
   },
   "roadmap": {

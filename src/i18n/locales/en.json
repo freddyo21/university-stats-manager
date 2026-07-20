@@ -137,14 +137,16 @@
     "yes": "YES",
     "no": "NO",
     "nope": "NOPE",
-    "help": {
-      "inputTarget": "Enter target GPA in scale 10 in the input below."
-    },
     "studyType": {
       "new": "New",
       "retake": "Retake",
       "improvement": "Improvement",
       "exempt": "Exempt"
+    },
+    "help": {
+      "inputTarget": {
+        "scale": "Enter target GPA in {scale} in the input below."
+      }
     }
   },
   "roadmap": {
